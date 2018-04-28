@@ -185,4 +185,13 @@ public class IHttpClientUtil {
         IHttpResponse response = client.execute(request);
         return response.getResult(resultCharset);
     }
+
+    /**
+     * 关闭该工具类，同时会关闭传入该工具类中的Client
+     *
+     * @throws IOException IOException
+     */
+    public void close() throws IOException {
+        this.client.close();
+    }
 }

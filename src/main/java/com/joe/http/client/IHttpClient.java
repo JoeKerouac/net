@@ -183,6 +183,13 @@ public class IHttpClient implements AutoCloseable {
         httpClient.close();
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        //如果用户没有正常关闭那么在finalize方法中关闭，由于该方法调用时机的不确定性，所以用户应该自己关闭
+        //而不是依赖该方法关闭资源。
+        close();
+    }
+
     /**
      * 执行GET请求
      *

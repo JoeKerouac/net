@@ -24,9 +24,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git@github.com:935237604/net.git</connection>
-        <developerConnection>scm:git@github.com:935237604/net.git</developerConnection>
-        <url>git@github.com:935237604/net.git</url>
+        <connection>scm:git@github.com:JoeKerouac/net.git</connection>
+        <developerConnection>scm:git@github.com:JoeKerouac/net.git</developerConnection>
+        <url>git@github.com:JoeKerouac/net.git</url>
     </scm>
 
     <profiles>

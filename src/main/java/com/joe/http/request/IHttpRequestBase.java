@@ -41,7 +41,6 @@ public abstract class IHttpRequestBase {
         this.headers.putAll(parse(url));
         this.queryParams = new HashMap<>();
         this.contentType = CONTENT_TYPE_JSON;
-        this.httpConfig = new IHttpConfig();
         this.charset = Charset.defaultCharset().name();
     }
 

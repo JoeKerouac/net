@@ -3,23 +3,10 @@ package com.joe.http.config;
 import lombok.Data;
 
 /**
- * Http配置
- * 
- * @author joe
+ * Http请求配置，一个请求一个，全局配置可以通过{@link com.joe.http.config.IHttpClientConfig IHttpClientConfig}来配置
  *
+ * @author joe
  */
 @Data
-public class IHttpConfig {
-	// 数据传输超时时间，单位毫秒，默认一分钟
-	private int socketTimeout;
-	// 连接超时，单位毫秒，默认5秒
-	private int connectTimeout;
-	// 连接请求超时，单位毫秒，默认10秒
-	private int connectionRequestTimeout;
-
-	public IHttpConfig() {
-		this.socketTimeout = 1000 * 60;
-		this.connectTimeout = 1000 * 30;
-		this.connectionRequestTimeout = 1000 * 30;
-	}
+public class IHttpConfig extends HttpBaseConfig {
 }

@@ -1,5 +1,6 @@
 package com.joe.http.client;
 
+import com.joe.http.config.HttpBaseConfig;
 import com.joe.http.config.HttpProxy;
 import com.joe.http.config.IHttpClientConfig;
 import com.joe.http.config.IHttpConfig;
@@ -84,6 +85,10 @@ public class IHttpClient implements AutoCloseable {
     private CloseableHttpClient httpClient;
     // cookie
     private CookieStore cookieStore;
+    /**
+     * 配置
+     */
+    private IHttpClientConfig config;
 
     /**
      * 指定client配置和cookieStore
@@ -95,10 +100,10 @@ public class IHttpClient implements AutoCloseable {
      */
     @Builder
     private IHttpClient(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext, boolean noRedirect) {
-        config = config == null ? new IHttpClientConfig() : config;
+        this.config = config == null ? new IHttpClientConfig() : config;
         cookieStore = cookieStore == null ? new BasicCookieStore() : cookieStore;
         sslcontext = sslcontext == null ? SSLContexts.createSystemDefault() : sslcontext;
-        this.init(config, cookieStore, sslcontext, noRedirect);
+        this.init(this.config, cookieStore, sslcontext, noRedirect);
     }
 
     /**
@@ -231,9 +236,12 @@ public class IHttpClient implements AutoCloseable {
      */
     private void configure(HttpRequestBase request, IHttpRequestBase iRequest) {
         // 设置
-        IHttpConfig config = iRequest.getHttpConfig();
+        HttpBaseConfig config = iRequest.getHttpConfig() == null ? this.config : iRequest.getHttpConfig();
+
+        //请求配置
         request.setConfig(buildRequestConfig(config.getSocketTimeout(), config.getConnectTimeout(),
                 config.getConnectionRequestTimeout()));
+
         logger.debug("请求socketTimeout为：{}；connectTimeout为：{}；connectionRequestTimeout为：{}", config.getSocketTimeout(),
                 config.getConnectTimeout(), config.getConnectionRequestTimeout());
         // 设置请求头
@@ -272,7 +280,7 @@ public class IHttpClient implements AutoCloseable {
      */
     private void init(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext, boolean noRedirect) {
         logger.debug("正在初始化HttpClient");
-        CloseableHttpClient httpclient = null;
+        CloseableHttpClient httpclient;
         // 自定义解析，选择默认解析
         HttpMessageParserFactory<HttpResponse> responseParserFactory = new DefaultHttpResponseParserFactory();
         HttpMessageWriterFactory<HttpRequest> requestWriterFactory = new DefaultHttpRequestWriterFactory();

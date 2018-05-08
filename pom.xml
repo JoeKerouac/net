@@ -117,6 +117,9 @@
         <lombok.version>1.16.10</lombok.version>
         <jackson.version>2.8.1</jackson.version>
         <junit.version>4.12</junit.version>
+        <ws.version>2.1</ws.version>
+        <cglib.version>3.2.5</cglib.version>
+        <utils.version>1.8</utils.version>
     </properties>
 
     <dependencies>
@@ -141,6 +144,25 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <!--下面三个cglib、JSR311、utils包都是ResourceFactory需要使用的-->
+        <!--JSR311规范，REST的API-->
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${ws.version}</version>
+        </dependency>
+        <!--CGLIB依赖包，生成测试类使用-->
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
+        </dependency>
+        <!--utils依赖，用到里边的JsonParser-->
+        <dependency>
+            <groupId>com.github.935237604</groupId>
+            <artifactId>utils</artifactId>
+            <version>${utils.version}</version>
         </dependency>
         <!-- json依赖 -->
         <dependency>

@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -61,9 +60,7 @@ public class IHttpResponse implements Closeable {
         if (name == null) {
             return Collections.emptyList();
         }
-        return headers.stream().filter(header -> {
-            return name.equals(header.getName());
-        }).map(IHeader::new).collect(Collectors.toList());
+        return headers.stream().filter(header -> name.equals(header.getName())).map(IHeader::new).collect(Collectors.toList());
     }
 
     /**

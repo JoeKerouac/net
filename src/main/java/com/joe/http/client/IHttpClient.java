@@ -212,9 +212,7 @@ public class IHttpClient implements AutoCloseable {
         Map<String, String> query = request.getQueryParams();
         if (query != null && !query.isEmpty()) {
             StringBuilder sb = new StringBuilder();
-            query.forEach((key, value) -> {
-                sb.append("&" + key + "=" + value);
-            });
+            query.forEach((key, value) -> sb.append("&" + key + "=" + value));
             return request.getUrl() + "?" + sb.toString().substring(1);
         } else {
             return request.getUrl();

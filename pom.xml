@@ -163,7 +163,7 @@
         </dependency>
         <!--utils依赖，用到里边的JsonParser-->
         <dependency>
-            <groupId>com.github.935237604</groupId>
+            <groupId>com.github.JoeKerouac</groupId>
             <artifactId>utils</artifactId>
             <version>${utils.version}</version>
         </dependency>

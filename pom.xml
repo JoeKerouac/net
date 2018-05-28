@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.JoeKerouac</groupId>
     <artifactId>net</artifactId>
-    <version>1.5</version>
+    <version>1.5.001</version>
     <name>net</name>
     <packaging>jar</packaging>
     <description>网络请求工具简单封装</description>

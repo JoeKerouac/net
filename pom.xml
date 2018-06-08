@@ -9,6 +9,12 @@
     <description>网络请求工具简单封装</description>
     <url>https://github.com/935237604/net</url>
 
+    <parent>
+        <groupId>com.github.JoeKerouac</groupId>
+        <artifactId>java-parent</artifactId>
+        <version>1.0</version>
+    </parent>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -113,81 +119,59 @@
         </profile>
     </profiles>
 
-    <properties>
-        <httpcomponents.version>4.5.2</httpcomponents.version>
-        <logback.version>1.1.7</logback.version>
-        <slf4j.version>1.7.21</slf4j.version>
-        <lombok.version>1.16.10</lombok.version>
-        <jackson.version>2.8.1</jackson.version>
-        <junit.version>4.12</junit.version>
-        <ws.version>2.1</ws.version>
-        <cglib.version>3.2.5</cglib.version>
-        <utils.version>1.8</utils.version>
-    </properties>
-
     <dependencies>
         <!-- 核心，本包就是对这个httpclient包进行简单封装的来的 -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>${httpcomponents.version}</version>
         </dependency>
         <!-- 日志 -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-core</artifactId>
-            <version>${logback.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
         <!--下面三个cglib、JSR311、utils包都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <version>${ws.version}</version>
         </dependency>
         <!--CGLIB依赖包，生成测试类使用-->
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
-            <version>${cglib.version}</version>
         </dependency>
         <!--utils依赖，用到里边的JsonParser-->
         <dependency>
             <groupId>com.github.JoeKerouac</groupId>
             <artifactId>utils</artifactId>
-            <version>${utils.version}</version>
         </dependency>
         <!-- json依赖 -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
             <scope>provided</scope>
         </dependency>
         <!-- 生成get set方法 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <!--test-->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -197,11 +181,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <encoding>UTF8</encoding>
+                    <encoding>${encode}</encoding>
                 </configuration>
             </plugin>
         </plugins>

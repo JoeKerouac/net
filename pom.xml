@@ -118,18 +118,6 @@
             <artifactId>jackson-databind</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- 生成get set方法 -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <!--test-->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>

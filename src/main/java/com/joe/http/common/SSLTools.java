@@ -29,7 +29,7 @@ public class SSLTools {
         try {
             return build(new FileInputStream(path), type, password);
         } catch (IOException e) {
-            return null;
+            throw new RuntimeException("证书加载失败", e);
         }
     }
 
@@ -39,7 +39,7 @@ public class SSLTools {
      * @param inputStream 证书的输入流（方法内部会关闭该流）
      * @param type        证书类型，例如PKCS12、JKS等
      * @param password    证书密码，没有可以不填
-     * @return 指定证书对应的SSLContext，证书加载失败返回null
+     * @return 指定证书对应的SSLContext，证书加载失败抛出异常
      */
     public static SSLContext build(InputStream inputStream, String type, String password) {
         try (InputStream stream = inputStream) {
@@ -51,7 +51,7 @@ public class SSLTools {
                     .build();
         } catch (Throwable e) {
             log.error("SSLContext加载失败", e);
-            return null;
+            throw new RuntimeException("证书加载失败", e);
         }
     }
 }

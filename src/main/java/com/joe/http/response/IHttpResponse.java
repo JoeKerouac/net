@@ -23,16 +23,16 @@ import org.slf4j.LoggerFactory;
  * @author joe
  */
 public class IHttpResponse implements Closeable {
-    private static final Logger logger = LoggerFactory.getLogger(IHttpResponse.class);
+    private static final Logger   logger = LoggerFactory.getLogger(IHttpResponse.class);
     // 请求状态
-    private int status;
+    private int                   status;
     // 请求响应
     private CloseableHttpResponse closeableHttpResponse;
     // 是否关闭
-    private boolean closed = false;
+    private boolean               closed = false;
     // 响应数据
-    private String data;
-    private List<Header> headers;
+    private String                data;
+    private List<Header>          headers;
 
     public IHttpResponse(CloseableHttpResponse closeableHttpResponse) throws IOException {
         this.closeableHttpResponse = closeableHttpResponse;
@@ -60,7 +60,8 @@ public class IHttpResponse implements Closeable {
         if (name == null) {
             return Collections.emptyList();
         }
-        return headers.stream().filter(header -> name.equals(header.getName())).map(IHeader::new).collect(Collectors.toList());
+        return headers.stream().filter(header -> name.equals(header.getName())).map(IHeader::new)
+            .collect(Collectors.toList());
     }
 
     /**

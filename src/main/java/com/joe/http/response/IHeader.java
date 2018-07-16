@@ -18,7 +18,6 @@ public class IHeader {
         return header.getName();
     }
 
-
     public String getValue() {
         return header.getValue();
     }

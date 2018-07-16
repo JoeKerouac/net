@@ -1,14 +1,14 @@
 package com.joe.http;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import com.joe.http.client.IHttpClient;
 import com.joe.http.config.IHttpConfig;
 import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Http请求工具类，方便发起请求
@@ -17,7 +17,7 @@ import java.io.InputStream;
  */
 public class IHttpClientUtil {
     private static final IHttpClient defaultClient = IHttpClient.builder().build();
-    private final IHttpClient client;
+    private final IHttpClient        client;
 
     public IHttpClientUtil() {
         this(null);
@@ -90,8 +90,8 @@ public class IHttpClientUtil {
      * @return 请求结果字符串
      * @throws IOException IO异常
      */
-    public String executeGet(String url, String resultCharset, String contentType)
-            throws IOException {
+    public String executeGet(String url, String resultCharset,
+                             String contentType) throws IOException {
         IHttpGet get = new IHttpGet(url);
         get.setContentType(contentType == null ? IHttpRequestBase.CONTENT_TYPE_JSON : contentType);
         return execute(get, resultCharset);
@@ -118,8 +118,7 @@ public class IHttpClientUtil {
      * @return 请求结果字符串
      * @throws IOException IO异常
      */
-    public String executePost(String url, String data, String resultCharset)
-            throws IOException {
+    public String executePost(String url, String data, String resultCharset) throws IOException {
         return executePost(url, data, resultCharset, null);
     }
 
@@ -133,8 +132,8 @@ public class IHttpClientUtil {
      * @return 请求结果字符串
      * @throws IOException IO异常
      */
-    public String executePost(String url, String data, String resultCharset, String requestCharset)
-            throws IOException {
+    public String executePost(String url, String data, String resultCharset,
+                              String requestCharset) throws IOException {
         return executePost(url, data, resultCharset, requestCharset, null);
     }
 
@@ -149,8 +148,8 @@ public class IHttpClientUtil {
      * @return 请求结果字符串
      * @throws IOException IO异常
      */
-    public String executePost(String url, String data, String resultCharset, String requestCharset, String contentType)
-            throws IOException {
+    public String executePost(String url, String data, String resultCharset, String requestCharset,
+                              String contentType) throws IOException {
         IHttpPost post = new IHttpPost(url);
         post.setEntity(data);
         post.setCharset(requestCharset == null ? IHttpRequestBase.CHARSET : requestCharset);

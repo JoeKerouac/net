@@ -1,14 +1,15 @@
 package com.joe.http.common;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.ssl.SSLContexts;
-
-import javax.net.ssl.SSLContext;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.security.KeyStore;
+
+import javax.net.ssl.SSLContext;
+
+import org.apache.http.ssl.SSLContexts;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author joe
@@ -46,9 +47,7 @@ public class SSLTools {
             KeyStore keyStore = KeyStore.getInstance(type);
             char[] passwordChars = password == null ? null : password.toCharArray();
             keyStore.load(stream, passwordChars);
-            return SSLContexts.custom()
-                    .loadKeyMaterial(keyStore, passwordChars)
-                    .build();
+            return SSLContexts.custom().loadKeyMaterial(keyStore, passwordChars).build();
         } catch (Throwable e) {
             log.error("SSLContext加载失败", e);
             throw new RuntimeException("证书加载失败", e);

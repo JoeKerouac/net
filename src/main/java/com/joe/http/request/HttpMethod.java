@@ -6,12 +6,14 @@ package com.joe.http.request;
  *
  */
 public enum HttpMethod {
-	GET("GET"),POST("POST"),PUT("PUT"),DELETE("DELETE");
-	private String method;
-	private HttpMethod(String method){
-		this.method = method;
-	}
-	public String getMethod(){
-		return this.method;
-	}
+                        GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
+    private String method;
+
+    private HttpMethod(String method) {
+        this.method = method;
+    }
+
+    public String getMethod() {
+        return this.method;
+    }
 }

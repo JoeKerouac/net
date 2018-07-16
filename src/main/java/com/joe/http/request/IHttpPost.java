@@ -15,7 +15,8 @@ public class IHttpPost extends IHttpRequestBase {
     }
 
     public static final class HttpGetBuilder extends Builder<IHttpPost> {
-        private HttpGetBuilder() {}
+        private HttpGetBuilder() {
+        }
 
         @Override
         public IHttpPost build() {

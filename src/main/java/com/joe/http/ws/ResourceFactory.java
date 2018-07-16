@@ -1,24 +1,27 @@
 package com.joe.http.ws;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.joe.http.client.IHttpClient;
 import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
 import com.joe.utils.parse.json.JsonParser;
+
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * HTTP资源工厂，主要为了方便测试HTTP接口（接口需要符合JAX-RS (JSR 311)规范），可以达
@@ -37,9 +40,10 @@ import java.util.Map;
  * @author joe
  */
 public class ResourceFactory {
-    private static final Logger logger = LoggerFactory.getLogger(ResourceFactory.class);
-    private static final Map<String, ResourceFactory> cache = new HashMap<>();
-    private String baseUrl;
+    private static final Logger                       logger = LoggerFactory
+        .getLogger(ResourceFactory.class);
+    private static final Map<String, ResourceFactory> cache  = new HashMap<>();
+    private String                                    baseUrl;
 
     private ResourceFactory(String baseUrl) {
         this.baseUrl = baseUrl;
@@ -86,11 +90,12 @@ public class ResourceFactory {
      * CGLIB的HTTP代理，用于测试接口使用，暂时只支持返回JSON类型的接口测试
      */
     private static class CglibHTTPProxy implements MethodInterceptor {
-        private static final JsonParser parser = JsonParser.getInstance();
-        private static final Logger logger = LoggerFactory.getLogger(CglibHTTPProxy.class);
-        private static final IHttpClient client = IHttpClient.builder().build();
-        private static final Map<String, CglibHTTPProxy> cache = new HashMap<>();
-        private String baseUrl;
+        private static final JsonParser                  parser = JsonParser.getInstance();
+        private static final Logger                      logger = LoggerFactory
+            .getLogger(CglibHTTPProxy.class);
+        private static final IHttpClient                 client = IHttpClient.builder().build();
+        private static final Map<String, CglibHTTPProxy> cache  = new HashMap<>();
+        private String                                   baseUrl;
 
         private CglibHTTPProxy(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -114,7 +119,8 @@ public class ResourceFactory {
         }
 
         @Override
-        public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        public Object intercept(Object o, Method method, Object[] objects,
+                                MethodProxy methodProxy) throws Throwable {
             logger.debug("开始代理方法");
             if (method.getAnnotation(Path.class) == null) {
                 logger.error("方法{}不是资源方法，不能调用", method);

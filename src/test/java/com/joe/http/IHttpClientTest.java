@@ -1,12 +1,13 @@
 package com.joe.http;
 
-import com.joe.http.client.IHttpClient;
-import com.joe.http.request.IHttpGet;
-import com.joe.http.request.IHttpPost;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.joe.http.client.IHttpClient;
+import com.joe.http.request.IHttpGet;
+import com.joe.http.request.IHttpPost;
 
 /**
  * @author joe
@@ -14,7 +15,7 @@ import org.junit.Test;
  */
 public class IHttpClientTest {
     private static final String url = "http://baidu.com";
-    private IHttpClient client;
+    private IHttpClient         client;
 
     @Before
     public void init() {

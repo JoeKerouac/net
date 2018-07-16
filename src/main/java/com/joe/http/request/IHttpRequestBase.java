@@ -1,13 +1,14 @@
 package com.joe.http.request;
 
-import com.joe.http.config.IHttpConfig;
-import lombok.Data;
-
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.joe.http.config.IHttpConfig;
+
+import lombok.Data;
 
 /**
  * 默认content-type为json格式，如果调用addFormParam方法那么将会更改为form格式
@@ -18,22 +19,22 @@ import java.util.Map;
 public abstract class IHttpRequestBase {
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
-    public static final String CHARSET = "UTF8";
+    public static final String CHARSET           = "UTF8";
     // Http配置
-    IHttpConfig httpConfig;
+    IHttpConfig                httpConfig;
     // contentType，默认json
-    String contentType;
+    String                     contentType;
     // 请求URL
-    String url;
+    String                     url;
     // 请求头
-    Map<String, String> headers;
+    Map<String, String>        headers;
     // URL参数
-    Map<String, String> queryParams;
-    Map<String, Object> formParam;
+    Map<String, String>        queryParams;
+    Map<String, Object>        formParam;
     // 请求
-    String charset;
+    String                     charset;
     // 请求body，如果请求方法是get的话自动忽略该字段
-    String entity;
+    String                     entity;
 
     public IHttpRequestBase(String url) {
         this.url = url;
@@ -115,20 +116,20 @@ public abstract class IHttpRequestBase {
      */
     public static abstract class Builder<T extends IHttpRequestBase> {
         // Http配置
-        IHttpConfig httpConfig;
+        IHttpConfig         httpConfig;
         // contentType，默认json
-        String contentType;
+        String              contentType;
         // 请求URL
-        String url;
+        String              url;
         // 请求头
         Map<String, String> headers;
         // URL参数
         Map<String, String> queryParams;
         Map<String, Object> formParam;
         // 请求
-        String charset;
+        String              charset;
         // 请求body，如果请求方法是get的话自动忽略该字段
-        String entity;
+        String              entity;
 
         protected Builder() {
             this.headers = new HashMap<>();
@@ -243,12 +244,15 @@ public abstract class IHttpRequestBase {
          */
         protected T configure(T request) {
             request.setHttpConfig(httpConfig);
-            request.setContentType(contentType == null || contentType.trim().isEmpty() ? CONTENT_TYPE_JSON :
-                    contentType);
+            request.setContentType(
+                contentType == null || contentType.trim().isEmpty() ? CONTENT_TYPE_JSON
+                    : contentType);
             request.setHeaders(headers);
             request.setQueryParams(queryParams);
             request.setFormParam(formParam);
-            request.setCharset(charset == null || charset.trim().isEmpty() ? Charset.defaultCharset().name() : charset);
+            request.setCharset(
+                charset == null || charset.trim().isEmpty() ? Charset.defaultCharset().name()
+                    : charset);
             request.setEntity(entity == null ? "" : entity);
             return request;
         }

@@ -59,10 +59,15 @@ public abstract class IHttpRequestBase {
     }
 
     public IHttpRequestBase(String url, IHttpClient client) {
-        this.url = url;
         this.headers = new HashMap<>();
-        this.headers.putAll(parse(url));
         this.queryParams = new HashMap<>();
+        int index;
+        if ((index = url.indexOf("?")) > 0) {
+            this.queryParams.putAll(parse(url));
+            this.url = url.substring(0, index);
+        } else {
+            this.url = url;
+        }
         this.contentType = CONTENT_TYPE_JSON;
         this.charset = Charset.defaultCharset().name();
         this.client = client == null ? IHttpClient.DEFAULT_CLIENT : client;
@@ -117,8 +122,8 @@ public abstract class IHttpRequestBase {
      */
     public static Map<String, String> parse(String url) {
         int index = url.indexOf("?");
-        if (index > -1) {
-            String data = url.substring(index);
+        if (index > 0) {
+            String data = url.substring(index + 1);
             Map<String, String> map = new HashMap<>();
             Arrays.asList(data.split("&")).stream().forEach(str -> {
                 String[] params = str.split("=");

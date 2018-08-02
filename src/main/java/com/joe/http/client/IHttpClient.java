@@ -11,6 +11,7 @@ import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
+import com.joe.utils.common.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -65,33 +66,49 @@ import lombok.Builder;
  * @author joe
  */
 public class IHttpClient implements AutoCloseable {
-    private static final Logger           logger     = LoggerFactory.getLogger(IHttpClient.class);
-    //不自动重定向
-    private static final RedirectStrategy NOREDIRECT = new RedirectStrategy() {
-                                                         @Override
-                                                         public boolean isRedirected(HttpRequest request,
-                                                                                     HttpResponse response,
-                                                                                     HttpContext context) throws ProtocolException {
-                                                             return false;
-                                                         }
+    private static Logger                 log = LoggerFactory.getLogger(IHttpClient.class);
+    /**
+     * 不自动重定向
+     */
+    private static final RedirectStrategy NOREDIRECT;
+    /**
+     * 默认客户端
+     */
+    public static final IHttpClient       DEFAULT_CLIENT;
 
-                                                         @Override
-                                                         public HttpUriRequest getRedirect(HttpRequest request,
-                                                                                           HttpResponse response,
-                                                                                           HttpContext context) throws ProtocolException {
-                                                             return null;
-                                                         }
-                                                     };
-    // client ID，用来唯一区分HttpClient
-    private String                        id;
-    // HttpClient
-    private CloseableHttpClient           httpClient;
-    // cookie
-    private CookieStore                   cookieStore;
+    static {
+        NOREDIRECT = new RedirectStrategy() {
+            @Override
+            public boolean isRedirected(HttpRequest request, HttpResponse response,
+                                        HttpContext context) throws ProtocolException {
+                return false;
+            }
+
+            @Override
+            public HttpUriRequest getRedirect(HttpRequest request, HttpResponse response,
+                                              HttpContext context) throws ProtocolException {
+                return null;
+            }
+        };
+        DEFAULT_CLIENT = IHttpClient.builder().build();
+    }
+
+    /**
+     * client ID，用来唯一区分HttpClient
+     */
+    private String              id;
+    /**
+     * HttpClient
+     */
+    private CloseableHttpClient httpClient;
+    /**
+     * cookie store ，存储cookie
+     */
+    private CookieStore         cookieStore;
     /**
      * 配置
      */
-    private IHttpClientConfig             config;
+    private IHttpClientConfig   config;
 
     /**
      * 指定client配置和cookieStore
@@ -118,7 +135,7 @@ public class IHttpClient implements AutoCloseable {
      */
     public IHttpResponse execute(IHttpRequestBase request) throws IOException {
         if (request == null) {
-            logger.error("request不能为null");
+            log.error("request不能为null");
             return null;
         }
         HttpRequestBase requestBase = null;
@@ -203,7 +220,7 @@ public class IHttpClient implements AutoCloseable {
      */
     private HttpRequestBase build(IHttpGet request) {
         HttpGet get = new HttpGet(buildUrl(request));
-        logger.debug("要请求的地址为：{}", get.getURI());
+        log.debug("要请求的地址为：{}", get.getURI());
         return get;
 
     }
@@ -233,7 +250,7 @@ public class IHttpClient implements AutoCloseable {
     private HttpRequestBase build(IHttpPost request) {
         HttpPost post = new HttpPost(buildUrl(request));
         post.setEntity(new StringEntity(request.getEntity(), request.getCharset()));
-        logger.debug("要请求的地址为：{}；要发送的内容为：{}", request.getUrl(), request.getEntity());
+        log.debug("要请求的地址为：{}；要发送的内容为：{}", request.getUrl(), request.getEntity());
         return post;
     }
 
@@ -252,7 +269,7 @@ public class IHttpClient implements AutoCloseable {
         request.setConfig(buildRequestConfig(config.getSocketTimeout(), config.getConnectTimeout(),
             config.getConnectionRequestTimeout()));
 
-        logger.debug("请求socketTimeout为：{}；connectTimeout为：{}；connectionRequestTimeout为：{}",
+        log.debug("请求socketTimeout为：{}；connectTimeout为：{}；connectionRequestTimeout为：{}",
             config.getSocketTimeout(), config.getConnectTimeout(),
             config.getConnectionRequestTimeout());
         // 设置请求头
@@ -261,10 +278,11 @@ public class IHttpClient implements AutoCloseable {
             request.addHeader(entity.getKey(), entity.getValue());
         }
         // 设置content-type
-        request.addHeader(HTTP.CONTENT_TYPE,
-            ContentType.create(iRequest.getContentType(), iRequest.getCharset()).toString());
-        logger.debug("请求content-type为：{}；请求头集合为：{}", iRequest.getContentType(),
-            iRequest.getHeaders());
+        if (!StringUtils.isEmpty(iRequest.getContentType())) {
+            request.addHeader(HTTP.CONTENT_TYPE,
+                    ContentType.create(iRequest.getContentType(), iRequest.getCharset()).toString());
+        }
+        log.debug("请求content-type为：{}；请求头集合为：{}", iRequest.getContentType(), iRequest.getHeaders());
     }
 
     /**
@@ -277,13 +295,13 @@ public class IHttpClient implements AutoCloseable {
      */
     private RequestConfig buildRequestConfig(int socketTimeout, int connectTimeout,
                                              int connectionRequestTimeout) {
-        logger.debug("构建请求配置");
-        logger.debug("请求socket超时时间为：" + socketTimeout + "ms；connect超时时间为：" + connectTimeout
-                     + "ms；connectionRequest超时时间为：" + connectionRequestTimeout + "ms");
+        log.debug("构建请求配置");
+        log.debug("请求socket超时时间为：" + socketTimeout + "ms；connect超时时间为：" + connectTimeout
+                  + "ms；connectionRequest超时时间为：" + connectionRequestTimeout + "ms");
         RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(socketTimeout)
             .setConnectTimeout(connectTimeout).setConnectionRequestTimeout(connectionRequestTimeout)
             .build();
-        logger.debug("请求配置构建成功");
+        log.debug("请求配置构建成功");
         return requestConfig;
     }
 
@@ -294,7 +312,7 @@ public class IHttpClient implements AutoCloseable {
      */
     private void init(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext,
                       boolean noRedirect) {
-        logger.debug("正在初始化HttpClient");
+        log.debug("正在初始化HttpClient");
         CloseableHttpClient httpclient;
         // 自定义解析，选择默认解析
         HttpMessageParserFactory<HttpResponse> responseParserFactory = new DefaultHttpResponseParserFactory();
@@ -334,7 +352,7 @@ public class IHttpClient implements AutoCloseable {
         // socket配置，不延迟发送
         SocketConfig socketConfig = SocketConfig.custom().setTcpNoDelay(true)
             .setSndBufSize(sndBufSize).setSoKeepAlive(true).setRcvBufSize(rcvBufSize).build();
-        logger.debug("soket默认设置：sendBufferSize:{};receiveBufferSize:{}", sndBufSize, rcvBufSize);
+        log.debug("soket默认设置：sendBufferSize:{};receiveBufferSize:{}", sndBufSize, rcvBufSize);
         // 将socket配置设置为连接池默认配置
         connManager.setDefaultSocketConfig(socketConfig);
         // 暂停活动1S后验证连接
@@ -351,7 +369,7 @@ public class IHttpClient implements AutoCloseable {
             .setMalformedInputAction(CodingErrorAction.IGNORE)
             .setUnmappableInputAction(CodingErrorAction.IGNORE).setCharset(charset)
             .setMessageConstraints(messageConstraints).build();
-        logger.debug("默认连接编码配置为：{}", charset);
+        log.debug("默认连接编码配置为：{}", charset);
         // 设置默认的连接配置
         connManager.setDefaultConnectionConfig(connectionConfig);
 
@@ -374,17 +392,17 @@ public class IHttpClient implements AutoCloseable {
         }
 
         if (noRedirect) {
-            logger.debug("用户设置不重定向，客户端将不会重定向");
+            log.debug("用户设置不重定向，客户端将不会重定向");
             builder.setRedirectStrategy(NOREDIRECT);
         }
 
         httpclient = builder.setConnectionManager(connManager).setDefaultCookieStore(cookieStore)
             .setDefaultRequestConfig(defaultRequestConfig).setUserAgent(config.getUserAgent())
             .build();
-        logger.debug("用户代理为：{}", config.getUserAgent());
+        log.debug("用户代理为：{}", config.getUserAgent());
         this.httpClient = httpclient;
         this.cookieStore = cookieStore;
         this.id = String.valueOf(System.currentTimeMillis());
-        logger.debug("HttpClient初始化完毕");
+        log.debug("HttpClient初始化完毕");
     }
 }

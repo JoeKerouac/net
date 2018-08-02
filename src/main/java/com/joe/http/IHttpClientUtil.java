@@ -16,7 +16,7 @@ import com.joe.http.response.IHttpResponse;
  * @author joe
  */
 public class IHttpClientUtil {
-    private static final IHttpClient defaultClient = IHttpClient.builder().build();
+    private static final IHttpClient DEFAULT_CLIENT = IHttpClient.DEFAULT_CLIENT;
     private final IHttpClient        client;
 
     public IHttpClientUtil() {
@@ -24,7 +24,7 @@ public class IHttpClientUtil {
     }
 
     public IHttpClientUtil(IHttpClient client) {
-        this.client = client == null ? defaultClient : client;
+        this.client = client == null ? DEFAULT_CLIENT : client;
     }
 
     /**

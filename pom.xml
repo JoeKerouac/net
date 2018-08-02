@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.JoeKerouac</groupId>
     <artifactId>net</artifactId>
-    <version>1.5.002</version>
+    <version>1.6.000</version>
     <name>net</name>
     <packaging>jar</packaging>
     <description>网络请求工具简单封装</description>
@@ -55,6 +55,12 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <!-- 解决common-logging依赖，该包可以替换common-logging依赖（http-client中有common-logging依赖，所以需要该依赖） -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <scope>optional</scope>
         </dependency>
         <!--下面三个cglib、JSR311、utils包都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->

@@ -1,12 +1,15 @@
 package com.joe.http.request;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.joe.http.client.IHttpClient;
 import com.joe.http.config.IHttpConfig;
+import com.joe.http.response.IHttpResponse;
 
 import lombok.Data;
 
@@ -20,29 +23,49 @@ public abstract class IHttpRequestBase {
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
     public static final String CHARSET           = "UTF8";
-    // Http配置
+    private IHttpClient        client;
+    /**
+     *  Http配置
+     */
     IHttpConfig                httpConfig;
-    // contentType，默认json
+    /**
+     * contentType，默认json
+     */
     String                     contentType;
-    // 请求URL
+    /**
+     * 请求URL
+     */
     String                     url;
-    // 请求头
+    /**
+     * 请求头
+     */
     Map<String, String>        headers;
-    // URL参数
+    /**
+     * URL参数
+     */
     Map<String, String>        queryParams;
     Map<String, Object>        formParam;
-    // 请求
+    /**
+     * 请求
+     */
     String                     charset;
-    // 请求body，如果请求方法是get的话自动忽略该字段
+    /**
+     * 请求body，如果请求方法是get的话自动忽略该字段
+     */
     String                     entity;
 
     public IHttpRequestBase(String url) {
+        this(url, null);
+    }
+
+    public IHttpRequestBase(String url, IHttpClient client) {
         this.url = url;
         this.headers = new HashMap<>();
         this.headers.putAll(parse(url));
         this.queryParams = new HashMap<>();
         this.contentType = CONTENT_TYPE_JSON;
         this.charset = Charset.defaultCharset().name();
+        this.client = client == null ? IHttpClient.DEFAULT_CLIENT : client;
     }
 
     /**
@@ -78,7 +101,7 @@ public abstract class IHttpRequestBase {
     public IHttpRequestBase addFormParam(String key, String value) {
         String tag = key + "=" + value;
         if (entity == null || entity.isEmpty()) {
-            entity += tag;
+            entity = tag;
         } else {
             entity += "&" + tag;
         }
@@ -109,6 +132,16 @@ public abstract class IHttpRequestBase {
         } else {
             return Collections.emptyMap();
         }
+    }
+
+    /**
+     * 执行网络请求
+     * @return 请求结果
+     * @throws IOException 网络IO异常
+     */
+    public IHttpResponse exec() throws IOException {
+        IHttpResponse response = client.execute(this);
+        return response;
     }
 
     /**

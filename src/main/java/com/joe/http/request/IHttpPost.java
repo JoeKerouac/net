@@ -1,8 +1,14 @@
 package com.joe.http.request;
 
+import com.joe.http.client.IHttpClient;
+
 public class IHttpPost extends IHttpRequestBase {
     public IHttpPost(String url) {
         super(url);
+    }
+
+    public IHttpPost(String url, IHttpClient client) {
+        super(url, client);
     }
 
     /**

@@ -11,7 +11,6 @@ import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
-import com.joe.utils.common.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -57,6 +56,7 @@ import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
+import com.joe.utils.common.StringUtils;
 
 import lombok.Builder;
 
@@ -202,6 +202,7 @@ public class IHttpClient implements AutoCloseable {
         return this.id;
     }
 
+    @Override
     public void close() throws IOException {
         httpClient.close();
     }
@@ -249,7 +250,11 @@ public class IHttpClient implements AutoCloseable {
      */
     private HttpRequestBase build(IHttpPost request) {
         HttpPost post = new HttpPost(buildUrl(request));
-        post.setEntity(new StringEntity(request.getEntity(), request.getCharset()));
+        StringEntity entity = new StringEntity(request.getEntity(), request.getCharset());
+        if (!StringUtils.isEmpty(request.getContentType())) {
+            entity.setContentType(request.getContentType());
+        }
+        post.setEntity(entity);
         log.debug("要请求的地址为：{}；要发送的内容为：{}", request.getUrl(), request.getEntity());
         return post;
     }
@@ -280,7 +285,7 @@ public class IHttpClient implements AutoCloseable {
         // 设置content-type
         if (!StringUtils.isEmpty(iRequest.getContentType())) {
             request.addHeader(HTTP.CONTENT_TYPE,
-                    ContentType.create(iRequest.getContentType(), iRequest.getCharset()).toString());
+                ContentType.create(iRequest.getContentType(), iRequest.getCharset()).toString());
         }
         log.debug("请求content-type为：{}；请求头集合为：{}", iRequest.getContentType(), iRequest.getHeaders());
     }
@@ -333,7 +338,7 @@ public class IHttpClient implements AutoCloseable {
 
             @Override
             public InetAddress[] resolve(final String host) throws UnknownHostException {
-                if (host.equalsIgnoreCase("localhost")) {
+                if ("localhost".equalsIgnoreCase(host)) {
                     return new InetAddress[] { InetAddress
                         .getByAddress(new byte[] { 127, 0, 0, 1 }) };
                 } else {

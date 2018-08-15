@@ -153,20 +153,37 @@ public abstract class IHttpRequestBase {
      * 请求构建器
      */
     public static abstract class Builder<T extends IHttpRequestBase> {
-        // Http配置
+        /**
+         * Http配置
+         */
         IHttpConfig         httpConfig;
-        // contentType，默认json
+        /**
+         * contentType，默认json
+         */
         String              contentType;
-        // 请求URL
+        /**
+         * 请求URL
+         */
         String              url;
-        // 请求头
+        /**
+         * 请求头
+         */
         Map<String, String> headers;
-        // URL参数
+        /**
+         * URL参数
+         */
         Map<String, String> queryParams;
+        /**
+         * form参数
+         */
         Map<String, Object> formParam;
-        // 请求
+        /**
+         * 请求
+         */
         String              charset;
-        // 请求body，如果请求方法是get的话自动忽略该字段
+        /**
+         * 请求body，如果请求方法是get的话自动忽略该字段
+         */
         String              entity;
 
         protected Builder() {

@@ -9,12 +9,17 @@ import org.junit.Test;
  */
 public class IHttpClientUtilTest {
     private static final String url = "http://baidu.com";
+    private IHttpClientUtil client;
+
+    @Test
+    public void init() {
+        client = new IHttpClientUtil();
+    }
 
     @Test
     public void executeGet() {
         try {
-            IHttpClientUtil clientUtil = new IHttpClientUtil();
-            String result = clientUtil.executeGet(url);
+            String result = client.executeGet(url);
             Assert.assertNotNull("请求失败", result);
         } catch (Exception e) {
             Assert.assertNull("请求异常", e);
@@ -24,8 +29,7 @@ public class IHttpClientUtilTest {
     @Test
     public void executePost() {
         try {
-            IHttpClientUtil clientUtil = new IHttpClientUtil();
-            String result = clientUtil.executePost(url, "");
+            String result = client.executePost(url, "");
             Assert.assertNotNull("请求失败", result);
         } catch (Exception e) {
             Assert.assertNull("请求异常", e);

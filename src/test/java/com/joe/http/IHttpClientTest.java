@@ -1,11 +1,14 @@
 package com.joe.http;
 
+import java.nio.charset.Charset;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.joe.http.client.IHttpClient;
+import com.joe.http.config.IHttpClientConfig;
 import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 
@@ -19,7 +22,14 @@ public class IHttpClientTest {
 
     @Before
     public void init() {
-        client = IHttpClient.builder().build();
+        IHttpClientConfig config = new IHttpClientConfig();
+        config.setCharset(Charset.defaultCharset());
+        config.setRcvBufSize(1024);
+        config.setSndBufSize(1024);
+        config.setConnectionRequestTimeout(1000 * 5);
+        config.setSocketTimeout(1000 * 60);
+        config.setConnectTimeout(1000 * 30);
+        client = IHttpClient.builder().config(config).build();
     }
 
     @After

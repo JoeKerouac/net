@@ -42,7 +42,7 @@ public class CglibHTTPProxy implements MethodInterceptor {
         String className;
         switch (resourceType) {
             case SPRING:
-                className = "";
+                className = "com.joe.http.ws.SpringResourceAnalyze";
                 break;
             case JERSEY:
                 className = "com.joe.http.ws.JerseyResourceAnalyze";
@@ -79,7 +79,7 @@ public class CglibHTTPProxy implements MethodInterceptor {
     public Object intercept(Object obj, Method method, Object[] args,
                             MethodProxy proxy) throws Throwable {
         log.debug("开始代理方法");
-        analyze = constructor.newInstance(obj.getClass(), obj, method, args);
+        analyze = constructor.newInstance(obj.getClass().getSuperclass(), obj, method, args);
 
         if (!analyze.isResource()) {
             log.error("方法{}不是资源方法，不能调用", method);

@@ -62,7 +62,7 @@
             <artifactId>jcl-over-slf4j</artifactId>
             <scope>optional</scope>
         </dependency>
-        <!--下面三个cglib、JSR311、utils包都是ResourceFactory需要使用的-->
+        <!--下面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->
         <dependency>
             <groupId>javax.ws.rs</groupId>
@@ -102,6 +102,7 @@
             <artifactId>jackson-databind</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!--上面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
     </dependencies>
 
     <build>

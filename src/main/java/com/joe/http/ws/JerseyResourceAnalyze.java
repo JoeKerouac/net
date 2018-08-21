@@ -17,12 +17,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class JerseyResourceAnalyze extends ResourceAnalyze {
-    private String          pathPrefix;
-    private String          pathLast;
-    private ResourceParam[] params = ResourceAnalyze.EMPTY;
-    private ResourceMethod  resourceMethod;
-    private boolean         isResource;
-
     public JerseyResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
                                  Object[] args) {
         super(resourceClass, resourceInstance, method, args);
@@ -43,6 +37,7 @@ public class JerseyResourceAnalyze extends ResourceAnalyze {
                 isResource = false;
                 return;
             }
+            isResource = true;
 
             pathPrefix = prePath.value();
             log.debug("请求的前缀是：{}", pathPrefix);
@@ -82,7 +77,6 @@ public class JerseyResourceAnalyze extends ResourceAnalyze {
                     param.setParam(value);
                     param.setIndex(i);
                     params[i] = param;
-
 
                     //注解
                     Annotation[] annotations = parameter.getAnnotations();

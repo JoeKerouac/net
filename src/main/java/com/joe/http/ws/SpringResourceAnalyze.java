@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -49,6 +50,7 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                 isResource = false;
                 return;
             }
+            isResource = true;
 
             pathPrefix = prePath.value();
             log.debug("请求的前缀是：{}", pathPrefix);
@@ -159,6 +161,15 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                         }
                     }
                 }
+            }
+        }
+
+        {
+            //如果没有参数那么将请求方法重新设置为GET
+            long count = Stream.of(params)
+                .filter(param -> !ResourceParam.Type.CONTEXT.equals(param.getType())).count();
+            if (count == 0) {
+                resourceMethod = ResourceMethod.GET;
             }
         }
     }

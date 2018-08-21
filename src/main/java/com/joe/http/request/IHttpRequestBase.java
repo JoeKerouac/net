@@ -84,6 +84,15 @@ public abstract class IHttpRequestBase {
     }
 
     /**
+     * 添加path param
+     * @param key key（不包含{})
+     * @param value value
+     */
+    public void addPathParam(String key, String value) {
+        this.url = url.replace("{" + key + "}", value);
+    }
+
+    /**
      * 添加URL参数
      *
      * @param key   参数键

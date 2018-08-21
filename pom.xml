@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.JoeKerouac</groupId>
     <artifactId>net</artifactId>
-    <version>1.6.000</version>
+    <version>1.7.000</version>
     <name>net</name>
     <packaging>jar</packaging>
     <description>网络请求工具简单封装</description>
@@ -67,16 +67,34 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!--CGLIB依赖包，生成测试类使用-->
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!--utils依赖，用到里边的JsonParser-->
         <dependency>
             <groupId>com.github.JoeKerouac</groupId>
             <artifactId>utils</artifactId>
+            <scope>provided</scope>
         </dependency>
         <!-- json依赖 -->
         <dependency>

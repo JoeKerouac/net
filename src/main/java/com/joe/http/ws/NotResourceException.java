@@ -5,7 +5,7 @@ package com.joe.http.ws;
  *
  * @author joe
  */
-public class NotResourceException extends RuntimeException {
+public class NotResourceException extends WsException {
     public NotResourceException(Object obj) {
         super(obj + "不是一个资源，请检查");
     }

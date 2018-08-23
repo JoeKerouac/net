@@ -3,9 +3,9 @@
 
 # 使用说明：
 本SDK提供三种请求方法：
-- IHttpClientUtil:通过IHttpClientUtil可以快速的构建HTTP请求，可以满足大多数场景；
-- IHttpClient:通过IHttpClient可以定制许多HTTP请求的细节，满足精细化场景；
-- ResourceFactory:通过ResourceFactory可以快速调用springMVC/jersey编写的接口，可以用来快速测试。
+- [IHttpClient](#IHttpClient):通过IHttpClient可以定制许多HTTP请求的细节，满足精细化场景；
+- [IHttpClientUtil](#IHttpClientUtil):通过IHttpClientUtil可以快速的构建HTTP请求，可以满足大多数场景；
+- [ResourceFactory](#ResourceFactory):通过ResourceFactory可以快速调用springMVC/jersey编写的接口，可以用来快速测试。
 
 # 使用示例：
 ## IHttpClient

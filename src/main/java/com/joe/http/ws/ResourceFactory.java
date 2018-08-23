@@ -1,5 +1,7 @@
 package com.joe.http.ws;
 
+import com.joe.utils.common.StringUtils;
+
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 
@@ -20,6 +22,9 @@ public class ResourceFactory {
      * @param resourceType 代理的resource类型
      */
     public ResourceFactory(String baseUrl, ResourceType resourceType) {
+        if (StringUtils.isEmpty(baseUrl) || resourceType == null) {
+            throw new NullPointerException("baseUrl和resourceType不能为空");
+        }
         this.baseUrl = baseUrl;
         this.resourceType = resourceType;
     }

@@ -36,8 +36,6 @@ public class CglibHTTPProxy implements MethodInterceptor {
     private Constructor<? extends ResourceAnalyze>   constructor;
 
     private CglibHTTPProxy(String baseUrl, ResourceType resourceType) {
-        Assert.notNull(baseUrl);
-        Assert.notNull(resourceType);
         this.baseUrl = baseUrl;
         String className;
         switch (resourceType) {
@@ -52,7 +50,8 @@ public class CglibHTTPProxy implements MethodInterceptor {
         }
         try {
             this.constructor = ((Class<? extends ResourceAnalyze>) Class.forName(className))
-                .getConstructor(Class.class, Object.class, Method.class, Object[].class);
+                .getDeclaredConstructor(Class.class, Object.class, Method.class, Object[].class);
+            this.constructor.setAccessible(true);
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             throw new RuntimeException("系统异常", e);
         }

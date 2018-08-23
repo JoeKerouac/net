@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class JerseyResourceAnalyze extends ResourceAnalyze {
-    public JerseyResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
+    JerseyResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
                                  Object[] args) {
         super(resourceClass, resourceInstance, method, args);
     }

@@ -1,6 +1,7 @@
 package com.joe.http;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -11,7 +12,7 @@ public class IHttpClientUtilTest {
     private static final String url = "http://baidu.com";
     private IHttpClientUtil client;
 
-    @Test
+    @Before
     public void init() {
         client = new IHttpClientUtil();
     }
@@ -29,7 +30,7 @@ public class IHttpClientUtilTest {
     @Test
     public void executePost() {
         try {
-            String result = client.executePost(url, "");
+            String result = client.executePost(url, "123");
             Assert.assertNotNull("请求失败", result);
         } catch (Exception e) {
             Assert.assertNull("请求异常", e);

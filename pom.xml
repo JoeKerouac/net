@@ -43,16 +43,6 @@
         </dependency>
         <!-- 日志 -->
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
@@ -60,7 +50,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <scope>optional</scope>
         </dependency>
         <!--下面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->
@@ -101,6 +90,12 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <!--测试使用-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <scope>test</scope>
         </dependency>
         <!--上面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
     </dependencies>

@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SpringResourceAnalyze extends ResourceAnalyze {
 
-    public SpringResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
+    SpringResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
                                  Object[] args) {
         super(resourceClass, resourceInstance, method, args);
     }
@@ -39,11 +39,12 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
     public void init() {
         {
             //解析路径
-            Controller prePath = resourceClass.getDeclaredAnnotation(Controller.class);
-            if (prePath == null) {
+            if (resourceClass.getDeclaredAnnotation(Controller.class) == null) {
                 isResource = false;
                 return;
             }
+
+            RequestMapping prePath = resourceClass.getDeclaredAnnotation(RequestMapping.class);
 
             RequestMapping mapping = method.getAnnotation(RequestMapping.class);
             if (mapping == null) {
@@ -52,24 +53,28 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
             }
             isResource = true;
 
-            pathPrefix = prePath.value();
+            pathPrefix = prePath == null ? "" : prePath.value()[0];
             log.debug("请求的前缀是：{}", pathPrefix);
             pathLast = mapping.value()[0];
             log.debug("接口名是：{}", pathLast);
 
             //解析请求方法
             RequestMethod[] methods = mapping.method();
-            for (RequestMethod method : methods) {
-                if (method == RequestMethod.POST) {
-                    resourceMethod = ResourceMethod.POST;
-                    break;
-                } else if (method == RequestMethod.PUT) {
-                    resourceMethod = ResourceMethod.PUT;
-                    break;
-                } else if (method == RequestMethod.DELETE) {
-                    resourceMethod = ResourceMethod.DELETE;
-                } else if (method == RequestMethod.GET) {
-                    resourceMethod = ResourceMethod.GET;
+            if (methods.length == 0) {
+                resourceMethod = ResourceMethod.POST;
+            } else {
+                for (RequestMethod method : methods) {
+                    if (method == RequestMethod.POST) {
+                        resourceMethod = ResourceMethod.POST;
+                        break;
+                    } else if (method == RequestMethod.PUT) {
+                        resourceMethod = ResourceMethod.PUT;
+                        break;
+                    } else if (method == RequestMethod.DELETE) {
+                        resourceMethod = ResourceMethod.DELETE;
+                    } else if (method == RequestMethod.GET) {
+                        resourceMethod = ResourceMethod.GET;
+                    }
                 }
             }
         }

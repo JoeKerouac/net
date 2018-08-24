@@ -51,6 +51,10 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.JoeKerouac</groupId>
+            <artifactId>utils</artifactId>
+        </dependency>
         <!--下面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->
         <dependency>
@@ -77,12 +81,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <!--utils依赖，用到里边的JsonParser-->
-        <dependency>
-            <groupId>com.github.JoeKerouac</groupId>
-            <artifactId>utils</artifactId>
             <scope>provided</scope>
         </dependency>
         <!-- json依赖 -->

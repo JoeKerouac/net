@@ -1,4 +1,4 @@
-package com.joe.http.ws;
+package com.joe.http.ws.exception;
 
 /**
  * 如果类或者调用的方法不是资源将会抛出该异常

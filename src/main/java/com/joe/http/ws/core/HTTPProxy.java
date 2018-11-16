@@ -1,57 +1,52 @@
-package com.joe.http.ws;
+package com.joe.http.ws.core;
 
 import static com.joe.utils.parse.json.JsonParser.getInstance;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.joe.http.client.IHttpClient;
 import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
+import com.joe.http.ws.exception.NotResourceException;
+import com.joe.http.ws.exception.WsException;
+import com.joe.utils.common.Assert;
 import com.joe.utils.common.StringUtils;
 import com.joe.utils.parse.json.JsonParser;
+import com.joe.utils.proxy.Interception;
+import com.joe.utils.proxy.Invoker;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.MethodInterceptor;
-import net.sf.cglib.proxy.MethodProxy;
 
 /**
- * cglib的http代理
- *
- * @author joe
- * @version 2018.08.21 14:15
+ * @author JoeKerouac
+ * @version $Id: joe, v 0.1 2018年11月13日 22:55 JoeKerouac Exp $
  */
 @Slf4j
-public class CglibHTTPProxy implements MethodInterceptor {
-    private static final JsonParser                  JSON_PARSER = getInstance();
-    private static final IHttpClient                 CLIENT      = IHttpClient.builder().build();
-    private static final Map<String, CglibHTTPProxy> CACHE       = new HashMap<>();
-    private String                                   baseUrl;
-    private ResourceAnalyze                          analyze;
-    private Constructor<? extends ResourceAnalyze>   constructor;
+public class HTTPProxy implements Interception {
 
-    private CglibHTTPProxy(String baseUrl, ResourceType resourceType) {
+    private static final JsonParser                JSON_PARSER = getInstance();
+    private static final IHttpClient               CLIENT      = IHttpClient.builder().build();
+    private static final Map<Key, HTTPProxy>       CACHE       = new ConcurrentHashMap<>();
+    private String                                 baseUrl;
+    private ResourceAnalyze analyze;
+    private Constructor<? extends ResourceAnalyze> constructor;
+
+    private HTTPProxy(String baseUrl, ResourceType resourceType) {
+        Assert.notNull(baseUrl, "baseUrl不能为null");
+        Assert.notNull(resourceType, "resourceType不能为null");
         this.baseUrl = baseUrl;
-        String className;
-        switch (resourceType) {
-            case SPRING:
-                className = "com.joe.http.ws.SpringResourceAnalyze";
-                break;
-            case JERSEY:
-                className = "com.joe.http.ws.JerseyResourceAnalyze";
-                break;
-            default:
-                throw new RuntimeException("系统异常");
-        }
         try {
-            this.constructor = ((Class<? extends ResourceAnalyze>) Class.forName(className))
-                .getDeclaredConstructor(Class.class, Object.class, Method.class, Object[].class);
+            this.constructor = resourceType.getResourceAnalyzeClass()
+                .getDeclaredConstructor(Class.class, Method.class, Object[].class);
             this.constructor.setAccessible(true);
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             throw new RuntimeException("系统异常", e);
         }
     }
@@ -62,22 +57,20 @@ public class CglibHTTPProxy implements MethodInterceptor {
      * @param baseUrl 代理的根目录
      * @return 代理
      */
-    static CglibHTTPProxy build(String baseUrl, ResourceType resourceType) {
-        if (!CglibHTTPProxy.CACHE.containsKey(baseUrl)) {
-            synchronized (CACHE) {
-                if (!CACHE.containsKey(baseUrl)) {
-                    CACHE.put(baseUrl, new CglibHTTPProxy(baseUrl, resourceType));
-                }
+    public static HTTPProxy build(String baseUrl, ResourceType resourceType) {
+        return CACHE.compute(new Key(baseUrl, resourceType), (k, v) -> {
+            if (v == null) {
+                return new HTTPProxy(baseUrl, resourceType);
+            } else {
+                return v;
             }
-        }
-        return CACHE.get(baseUrl);
+        });
     }
 
     @Override
-    public Object intercept(Object obj, Method method, Object[] args,
-                            MethodProxy proxy) throws Throwable {
+    public Object invoke(Object[] params, Invoker invoker, Method method) throws Throwable {
         log.debug("开始代理方法");
-        analyze = constructor.newInstance(obj.getClass().getSuperclass(), obj, method, args);
+        analyze = constructor.newInstance(method.getDeclaringClass(), method, params);
 
         if (!analyze.isResource()) {
             log.error("方法{}不是资源方法，不能调用", method);
@@ -158,5 +151,12 @@ public class CglibHTTPProxy implements MethodInterceptor {
         }
 
         return request;
+    }
+
+    @Data
+    @AllArgsConstructor
+    private static class Key {
+        private String       baseUrl;
+        private ResourceType type;
     }
 }

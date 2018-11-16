@@ -1,12 +1,16 @@
 package com.joe.http.ws;
 
-import com.joe.utils.common.StringUtils;
+import com.joe.http.ws.core.HTTPProxy;
+import com.joe.http.ws.core.ResourceType;
+import com.joe.http.ws.exception.NotResourceException;
+import com.joe.utils.common.Assert;
+import com.joe.utils.proxy.ProxyClient;
 
 import lombok.extern.slf4j.Slf4j;
-import net.sf.cglib.proxy.Enhancer;
 
 /**
- * resource工厂
+ * resource工厂，对于springresource，方法参数必须加上@RequestParam等注解声明参数从哪儿取得，否则框架没办法像spring那样读取class文件
+ * 获取参数名
  *
  * @author joe
  * @version 2018.08.21 13:38
@@ -15,6 +19,7 @@ import net.sf.cglib.proxy.Enhancer;
 public class ResourceFactory {
     private String       baseUrl;
     private ResourceType resourceType;
+    private ProxyClient  client;
 
     /**
      * 构造器
@@ -22,11 +27,11 @@ public class ResourceFactory {
      * @param resourceType 代理的resource类型
      */
     public ResourceFactory(String baseUrl, ResourceType resourceType) {
-        if (StringUtils.isEmpty(baseUrl) || resourceType == null) {
-            throw new NullPointerException("baseUrl和resourceType不能为空");
-        }
+        Assert.notNull(baseUrl, "baseUrl不能为null");
+        Assert.notNull(resourceType, "resourceType不能为null");
         this.baseUrl = baseUrl;
         this.resourceType = resourceType;
+        this.client = ProxyClient.getInstance(ProxyClient.ClientType.CGLIB);
     }
 
     /**
@@ -37,11 +42,6 @@ public class ResourceFactory {
      * @throws NotResourceException 如果class对象不是一个resource那么抛出该异常
      */
     public <T> T build(Class<T> t) throws NotResourceException {
-        Enhancer enhancer = new Enhancer();
-        enhancer.setSuperclass(t);
-        enhancer.setCallback(CglibHTTPProxy.build(baseUrl, resourceType));
-        @SuppressWarnings("unchecked")
-        T resource = (T) enhancer.create();
-        return resource;
+        return client.create(t, method -> HTTPProxy.build(baseUrl, resourceType));
     }
 }

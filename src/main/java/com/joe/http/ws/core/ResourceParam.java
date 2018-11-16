@@ -1,4 +1,4 @@
-package com.joe.http.ws;
+package com.joe.http.ws.core;
 
 import lombok.Data;
 

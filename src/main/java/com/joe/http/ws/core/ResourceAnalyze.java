@@ -1,4 +1,4 @@
-package com.joe.http.ws;
+package com.joe.http.ws.core;
 
 import java.lang.reflect.Method;
 
@@ -16,14 +16,12 @@ public abstract class ResourceAnalyze {
      * 资源实例class
      */
     protected final Class<?>               resourceClass;
-    /**
-     * 资源实例
-     */
-    protected final Object                 resourceInstance;
+
     /**
      * 资源method
      */
     protected final Method                 method;
+
     /**
      * 资源方法参数
      */
@@ -34,18 +32,22 @@ public abstract class ResourceAnalyze {
      * 资源前缀
      */
     protected String                       pathPrefix;
+
     /**
      * 资源后缀
      */
     protected String                       pathLast;
+
     /**
      * 资源参数
      */
     protected ResourceParam[]              params = ResourceAnalyze.EMPTY;
+
     /**
      * 资源方法
      */
-    protected ResourceMethod               resourceMethod;
+    protected ResourceMethod resourceMethod;
+
     /**
      * 是否是一个资源
      */
@@ -54,27 +56,23 @@ public abstract class ResourceAnalyze {
     /**
      * 构造器，子类必须具有与该构造器签名相同的构造器
      * @param resourceClass 资源class
-     * @param resourceInstance 资源实例
      * @param method 资源方法
      * @param args 资源方法参数
      */
-    public ResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
-                           Object[] args) {
+    public ResourceAnalyze(Class<?> resourceClass, Method method, Object[] args) {
         Assert.notNull(resourceClass, "resourceClass must not be null");
-        Assert.notNull(resourceInstance, "resourceInstance must not be null");
         Assert.notNull(method, "method must not be null");
         if (method.getDeclaringClass() != resourceClass) {
             throw new IllegalArgumentException("指定method不是resourceClass中声明的");
         }
         this.resourceClass = resourceClass;
-        this.resourceInstance = resourceInstance;
         this.method = method;
         this.args = args;
         init();
     }
 
     /**
-     * 解析参数
+     * 解析参数，如果发现不是资源方法那么只需要将isResource返回false即可
      */
     public abstract void init();
 

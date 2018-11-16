@@ -1,4 +1,4 @@
-package com.joe.http.ws;
+package com.joe.http.ws.core;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -7,6 +7,7 @@ import java.lang.reflect.Parameter;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
+import com.joe.http.ws.exception.WsException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -17,9 +18,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class JerseyResourceAnalyze extends ResourceAnalyze {
-    JerseyResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
-                                 Object[] args) {
-        super(resourceClass, resourceInstance, method, args);
+    JerseyResourceAnalyze(Class<?> resourceClass, Method method, Object[] args) {
+        super(resourceClass, method, args);
     }
 
     @Override

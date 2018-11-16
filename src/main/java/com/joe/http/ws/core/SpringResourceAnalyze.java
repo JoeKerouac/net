@@ -1,4 +1,4 @@
-package com.joe.http.ws;
+package com.joe.http.ws.core;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import com.joe.utils.reflect.ReflectUtil;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import com.joe.utils.common.StringUtils;
+import com.joe.utils.reflect.ReflectUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,9 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SpringResourceAnalyze extends ResourceAnalyze {
 
-    SpringResourceAnalyze(Class<?> resourceClass, Object resourceInstance, Method method,
-                                 Object[] args) {
-        super(resourceClass, resourceInstance, method, args);
+    SpringResourceAnalyze(Class<?> resourceClass, Method method, Object[] args) {
+        super(resourceClass, method, args);
     }
 
     @Override

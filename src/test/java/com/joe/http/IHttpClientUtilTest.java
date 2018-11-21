@@ -7,21 +7,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.request.IHttpRequestBase;
-import com.joe.utils.test.WebTestBase;
+import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author joe
  * @version 2018.04.28 15:48
  */
-public class IHttpClientUtilTest extends WebTestBase {
-    private static final IHttpClientUtil CLIENT = new IHttpClientUtil();
-    private ThreadLocal<String>          url    = new ThreadLocal<>();
+public class IHttpClientUtilTest extends WebBaseTest {
+    private ThreadLocal<IHttpClientUtil> clientHolder = new ThreadLocal<>();
+    private ThreadLocal<String>          url          = new ThreadLocal<>();
 
     @Test
     public void executeGet() {
-        run(() -> {
+        runCase(() -> {
             try {
-                String result = CLIENT.executeGet(url.get() + "hello");
+                String result = clientHolder.get().executeGet(url.get() + "hello");
                 Assert.assertEquals("hello", result);
             } catch (Exception e) {
                 Assert.assertNull("请求异常", e);
@@ -31,10 +31,10 @@ public class IHttpClientUtilTest extends WebTestBase {
 
     @Test
     public void executePost() {
-        run(() -> {
+        runCase(() -> {
             try {
-                String result = CLIENT.executePost(url.get() + "helloName", "name=123", "UTF8",
-                    "UTF8", IHttpRequestBase.CONTENT_TYPE_FORM);
+                String result = clientHolder.get().executePost(url.get() + "helloName", "name=123",
+                    "UTF8", "UTF8", IHttpRequestBase.CONTENT_TYPE_FORM);
                 Assert.assertEquals("hello : 123", result);
             } catch (Exception e) {
                 Assert.assertNull("请求异常", e);
@@ -44,12 +44,16 @@ public class IHttpClientUtilTest extends WebTestBase {
 
     @Override
     protected void init() {
+        super.init();
         url.set(getBaseUrl() + "test/");
+        clientHolder.set(new IHttpClientUtil());
     }
 
     @Override
     protected void destroy() {
+        super.destroy();
         url.remove();
+        clientHolder.remove();
     }
 
     @Controller

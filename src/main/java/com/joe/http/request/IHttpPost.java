@@ -3,31 +3,28 @@ package com.joe.http.request;
 import com.joe.http.client.IHttpClient;
 
 public class IHttpPost extends IHttpRequestBase {
-    public IHttpPost(String url) {
-        super(url);
-    }
-
-    public IHttpPost(String url, IHttpClient client) {
+    IHttpPost(String url, IHttpClient client) {
         super(url, client);
     }
 
     /**
      * 构建POST构建器
      *
+     * @param url 请求url
      * @return POST构建器
      */
-    public static HttpGetBuilder builder() {
-        return new HttpGetBuilder();
+    public static Builder builder(String url) {
+        return new Builder(url);
     }
 
-    public static final class HttpGetBuilder extends Builder<IHttpPost> {
-        private HttpGetBuilder() {
+    public static final class Builder extends IHttpRequestBase.Builder<IHttpPost> {
+        private Builder(String url) {
+            super(url);
         }
 
         @Override
         public IHttpPost build() {
-            checkUrl();
-            IHttpPost post = new IHttpPost(super.url);
+            IHttpPost post = new IHttpPost(super.url, super.client);
             super.configure(post);
             return post;
         }

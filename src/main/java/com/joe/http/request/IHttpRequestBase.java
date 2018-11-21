@@ -9,21 +9,29 @@ import java.util.Map;
 
 import com.joe.http.client.IHttpClient;
 import com.joe.http.config.IHttpConfig;
+import com.joe.http.exception.NetException;
 import com.joe.http.response.IHttpResponse;
+import com.joe.utils.common.Assert;
+import com.joe.utils.common.StringUtils;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * 默认content-type为json格式，如果调用addFormParam方法那么将会更改为form格式
  *
  * @author joe
  */
-@Data
+@ToString
+@Getter
 public abstract class IHttpRequestBase {
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
     public static final String CHARSET           = "UTF8";
-    private IHttpClient        client;
+    /**
+     * 发起请求的客户端
+     */
+    IHttpClient                client;
     /**
      *  Http配置
      */
@@ -44,7 +52,6 @@ public abstract class IHttpRequestBase {
      * URL参数
      */
     Map<String, String>        queryParams;
-    Map<String, Object>        formParam;
     /**
      * 请求
      */
@@ -54,11 +61,8 @@ public abstract class IHttpRequestBase {
      */
     String                     entity;
 
-    public IHttpRequestBase(String url) {
-        this(url, null);
-    }
-
-    public IHttpRequestBase(String url, IHttpClient client) {
+    IHttpRequestBase(String url, IHttpClient client) {
+        Assert.notNull(url, "url不能为空");
         this.headers = new HashMap<>();
         this.queryParams = new HashMap<>();
         int index;
@@ -79,7 +83,7 @@ public abstract class IHttpRequestBase {
      * @param key   键
      * @param value 值
      */
-    public void addHeader(String key, String value) {
+    protected void addHeader(String key, String value) {
         headers.put(key, value);
     }
 
@@ -88,7 +92,7 @@ public abstract class IHttpRequestBase {
      * @param key key（不包含{})
      * @param value value
      */
-    public void addPathParam(String key, String value) {
+    protected void addPathParam(String key, String value) {
         this.url = url.replace("{" + key + "}", value);
     }
 
@@ -98,7 +102,7 @@ public abstract class IHttpRequestBase {
      * @param key   参数键
      * @param value 参数值
      */
-    public void addQueryParam(String key, String value) {
+    protected void addQueryParam(String key, String value) {
         if (key == null) {
             throw new NullPointerException("key 不能为null");
         }
@@ -134,7 +138,7 @@ public abstract class IHttpRequestBase {
         if (index > 0) {
             String data = url.substring(index + 1);
             Map<String, String> map = new HashMap<>();
-            Arrays.asList(data.split("&")).stream().forEach(str -> {
+            Arrays.asList(data.split("&")).forEach(str -> {
                 String[] params = str.split("=");
                 if (params.length >= 2) {
                     map.put(params[0], params[1]);
@@ -154,8 +158,7 @@ public abstract class IHttpRequestBase {
      * @throws IOException 网络IO异常
      */
     public IHttpResponse exec() throws IOException {
-        IHttpResponse response = client.execute(this);
-        return response;
+        return client.execute(this);
     }
 
     /**
@@ -185,7 +188,7 @@ public abstract class IHttpRequestBase {
         /**
          * form参数
          */
-        Map<String, Object> formParam;
+        Map<String, String> formParam;
         /**
          * 请求
          */
@@ -194,8 +197,14 @@ public abstract class IHttpRequestBase {
          * 请求body，如果请求方法是get的话自动忽略该字段
          */
         String              entity;
+        /**
+         * 请求client
+         */
+        IHttpClient         client;
 
-        protected Builder() {
+        protected Builder(String url) {
+            Assert.notNull(url, "url不能为null");
+            this.url = url;
             this.headers = new HashMap<>();
             this.queryParams = new HashMap<>();
             this.formParam = new HashMap<>();
@@ -215,23 +224,21 @@ public abstract class IHttpRequestBase {
         /**
          * 设置content-type
          *
-         * @param ContentType content-type
+         * @param contentType content-type
          * @return builder
          */
-        public Builder<T> contentType(String ContentType) {
+        public Builder<T> contentType(String contentType) {
             this.contentType = contentType;
             return this;
         }
 
         /**
-         * 设置url
-         *
-         * @param url url
-         * @return builder
+         * 添加path param
+         * @param key 要替换的key
+         * @param value 对应的value
          */
-        public Builder<T> url(String url) {
-            this.url = url;
-            return this;
+        public void pathParam(String key, String value) {
+            this.url = url.replace("{" + key + "}", value);
         }
 
         /**
@@ -267,6 +274,7 @@ public abstract class IHttpRequestBase {
          */
         public Builder<T> formParam(String key, String value) {
             formParam.put(key, value);
+            this.contentType = CONTENT_TYPE_FORM;
             return this;
         }
 
@@ -293,6 +301,11 @@ public abstract class IHttpRequestBase {
             return this;
         }
 
+        public Builder<T> client(IHttpClient client) {
+            this.client = client;
+            return this;
+        }
+
         /**
          * 构建实际的request，由子类实现
          *
@@ -307,24 +320,25 @@ public abstract class IHttpRequestBase {
          * @return 配置好后的request
          */
         protected T configure(T request) {
-            request.setHttpConfig(httpConfig);
-            request.setContentType(
-                contentType == null || contentType.trim().isEmpty() ? CONTENT_TYPE_JSON
-                    : contentType);
-            request.setHeaders(headers);
-            request.setQueryParams(queryParams);
-            request.setFormParam(formParam);
-            request.setCharset(
-                charset == null || charset.trim().isEmpty() ? Charset.defaultCharset().name()
-                    : charset);
-            request.setEntity(entity == null ? "" : entity);
-            return request;
-        }
+            request.client = client;
+            request.httpConfig = httpConfig;
+            request.contentType = StringUtils.isEmpty(contentType) ? CONTENT_TYPE_JSON
+                : contentType;
+            headers.forEach(request::addHeader);
+            queryParams.forEach(request::addQueryParam);
 
-        protected void checkUrl() {
-            if (this.url == null) {
-                throw new NullPointerException("url must not be null");
+            if (!formParam.isEmpty() && !StringUtils.isEmpty(entity)) {
+                throw new NetException("form data 和 entity不能同时存在");
             }
+            if (formParam.isEmpty()) {
+                request.entity = entity == null ? "" : entity;
+            } else {
+                formParam.forEach(request::addFormParam);
+            }
+
+            request.charset = StringUtils.isEmpty(charset) ? Charset.defaultCharset().name()
+                : charset;
+            return request;
         }
     }
 }

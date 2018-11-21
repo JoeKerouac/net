@@ -105,14 +105,15 @@ public class HTTPProxy implements Interception {
         }
 
         String url = baseUrl + prefix + name;
-        IHttpRequestBase request;
+        IHttpRequestBase.Builder<? extends IHttpRequestBase> requestBuilder;
+
 
         switch (method) {
             case GET:
-                request = new IHttpGet(url);
+                requestBuilder = IHttpGet.builder(url);
                 break;
             case POST:
-                request = new IHttpPost(url);
+                requestBuilder = IHttpPost.builder(url);
                 break;
             default:
                 throw new WsException(StringUtils.format("当前不支持的请求类型：[{}]", method));
@@ -129,28 +130,28 @@ public class HTTPProxy implements Interception {
 
             switch (type) {
                 case PATH:
-                    request.addPathParam(param.getName(), value);
+                    requestBuilder.pathParam(param.getName(), value);
                     break;
                 case FORM:
-                    request.addFormParam(param.getName(), value);
+                    requestBuilder.formParam(param.getName(), value);
                     break;
                 case QUERY:
-                    request.addQueryParam(param.getName(), value);
+                    requestBuilder.queryParam(param.getName(), value);
                     break;
                 case HEADER:
-                    request.addHeader(param.getName(), value);
+                    requestBuilder.header(param.getName(), value);
                     break;
                 case CONTEXT:
                     break;
                 case JSON:
-                    request.setEntity(value);
+                    requestBuilder.entity(value);
                     break;
                 default:
                     throw new WsException(String.format("未知参数类型[{}]", type));
             }
         }
 
-        return request;
+        return requestBuilder.build();
     }
 
     @Data

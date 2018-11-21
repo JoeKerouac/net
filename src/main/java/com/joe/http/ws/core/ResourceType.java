@@ -1,6 +1,5 @@
 package com.joe.http.ws.core;
 
-import com.joe.http.ws.core.ResourceAnalyze;
 import com.joe.utils.reflect.ClassUtils;
 
 /**

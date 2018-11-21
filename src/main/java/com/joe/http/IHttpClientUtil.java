@@ -9,6 +9,7 @@ import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
+import com.joe.utils.common.StringUtils;
 
 /**
  * Http请求工具类，方便发起请求
@@ -65,8 +66,7 @@ public class IHttpClientUtil {
      * @throws IOException IO异常
      */
     public InputStream executeGetAsStream(String url) throws IOException {
-        IHttpGet get = new IHttpGet(url);
-        return executeAsStream(get);
+        return executeAsStream(IHttpGet.builder(url));
     }
 
     /**
@@ -92,9 +92,9 @@ public class IHttpClientUtil {
      */
     public String executeGet(String url, String resultCharset,
                              String contentType) throws IOException {
-        IHttpGet get = new IHttpGet(url);
-        get.setContentType(contentType == null ? IHttpRequestBase.CONTENT_TYPE_JSON : contentType);
-        return execute(get, resultCharset);
+        return execute(IHttpGet.builder(url).contentType(
+            StringUtils.isEmpty(contentType) ? IHttpRequestBase.CONTENT_TYPE_JSON : contentType),
+            resultCharset);
     }
 
     /**
@@ -150,47 +150,50 @@ public class IHttpClientUtil {
      */
     public String executePost(String url, String data, String resultCharset, String requestCharset,
                               String contentType) throws IOException {
-        IHttpPost post = new IHttpPost(url);
-        post.setEntity(data);
-        post.setCharset(requestCharset == null ? IHttpRequestBase.CHARSET : requestCharset);
-        post.setContentType(contentType == null ? IHttpRequestBase.CONTENT_TYPE_JSON : contentType);
-        return execute(post, resultCharset);
+        IHttpRequestBase.Builder builder = IHttpPost.builder(url);
+        builder.entity(data);
+        builder.charset(
+            StringUtils.isEmpty(requestCharset) ? IHttpRequestBase.CHARSET : requestCharset);
+        builder.contentType(
+            StringUtils.isEmpty(contentType) ? IHttpRequestBase.CONTENT_TYPE_JSON : contentType);
+        return execute(builder, resultCharset);
     }
 
     /**
      * 执行HTTP请求
      *
-     * @param request 请求
-     * @return 请求结果字符串
+     * @param builder 请求builder
+     * @return 请求结果流
      * @throws IOException IO异常
      */
-    private InputStream executeAsStream(IHttpRequestBase request) throws IOException {
-        IHttpConfig config = new IHttpConfig();
-        request.setHttpConfig(config);
-        return client.execute(request).getResultAsStream();
+    private InputStream executeAsStream(IHttpRequestBase.Builder builder) throws IOException {
+        builder.config(new IHttpConfig());
+        return client.execute(builder.build()).getResultAsStream();
     }
 
     /**
      * 执行HTTP请求
      *
-     * @param request       请求
+     * @param builder       请求builder
      * @param resultCharset 请求结果编码
      * @return 请求结果字符串
      * @throws IOException IO异常
      */
-    public String execute(IHttpRequestBase request, String resultCharset) throws IOException {
-        IHttpConfig config = new IHttpConfig();
-        request.setHttpConfig(config);
-        IHttpResponse response = client.execute(request);
+    public String execute(IHttpRequestBase.Builder builder,
+                          String resultCharset) throws IOException {
+        builder.config(new IHttpConfig());
+        IHttpResponse response = client.execute(builder.build());
         return response.getResult(resultCharset);
     }
 
     /**
-     * 关闭该工具类，同时会关闭传入该工具类中的Client
+     * 关闭该工具类，同时会关闭传入该工具类中的Client，不会关闭默认client
      *
      * @throws IOException IOException
      */
     public void close() throws IOException {
-        this.client.close();
+        if (client != IHttpClient.DEFAULT_CLIENT) {
+            this.client.close();
+        }
     }
 }

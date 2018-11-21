@@ -12,18 +12,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.ws.core.ResourceType;
-import com.joe.utils.test.WebTestBase;
+import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author joe
  * @version 2018.08.23 14:28
  */
 @SpringBootApplication
-public class ResourceFactoryTest extends WebTestBase {
+public class ResourceFactoryTest extends WebBaseTest {
 
     @Test
     public void doSpringResourceAnalyzeTest() {
-        run(() -> {
+        runCase(() -> {
             ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
             Resource resource = factory.build(SpringApi.class);
             doTest(resource);
@@ -32,7 +32,7 @@ public class ResourceFactoryTest extends WebTestBase {
 
     @Test
     public void doJerseyResourceAnalyzeTest() {
-        run(() -> {
+        runCase(() -> {
             ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.JERSEY);
             Resource resource = factory.build(JerseyResource.class);
             doTest(resource);

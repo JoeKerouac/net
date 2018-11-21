@@ -3,31 +3,28 @@ package com.joe.http.request;
 import com.joe.http.client.IHttpClient;
 
 public class IHttpGet extends IHttpRequestBase {
-    public IHttpGet(String url) {
-        super(url);
-    }
-
-    public IHttpGet(String url, IHttpClient client) {
+    IHttpGet(String url, IHttpClient client) {
         super(url, client);
     }
 
     /**
      * 构建GET构建器
-     *
+     * 
+     * @param url url
      * @return GET构建器
      */
-    public static HttpGetBuilder builder() {
-        return new HttpGetBuilder();
+    public static Builder builder(String url) {
+        return new Builder(url);
     }
 
-    public static final class HttpGetBuilder extends Builder<IHttpGet> {
-        private HttpGetBuilder() {
+    public static final class Builder extends IHttpRequestBase.Builder<IHttpGet> {
+        protected Builder(String url) {
+            super(url);
         }
 
         @Override
         public IHttpGet build() {
-            checkUrl();
-            IHttpGet get = new IHttpGet(super.url);
+            IHttpGet get = new IHttpGet(super.url, super.client);
             super.configure(get);
             return get;
         }

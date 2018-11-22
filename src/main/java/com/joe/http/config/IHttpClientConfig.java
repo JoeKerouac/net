@@ -3,8 +3,12 @@ package com.joe.http.config;
 import java.nio.charset.Charset;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public final class IHttpClientConfig extends HttpBaseConfig {
     /**
      * 总共可以保持的连接数

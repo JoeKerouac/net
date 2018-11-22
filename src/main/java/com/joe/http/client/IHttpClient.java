@@ -11,6 +11,7 @@ import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
+import com.joe.http.exception.NetException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -138,20 +139,21 @@ public class IHttpClient implements AutoCloseable {
             log.error("request不能为null");
             return null;
         }
-        HttpRequestBase requestBase = null;
+        HttpRequestBase requestBase;
         // 构建请求
         if (request instanceof IHttpGet) {
             requestBase = build((IHttpGet) request);
         } else if (request instanceof IHttpPost) {
             requestBase = build((IHttpPost) request);
+        } else {
+            throw new NetException(StringUtils.format("不支持的请求类型：[{}]", request.getClass()));
         }
         // 配置请求
         configure(requestBase, request);
         // 发起请求
         CloseableHttpResponse closeableHttpResponse = this.httpClient.execute(requestBase);
         // 设置响应
-        IHttpResponse response = new IHttpResponse(closeableHttpResponse);
-        return response;
+        return new IHttpResponse(closeableHttpResponse);
     }
 
     public CookieStore getCookieManager() {

@@ -2,8 +2,7 @@ package com.joe.http.ws.core;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Collection;
-import java.util.Map;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,8 +15,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import com.joe.http.exception.NetException;
 import com.joe.utils.common.StringUtils;
-import com.joe.utils.reflect.ReflectUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +35,7 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
 
     @Override
     public void init() {
+        RequestMapping mapping = method.getAnnotation(RequestMapping.class);
         {
             //解析路径
             if (resourceClass.getDeclaredAnnotation(Controller.class) == null) {
@@ -45,7 +45,6 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
 
             RequestMapping prePath = resourceClass.getDeclaredAnnotation(RequestMapping.class);
 
-            RequestMapping mapping = method.getAnnotation(RequestMapping.class);
             if (mapping == null) {
                 isResource = false;
                 return;
@@ -101,11 +100,15 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
 
                     PathVariable pathVariable;
                     RequestHeader requestHeader;
+                    SessionAttribute sessionAttribute;
 
-                    if (parameter.getDeclaredAnnotation(SessionAttribute.class) != null) {
+                    if ((sessionAttribute = parameter
+                        .getDeclaredAnnotation(SessionAttribute.class)) != null) {
                         param.setType(ResourceParam.Type.CONTEXT);
-                        param.setName(paramNames[i]);
-                        continue;
+                        String name = StringUtils.isEmpty(sessionAttribute.name())
+                            ? sessionAttribute.value()
+                            : sessionAttribute.name();
+                        param.setName(StringUtils.isEmpty(name) ? paramNames[i] : name);
                     } else if ((pathVariable = parameter
                         .getDeclaredAnnotation(PathVariable.class)) != null) {
                         String name = StringUtils.isEmpty(pathVariable.value())
@@ -147,22 +150,38 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                             param.setName(paramNames[i]);
                         }
 
-                        //判断类型
+                        //判断content-type ，默认json，然后是form，只支持这两种
+                        //content-type表示该字段要从form数据取还是json数据取
+                        String[] consumes = mapping.consumes();
+                        boolean isJson = false;
+
+                        // 如果既不是form又不是json同时又不是GET请求那么不支持
+                        if (consumes.length == 0 || Arrays.stream(consumes)
+                            .anyMatch(s -> s.contains("application/json"))) {
+                            isJson = true;
+                        } else if (Arrays.stream(consumes)
+                            .noneMatch(s -> s.contains("application/x-www-form-urlencoded"))
+                                   && ResourceMethod.GET != resourceMethod) {
+                            throw new NetException(
+                                "不支持的contextType : " + Arrays.toString(consumes));
+                        }
+
+                        //如果是POST那么只能是json或者form，如果是GET那么只能是QUERY
                         if (resourceMethod == ResourceMethod.POST) {
                             if (HttpSession.class.isAssignableFrom(parameterType)
                                 || HttpServletRequest.class.isAssignableFrom(parameterType)
                                 || HttpServletResponse.class.isAssignableFrom(parameterType)) {
                                 param.setType(ResourceParam.Type.CONTEXT);
-                            } else if (!(Map.class.isAssignableFrom(parameterType))
-                                       && !(Collection.class.isAssignableFrom(parameterType))
-                                       && ReflectUtil.isSimple(parameterType)) {
-                                param.setType(ResourceParam.Type.FORM);
-                            } else {
+                            } else if (isJson) {
                                 param.setType(ResourceParam.Type.JSON);
+                            } else {
+                                param.setType(ResourceParam.Type.FORM);
                             }
                         } else {
                             param.setType(ResourceParam.Type.QUERY);
                         }
+                        log.debug("method[{}]的参数[{}]对应的contextType是[{}]", method, param.getName(),
+                            param.getType());
                     }
                 }
             }

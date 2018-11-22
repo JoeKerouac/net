@@ -4,6 +4,7 @@ import static com.joe.utils.parse.json.JsonParser.getInstance;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -121,9 +122,12 @@ public class HTTPProxy implements Interception {
 
         ResourceParam[] params = analyze.getParams();
 
+        Map<String, Object> datas = new HashMap<>();
+        Object data = null;
+
         for (ResourceParam param : params) {
             ResourceParam.Type type = param.getType();
-            String value = JSON_PARSER.toJson(param.getParam());
+            String value = String.valueOf(param.getParam());
             if (value == null) {
                 continue;
             }
@@ -144,11 +148,18 @@ public class HTTPProxy implements Interception {
                 case CONTEXT:
                     break;
                 case JSON:
-                    requestBuilder.entity(value);
+                    datas.put(param.getName(), param.getParam());
+                    data = param.getParam();
                     break;
                 default:
-                    throw new WsException(String.format("未知参数类型[{}]", type));
+                    throw new WsException(StringUtils.format("未知参数类型[{}]", type));
             }
+        }
+
+        if (datas.size() == 1) {
+            requestBuilder.entity(JSON_PARSER.toJson(data));
+        }else if(datas.size() > 1){
+            requestBuilder.entity(JSON_PARSER.toJson(datas));
         }
 
         return requestBuilder.build();

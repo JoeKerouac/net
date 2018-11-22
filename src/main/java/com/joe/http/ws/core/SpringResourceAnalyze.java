@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import com.joe.utils.reflect.ReflectUtil;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.http.HttpHeaders;
@@ -150,18 +151,20 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                             param.setName(paramNames[i]);
                         }
 
-                        //判断content-type ，默认json，然后是form，只支持这两种
+                        //判断content-type ，默认form，然后是json，只支持这两种
                         //content-type表示该字段要从form数据取还是json数据取
                         String[] consumes = mapping.consumes();
-                        boolean isJson = false;
+                        boolean isForm = false;
 
                         // 如果既不是form又不是json同时又不是GET请求那么不支持
-                        if (consumes.length == 0 || Arrays.stream(consumes)
-                            .anyMatch(s -> s.contains("application/json"))) {
-                            isJson = true;
+                        // 只有明确声明是form或者没有声明consumes但是参数类型是基础类型：String、八大基本类型及其包装类、枚举、
+                        if (Arrays.stream(consumes)
+                            .anyMatch(s -> s.contains("application/x-www-form-urlencoded"))
+                            || (consumes.length == 0 && ReflectUtil.isSimple(parameterType))) {
+                            isForm = true;
                         } else if (Arrays.stream(consumes)
-                            .noneMatch(s -> s.contains("application/x-www-form-urlencoded"))
-                                   && ResourceMethod.GET != resourceMethod) {
+                            .noneMatch(s -> s.contains("application/json"))
+                                   && ResourceMethod.GET == resourceMethod) {
                             throw new NetException(
                                 "不支持的contextType : " + Arrays.toString(consumes));
                         }
@@ -172,10 +175,10 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                                 || HttpServletRequest.class.isAssignableFrom(parameterType)
                                 || HttpServletResponse.class.isAssignableFrom(parameterType)) {
                                 param.setType(ResourceParam.Type.CONTEXT);
-                            } else if (isJson) {
-                                param.setType(ResourceParam.Type.JSON);
-                            } else {
+                            } else if (isForm) {
                                 param.setType(ResourceParam.Type.FORM);
+                            } else {
+                                param.setType(ResourceParam.Type.JSON);
                             }
                         } else {
                             param.setType(ResourceParam.Type.QUERY);

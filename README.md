@@ -10,28 +10,70 @@
 # 使用示例：
 ## IHttpClient
 ```java
+package com.joe.http;
+
 import java.nio.charset.Charset;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.client.IHttpClient;
 import com.joe.http.config.IHttpClientConfig;
 import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
+import com.joe.http.request.IHttpRequestBase;
+import com.joe.http.response.IHttpResponse;
+import com.joe.utils.test.WebBaseTest;
 
 /**
- * @author joe
+ * @author JoeKerouac
  * @version 2018.04.28 15:48
  */
-public class IHttpClientTest {
-    private static final String url = "http://baidu.com";
-    private IHttpClient         client;
+public class IHttpClientTest extends WebBaseTest {
+    private ThreadLocal<IHttpClient> clientHolder = new ThreadLocal<>();
+    private ThreadLocal<String>      url          = new ThreadLocal<>();
 
-    @Before
+    @Test
+    public void executeGet() {
+        runCase(() -> {
+            IHttpGet get = IHttpGet.builder(url.get() + "hello").charset("utf8").build();
+            try {
+                doRequest(clientHolder.get(), get, "hello");
+            } catch (Exception e) {
+                Assert.assertNull("请求异常", e);
+            }
+        });
+    }
+
+    @Test
+    public void executePost() {
+        runCase(() -> {
+            IHttpPost post = IHttpPost.builder(url.get() + "helloName")
+                .contentType(IHttpRequestBase.CONTENT_TYPE_FORM).formParam("name", "123")
+                .charset("utf8").build();
+            try {
+                doRequest(clientHolder.get(), post, "hello : 123");
+            } catch (Exception e) {
+                Assert.assertNull("请求异常", e);
+            }
+        });
+    }
+
+    private void doRequest(IHttpClient client, IHttpRequestBase request,
+                           String result) throws Exception {
+        IHttpResponse response = client.execute(request);
+        String realResult = response.getResult();
+        int status = response.getStatus();
+        Assert.assertEquals("请求异常，请求状态码错误", 200, status);
+        Assert.assertEquals("请求异常，预期结果与实际不符", result, realResult);
+    }
+
+    @Override
     public void init() {
+        super.init();
         IHttpClientConfig config = new IHttpClientConfig();
         config.setCharset(Charset.defaultCharset());
         config.setRcvBufSize(1024);
@@ -39,140 +81,318 @@ public class IHttpClientTest {
         config.setConnectionRequestTimeout(1000 * 5);
         config.setSocketTimeout(1000 * 60);
         config.setConnectTimeout(1000 * 30);
-        client = IHttpClient.builder().config(config).build();
+        clientHolder.set(IHttpClient.builder().config(config).build());
+
+        url.set(getBaseUrl() + "test/");
     }
 
-    @After
-    public void destroy() throws Exception {
-        client.close();
+    @Override
+    public void destroy() {
+        super.destroy();
+        clientHolder.remove();
+        url.remove();
     }
 
-    @Test
-    public void executeGet() {
-        IHttpGet get = IHttpGet.builder().url(url).charset("utf8").build();
-        try {
-            int status = client.execute(get).getStatus();
-            Assert.assertEquals("请求异常", 200, status);
-        } catch (Exception e) {
-            Assert.assertNull("请求异常", e);
+    @Controller
+    @RequestMapping("test")
+    public static class SpringApi {
+        @RequestMapping(value = "helloName")
+        @ResponseBody
+        public String helloName(String name) {
+            return "hello : " + name;
+        }
+
+        @RequestMapping(value = "hello")
+        @ResponseBody
+        public String hello() {
+            return "hello";
         }
     }
-
-    @Test
-    public void executePost() {
-        IHttpPost post = IHttpPost.builder().url(url).charset("utf8").build();
-        try {
-            int status = client.execute(post).getStatus();
-            Assert.assertEquals("请求异常", 302, status);
-        } catch (Exception e) {
-            Assert.assertNull("请求异常", e);
-        }
-    }
-
 }
 ```
-可以看出IHttpClient可以定制化很多信息，例如连接超时时间、请求超时时间等，上述示例的配置并不全，详细的配置信息可以看API（还可以定时SSLContext、CookieStore等，同时对于每个请求信息也能单独定制），但是请求相对复杂；
+可以看出IHttpClient可以定制化很多信息，例如连接超时时间、请求超时时间等，上述示例的配置并不全，详细的配置信息可以看API（还可以定制SSLContext、CookieStore等，同时对于每个请求信息也能单独定制），但是请求相对复杂；
 
 ## IHttpClientUtil
 ```java
+package com.joe.http;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.joe.http.request.IHttpRequestBase;
+import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author joe
  * @version 2018.04.28 15:48
  */
-public class IHttpClientUtilTest {
-    private static final String url = "http://baidu.com";
-    private IHttpClientUtil client;
-
-    @Test
-    public void init() {
-        client = new IHttpClientUtil();
-    }
+public class IHttpClientUtilTest extends WebBaseTest {
+    private ThreadLocal<IHttpClientUtil> clientHolder = new ThreadLocal<>();
+    private ThreadLocal<String>          url          = new ThreadLocal<>();
 
     @Test
     public void executeGet() {
-        try {
-            String result = client.executeGet(url);
-            Assert.assertNotNull("请求失败", result);
-        } catch (Exception e) {
-            Assert.assertNull("请求异常", e);
-        }
+        runCase(() -> {
+            try {
+                String result = clientHolder.get().executeGet(url.get() + "hello");
+                Assert.assertEquals("hello", result);
+            } catch (Exception e) {
+                Assert.assertNull("请求异常", e);
+            }
+        });
     }
 
     @Test
     public void executePost() {
-        try {
-            String result = client.executePost(url, "");
-            Assert.assertNotNull("请求失败", result);
-        } catch (Exception e) {
-            Assert.assertNull("请求异常", e);
+        runCase(() -> {
+            try {
+                String result = clientHolder.get().executePost(url.get() + "helloName", "name=123",
+                    "UTF8", "UTF8", IHttpRequestBase.CONTENT_TYPE_FORM);
+                Assert.assertEquals("hello : 123", result);
+            } catch (Exception e) {
+                Assert.assertNull("请求异常", e);
+            }
+        });
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        url.set(getBaseUrl() + "test/");
+        clientHolder.set(new IHttpClientUtil());
+    }
+
+    @Override
+    protected void destroy() {
+        super.destroy();
+        url.remove();
+        clientHolder.remove();
+    }
+
+    @Controller
+    @RequestMapping("test")
+    public static class SpringApi {
+        @RequestMapping(value = "helloName")
+        @ResponseBody
+        public String helloName(String name) {
+            return "hello : " + name;
+        }
+
+        @RequestMapping(value = "hello")
+        @ResponseBody
+        public String hello() {
+            return "hello";
         }
     }
 }
-
 ```
 可以看出使用IHttpClientUtil的方式发起请求很方便，但是不能对每个请求做定制，不过也能满足大多数场景了，同时还可以自定义一个IHttpClient然后通过构造参数传给IHttpClientUtil，这样就能使用现有的已经定制的IHttpClient了。
 
 ## ResourceFactory
 ```java
-import org.junit.After;
+package com.joe.http.ws;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.FormParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.joe.http.request.IHttpRequestBase;
+import com.joe.http.ws.core.ResourceType;
+import com.joe.utils.test.WebBaseTest;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author joe
  * @version 2018.08.23 14:28
  */
 @SpringBootApplication
-public class ResourceFactoryTest {
-    ConfigurableApplicationContext context;
-
-    @Before
-    public void init() {
-        context = SpringApplication.run(ResourceFactoryTest.class, new String[0]);
-    }
-
-    @After
-    public void destroy() {
-        context.close();
-    }
+public class ResourceFactoryTest extends WebBaseTest {
 
     @Test
     public void doSpringResourceAnalyzeTest() {
-        ResourceFactory factory = new ResourceFactory("http://127.0.0.1", ResourceType.SPRING);
-        SpringApi api = factory.build(SpringApi.class);
-        String name = "joe";
-        String result = api.hello(name);
-        Assert.assertEquals(result, "hello : " + name);
+        runCase(() -> {
+            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
+            Resource resource = factory.build(SpringApi.class);
+            doTest(resource);
+        });
     }
 
-    @Bean
-    public EmbeddedServletContainerFactory embeddedServletContainerFactory() {
-        TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory();
-        factory.setPort(80);
-        return factory;
+    @Test
+    public void doJerseyResourceAnalyzeTest() {
+        runCase(() -> {
+            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.JERSEY);
+            Resource resource = factory.build(JerseyResource.class);
+            doTest(resource);
+        });
+    }
+
+    @Test
+    public void doSpringResourceAnalyzeListTest() {
+        runCase(() -> {
+            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
+            Resource resource = factory.build(SpringApi.class);
+            ArrayList<String> data = new ArrayList<>();
+            data.add("123");
+            data.add("121231233");
+            data.add("123123");
+            data.add("12sadljfklasdjflkjaswd3");
+            data.add("12sadljfklas-09-k'ld3");
+            Assert.assertEquals("结果与预期不符", data.size(), resource.size(data));
+        });
+    }
+
+    @Test
+    public void doSpringResourceAnalyzeMapTest() {
+        runCase(() -> {
+            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
+            Resource resource = factory.build(SpringApi.class);
+            Map<String, Object> map = new HashMap<>();
+            map.put("123", 123);
+            map.put("232", 2323);
+            map.put("1233", "123123");
+            Assert.assertEquals("结果与预期不符", map.size(), resource.size(map));
+        });
+    }
+
+    @Test
+    public void doSpringResourceAnalyzeUserTest() {
+        runCase(() -> {
+            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
+            Resource resource = factory.build(SpringApi.class);
+            User user = new User("JoeKerouac", 23, "男");
+            Assert.assertEquals("结果与预期不符", user, resource.user(user));
+        });
+    }
+
+    @Test
+    public void doSpringResourceAnalyzeJsonUserTest() {
+        runCase(() -> {
+            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
+            Resource resource = factory.build(SpringApi.class);
+            User user = new User("JoeKerouac", 23, "man");
+            Assert.assertEquals("结果与预期不符", user,
+                resource.formUser(user.getName(), user.getAge(), user.getSex()));
+        });
+    }
+
+    private void doTest(Resource resource) {
+        String name = "joe";
+        String result = resource.hello(name);
+        Assert.assertEquals(result, name);
     }
 
     @Controller
-    @RequestMapping("spring")
-    static class SpringApi {
+    @RequestMapping("test")
+    public static class SpringApi implements Resource {
         @RequestMapping(value = "hello")
         @ResponseBody
+        @Override
         public String hello(String name) {
-            return "hello : " + name;
+            return name;
         }
+
+        @RequestMapping(value = "list")
+        @ResponseBody
+        @Override
+        public int size(@RequestBody List<String> data) {
+            return data.size();
+        }
+
+        @RequestMapping(value = "map")
+        @ResponseBody
+        @Override
+        public int size(@RequestBody Map<String, Object> data) {
+            return data.size();
+        }
+
+        @RequestMapping(value = "user")
+        @ResponseBody
+        @Override
+        public User user(@RequestBody User user) {
+            return user;
+        }
+
+        @RequestMapping(value = "jsonUser", consumes = IHttpRequestBase.CONTENT_TYPE_FORM)
+        @ResponseBody
+        @Override
+        public User formUser(String name, Integer age, @RequestHeader("sex") String sex) {
+            return new User(name, age, sex);
+        }
+    }
+
+    public interface Resource {
+        /**
+         * 简单类型测试
+         * @param name 传入参数
+         * @return 传入参数原路返回
+         */
+        String hello(String name);
+
+        /**
+         * 测试List
+         * @param data 传入参数
+         * @return 传入List的长度
+         */
+        int size(List<String> data);
+
+        /**
+         * 测试Map
+         * @param data 传入参数
+         * @return 传入Map的长度
+         */
+        int size(Map<String, Object> data);
+
+        /**
+         * 测试复杂类型
+         * @param user 传入user
+         * @return 传入user原样返回
+         */
+        User user(User user);
+
+        /**
+         * 传入User的json数据返回User对象
+         * @param name 名字
+         * @param age 年龄
+         * @param sex 性别
+         * @return 构建的user对象
+         */
+        User formUser(String name, Integer age, String sex);
+    }
+
+    @Path("test")
+    public interface JerseyResource extends Resource {
+        @POST
+        @Path("hello")
+        String hello(@FormParam("name") String name);
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class User {
+        private String name;
+        private int    age;
+        private String sex;
     }
 }
 ```

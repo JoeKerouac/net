@@ -1,6 +1,6 @@
 package com.joe.http.ws.core;
 
-import static com.joe.utils.parse.json.JsonParser.getInstance;
+import static com.joe.utils.serialize.json.JsonParser.getInstance;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -17,7 +17,7 @@ import com.joe.http.ws.exception.NotResourceException;
 import com.joe.http.ws.exception.WsException;
 import com.joe.utils.common.Assert;
 import com.joe.utils.common.StringUtils;
-import com.joe.utils.parse.json.JsonParser;
+import com.joe.utils.serialize.json.JsonParser;
 import com.joe.utils.proxy.Interception;
 import com.joe.utils.proxy.Invoker;
 

@@ -17,9 +17,9 @@ import com.joe.http.ws.exception.NotResourceException;
 import com.joe.http.ws.exception.WsException;
 import com.joe.utils.common.Assert;
 import com.joe.utils.common.StringUtils;
-import com.joe.utils.serialize.json.JsonParser;
 import com.joe.utils.proxy.Interception;
 import com.joe.utils.proxy.Invoker;
+import com.joe.utils.serialize.json.JsonParser;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -36,7 +36,7 @@ public class HTTPProxy implements Interception {
     private static final IHttpClient               CLIENT      = IHttpClient.builder().build();
     private static final Map<Key, HTTPProxy>       CACHE       = new ConcurrentHashMap<>();
     private String                                 baseUrl;
-    private ResourceAnalyze analyze;
+    private ResourceAnalyze                        analyze;
     private Constructor<? extends ResourceAnalyze> constructor;
 
     private HTTPProxy(String baseUrl, ResourceType resourceType) {
@@ -69,7 +69,8 @@ public class HTTPProxy implements Interception {
     }
 
     @Override
-    public Object invoke(Object[] params, Invoker invoker, Method method) throws Throwable {
+    public Object invoke(Object target, Object[] params, Invoker invoker,
+                         Method method) throws Throwable {
         log.debug("开始代理方法");
         analyze = constructor.newInstance(method.getDeclaringClass(), method, params);
 
@@ -107,7 +108,6 @@ public class HTTPProxy implements Interception {
 
         String url = baseUrl + prefix + name;
         IHttpRequestBase.Builder<? extends IHttpRequestBase> requestBuilder;
-
 
         switch (method) {
             case GET:
@@ -158,7 +158,7 @@ public class HTTPProxy implements Interception {
 
         if (datas.size() == 1) {
             requestBuilder.entity(JSON_PARSER.toJson(data));
-        }else if(datas.size() > 1){
+        } else if (datas.size() > 1) {
             requestBuilder.entity(JSON_PARSER.toJson(datas));
         }
 

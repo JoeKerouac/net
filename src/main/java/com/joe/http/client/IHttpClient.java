@@ -11,7 +11,6 @@ import java.util.Map;
 
 import javax.net.ssl.SSLContext;
 
-import com.joe.http.exception.NetException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -53,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import com.joe.http.config.HttpBaseConfig;
 import com.joe.http.config.HttpProxy;
 import com.joe.http.config.IHttpClientConfig;
+import com.joe.http.exception.NetException;
 import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;

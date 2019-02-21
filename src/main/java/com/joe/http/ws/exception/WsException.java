@@ -21,7 +21,8 @@ public class WsException extends RuntimeException {
         super(cause);
     }
 
-    protected WsException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    protected WsException(String message, Throwable cause, boolean enableSuppression,
+                          boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

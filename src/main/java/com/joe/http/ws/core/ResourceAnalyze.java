@@ -46,7 +46,7 @@ public abstract class ResourceAnalyze {
     /**
      * 资源方法
      */
-    protected ResourceMethod resourceMethod;
+    protected ResourceMethod               resourceMethod;
 
     /**
      * 是否是一个资源

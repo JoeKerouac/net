@@ -117,7 +117,7 @@ public class HTTPProxy implements Interception {
                 requestBuilder = IHttpPost.builder(url);
                 break;
             default:
-                throw new WsException(StringUtils.format("当前不支持的请求类型：[{}]", method));
+                throw new WsException(StringUtils.format("当前不支持的请求类型：[{0}]", method));
         }
 
         ResourceParam[] params = analyze.getParams();

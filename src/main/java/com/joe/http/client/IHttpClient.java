@@ -146,7 +146,7 @@ public class IHttpClient implements AutoCloseable {
         } else if (request instanceof IHttpPost) {
             requestBase = build((IHttpPost) request);
         } else {
-            throw new NetException(StringUtils.format("不支持的请求类型：[{}]", request.getClass()));
+            throw new NetException(StringUtils.format("不支持的请求类型：[{0}]", request.getClass()));
         }
         // 配置请求
         configure(requestBase, request);

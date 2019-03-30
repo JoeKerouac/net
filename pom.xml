@@ -6,7 +6,7 @@
     <name>net</name>
     <packaging>jar</packaging>
     <description>网络请求工具简单封装</description>
-    <url>https://github.com/935237604/net</url>
+    <url>https://github.com/JoeKerouac/net</url>
 
     <parent>
         <groupId>com.github.JoeKerouac</groupId>

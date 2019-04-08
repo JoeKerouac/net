@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.joe.http.exception.NetException;
 import com.joe.utils.common.StringUtils;
-import com.joe.utils.reflect.ReflectUtil;
+import com.joe.utils.reflect.JavaTypeUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -160,7 +160,7 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                         // 只有明确声明是form或者没有声明consumes但是参数类型是基础类型：String、八大基本类型及其包装类、枚举、
                         if (Arrays.stream(consumes)
                             .anyMatch(s -> s.contains("application/x-www-form-urlencoded"))
-                            || (consumes.length == 0 && ReflectUtil.isSimple(parameterType))) {
+                            || (consumes.length == 0 && JavaTypeUtil.isSimple(parameterType))) {
                             isForm = true;
                         } else if (Arrays.stream(consumes)
                             .noneMatch(s -> s.contains("application/json"))

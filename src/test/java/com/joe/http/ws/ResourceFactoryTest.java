@@ -69,8 +69,9 @@ public class ResourceFactoryTest extends WebBaseTest {
         runCase(() -> doTestException(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
-    @Before
-    public void before() {
+
+    @Override
+    protected void init() {
         super.init();
         ResourceFactory jerseyResourceFactory = new ResourceFactory(getBaseUrl(), ResourceType.JERSEY);
         Resource jerseyResource = jerseyResourceFactory.build(JerseyResource.class);
@@ -81,8 +82,9 @@ public class ResourceFactoryTest extends WebBaseTest {
         SPRING_RESOURCE_FACTORY_THREAD_LOCAL.set(springResource);
     }
 
-    @After
-    public void after() {
+    @Override
+    protected void destroy() {
+        super.destroy();
         JERSEY_RESOURCE_FACTORY_THREAD_LOCAL.remove();
         SPRING_RESOURCE_FACTORY_THREAD_LOCAL.remove();
     }

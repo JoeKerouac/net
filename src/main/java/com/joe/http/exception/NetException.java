@@ -5,6 +5,9 @@ package com.joe.http.exception;
  * @version $Id: joe, v 0.1 2018年11月21日 13:44 JoeKerouac Exp $
  */
 public class NetException extends RuntimeException {
+
+    private static final long serialVersionUID = -3749005762505354775L;
+
     public NetException() {
         super();
     }

@@ -9,7 +9,9 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.joe.http.exception.ServerException;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.ws.core.ResourceType;
 import com.joe.utils.test.WebBaseTest;
@@ -33,82 +36,127 @@ import lombok.NoArgsConstructor;
 @SpringBootApplication
 public class ResourceFactoryTest extends WebBaseTest {
 
+    private static final ThreadLocal<Resource> SPRING_RESOURCE_FACTORY_THREAD_LOCAL = new ThreadLocal<>();
+    private static final ThreadLocal<Resource> JERSEY_RESOURCE_FACTORY_THREAD_LOCAL = new ThreadLocal<>();
+
     @Test
-    public void doSpringResourceAnalyzeTest() {
-        runCase(() -> {
-            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
-            Resource resource = factory.build(SpringApi.class);
-            doTest(resource);
-        });
+    public void doTestJerseyResourceAnalyze() {
+        runCase(() -> doTestHello(JERSEY_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
     @Test
-    public void doJerseyResourceAnalyzeTest() {
-        runCase(() -> {
-            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.JERSEY);
-            Resource resource = factory.build(JerseyResource.class);
-            doTest(resource);
-        });
+    public void doTestSpringResourceAnalyzeHello() {
+        runCase(() -> doTestHello(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
     @Test
-    public void doSpringResourceAnalyzeListTest() {
-        runCase(() -> {
-            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
-            Resource resource = factory.build(SpringApi.class);
-            ArrayList<String> data = new ArrayList<>();
-            data.add("123");
-            data.add("121231233");
-            data.add("123123");
-            data.add("12sadljfklasdjflkjaswd3");
-            data.add("12sadljfklas-09-k'ld3");
-            Assert.assertEquals("结果与预期不符", data.size(), resource.size(data));
-        });
+    public void doTestSpringResourceAnalyzeSize() {
+        runCase(() -> doTestSize(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
     @Test
-    public void doSpringResourceAnalyzeMapTest() {
-        runCase(() -> {
-            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
-            Resource resource = factory.build(SpringApi.class);
-            Map<String, Object> map = new HashMap<>();
-            map.put("123", 123);
-            map.put("232", 2323);
-            map.put("1233", "123123");
-            Assert.assertEquals("结果与预期不符", map.size(), resource.size(map));
-        });
+    public void doTestSpringResourceAnalyzeUser() {
+        runCase(() -> doTestUser(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
     @Test
-    public void doSpringResourceAnalyzeUserTest() {
-        runCase(() -> {
-            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
-            Resource resource = factory.build(SpringApi.class);
-            User user = new User("JoeKerouac", 23, "男");
-            Assert.assertEquals("结果与预期不符", user, resource.user(user));
-        });
+    public void doTestSpringResourceAnalyzeJsonUser() {
+        runCase(() -> doTestFormUser(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
     @Test
-    public void doSpringResourceAnalyzeJsonUserTest() {
-        runCase(() -> {
-            ResourceFactory factory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
-            Resource resource = factory.build(SpringApi.class);
-            User user = new User("JoeKerouac", 23, "man");
-            Assert.assertEquals("结果与预期不符", user,
-                resource.formUser(user.getName(), user.getAge(), user.getSex()));
-        });
+    public void doTestSpringResourceAnalyzeException() {
+        runCase(() -> doTestException(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
-    private void doTest(Resource resource) {
+    @Before
+    public void before() {
+        super.init();
+        ResourceFactory jerseyResourceFactory = new ResourceFactory(getBaseUrl(), ResourceType.JERSEY);
+        Resource jerseyResource = jerseyResourceFactory.build(JerseyResource.class);
+        JERSEY_RESOURCE_FACTORY_THREAD_LOCAL.set(jerseyResource);
+
+        ResourceFactory springResourceFactory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
+        Resource springResource = springResourceFactory.build(SpringApi.class);
+        SPRING_RESOURCE_FACTORY_THREAD_LOCAL.set(springResource);
+    }
+
+    @After
+    public void after() {
+        JERSEY_RESOURCE_FACTORY_THREAD_LOCAL.remove();
+        SPRING_RESOURCE_FACTORY_THREAD_LOCAL.remove();
+    }
+
+    /**
+     * 测试{@link Resource#hello(String)}方法
+     * @param resource Resource
+     */
+    private void doTestHello(Resource resource) {
         String name = "joe";
         String result = resource.hello(name);
         Assert.assertEquals(result, name);
     }
 
+    /**
+     * 测试{@link Resource#size(List)}和{@link Resource#size(Map)}方法
+     * @param resource Resource
+     */
+    private void doTestSize(Resource resource) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("123", 123);
+        map.put("456", 456);
+        Assert.assertEquals(resource.size(map), map.size());
+
+        List<String> list = new ArrayList<>(3);
+        list.add("1");
+        list.add("2");
+        list.add("3");
+        Assert.assertEquals(resource.size(list), list.size());
+    }
+
+    /**
+     * 测试{@link Resource#user(User)}方法
+     * @param resource Resource
+     */
+    private void doTestUser(Resource resource) {
+        User user = new User();
+        user.setAge(1);
+        user.setName("joe");
+        user.setSex("男");
+        Assert.assertEquals(resource.user(user), user);
+    }
+
+    /**
+     * 测试{@link Resource#formUser(String, Integer, String)}方法
+     * @param resource Resource
+     */
+    private void doTestFormUser(Resource resource) {
+        User user = new User();
+        user.setAge(1);
+        user.setName("joe");
+        // 注意，因为sex是在header，所以这里应该使用英语，不能使用中文，否则会乱码（header不支持中文）
+        user.setSex("man");
+        Assert.assertEquals(resource.formUser(user.getName(), user.getAge(), user.getSex()), user);
+    }
+
+    /**
+     * 测试服务器异常场景
+     * @param resource Resource
+     */
+    private void doTestException(Resource resource) {
+        ServerException exception = null;
+        try {
+            resource.exception();
+        } catch (ServerException e) {
+            exception = e;
+        }
+        Assert.assertNotNull(exception);
+    }
+
     @Controller
     @RequestMapping("test")
     public static class SpringApi implements Resource {
+
         @RequestMapping(value = "hello")
         @ResponseBody
         @Override
@@ -142,6 +190,12 @@ public class ResourceFactoryTest extends WebBaseTest {
         @Override
         public User formUser(String name, Integer age, @RequestHeader("sex") String sex) {
             return new User(name, age, sex);
+        }
+
+        @RequestMapping(value = "exception", consumes = IHttpRequestBase.CONTENT_TYPE_FORM)
+        @Override
+        public void exception() {
+            throw new NullPointerException("name不能为空");
         }
     }
 
@@ -182,10 +236,16 @@ public class ResourceFactoryTest extends WebBaseTest {
          * @return 构建的user对象
          */
         User formUser(String name, Integer age, String sex);
+
+        /**
+         * 抛出异常
+         */
+        void exception();
     }
 
     @Path("test")
     public interface JerseyResource extends Resource {
+
         @POST
         @Path("hello")
         String hello(@FormParam("name") String name);

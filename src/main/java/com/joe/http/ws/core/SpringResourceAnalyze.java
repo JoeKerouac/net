@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import com.joe.http.exception.NetException;
+import com.joe.utils.common.Assert;
 import com.joe.utils.common.StringUtils;
 import com.joe.utils.reflect.JavaTypeUtil;
 
@@ -28,29 +29,94 @@ import lombok.extern.slf4j.Slf4j;
  * @version 2018.08.21 15:53
  */
 @Slf4j
-public class SpringResourceAnalyze extends ResourceAnalyze {
+public final class SpringResourceAnalyze implements ResourceAnalyze {
+
+    /**
+     * 资源实例class
+     */
+    private final Class<?>  resourceClass;
+
+    /**
+     * 资源method
+     */
+    private final Method    method;
+
+    /**
+     * 资源方法参数
+     */
+    private final Object[]  args;
+
+    /**
+     * 资源前缀
+     */
+    private String          pathPrefix;
+
+    /**
+     * 资源后缀
+     */
+    private String          pathLast;
+
+    /**
+     * 资源参数
+     */
+    private ResourceParam[] params = ResourceAnalyze.EMPTY;
+
+    /**
+     * 资源方法
+     */
+    private ResourceMethod  resourceMethod;
+
+    /**
+     * 是否是一个资源
+     */
+    private boolean         isResource;
+
+    /**
+     * 请求contentType
+     */
+    private String[]        requestContentTypes;
+
+    /**
+     * 响应contentType
+     */
+    private String[]        responseContentTypes;
 
     SpringResourceAnalyze(Class<?> resourceClass, Method method, Object[] args) {
-        super(resourceClass, method, args);
+        Assert.notNull(resourceClass, "resourceClass must not be null");
+        Assert.notNull(method, "method must not be null");
+        if (method.getDeclaringClass() != resourceClass) {
+            throw new IllegalArgumentException("指定method不是resourceClass中声明的");
+        }
+        this.resourceClass = resourceClass;
+        this.method = method;
+        this.args = args;
+
+        // 初始化
+        init();
     }
 
-    @Override
-    public void init() {
+    private void init() {
         RequestMapping mapping = method.getAnnotation(RequestMapping.class);
+
+        /* 首先判断是否是资源 */
         {
+            if (mapping == null) {
+                isResource = false;
+                return;
+            }
+
             //解析路径
             if (resourceClass.getDeclaredAnnotation(Controller.class) == null) {
                 isResource = false;
                 return;
             }
 
-            RequestMapping prePath = resourceClass.getDeclaredAnnotation(RequestMapping.class);
-
-            if (mapping == null) {
-                isResource = false;
-                return;
-            }
             isResource = true;
+        }
+
+        /* 解析请求路径和请求方法 */
+        {
+            RequestMapping prePath = resourceClass.getDeclaredAnnotation(RequestMapping.class);
 
             pathPrefix = prePath == null ? "" : prePath.value()[0];
             log.debug("请求的前缀是：{}", pathPrefix);
@@ -76,6 +142,12 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                     }
                 }
             }
+        }
+
+        /* 解析请求/响应content_type */
+        {
+            requestContentTypes = mapping.consumes();
+            responseContentTypes = mapping.produces();
         }
 
         {
@@ -198,5 +270,60 @@ public class SpringResourceAnalyze extends ResourceAnalyze {
                 resourceMethod = ResourceMethod.GET;
             }
         }
+    }
+
+    @Override
+    public String[] getRequestContentTypes() {
+        return requestContentTypes;
+    }
+
+    @Override
+    public String[] getResponseContentTypes() {
+        return responseContentTypes;
+    }
+
+    /**
+     * 是否是资源
+     * @return true表示是资源，false表示不是
+     */
+    @Override
+    public boolean isResource() {
+        return isResource;
+    }
+
+    /**
+     * path前缀
+     * @return path前缀
+     */
+    @Override
+    public String pathPrefix() {
+        return pathPrefix;
+    }
+
+    /**
+     * path结尾
+     * @return path结尾
+     */
+    @Override
+    public String pathLast() {
+        return pathLast;
+    }
+
+    /**
+     * 获取参数列表
+     * @return 参数列表
+     */
+    @Override
+    public ResourceParam[] getParams() {
+        return params;
+    }
+
+    /**
+     * 获取请求方法
+     * @return 请求方法
+     */
+    @Override
+    public ResourceMethod getResourceMethod() {
+        return resourceMethod;
     }
 }

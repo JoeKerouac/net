@@ -42,6 +42,20 @@ public class ResourceFactory {
      * @throws NotResourceException 如果class对象不是一个resource那么抛出该异常
      */
     public <T> T build(Class<T> t) throws NotResourceException {
-        return client.create(t, (target, params[], invoker, method) -> HTTPProxy.build(baseUrl, resourceType));
+        return client.create(t, new HTTPProxy(baseUrl, resourceType, null, null));
+    }
+
+    /**
+     * 构建指定resource的代理
+     * @param t resource的class对象
+     * @param responseCharset 服务器响应
+     * @param <T> resource实际类型
+     * @return resource代理
+     * @throws NotResourceException 如果class对象不是一个resource那么抛出该异常
+     */
+    public <T> T build(Class<T> t, String responseCharset,
+                       String requestCharset) throws NotResourceException {
+        return client.create(t,
+            new HTTPProxy(baseUrl, resourceType, responseCharset, requestCharset));
     }
 }

@@ -138,7 +138,7 @@ public abstract class IHttpRequestBase {
         if (index > 0) {
             String data = url.substring(index + 1);
             Map<String, String> map = new HashMap<>();
-            Arrays.asList(data.split("&")).forEach(str -> {
+            Arrays.stream(data.split("&")).forEach(str -> {
                 String[] params = str.split("=");
                 if (params.length >= 2) {
                     map.put(params[0], params[1]);
@@ -165,38 +165,47 @@ public abstract class IHttpRequestBase {
      * 请求构建器
      */
     public static abstract class Builder<T extends IHttpRequestBase> {
+
         /**
          * Http配置
          */
         IHttpConfig         httpConfig;
+
         /**
          * contentType，默认json
          */
         String              contentType;
+
         /**
          * 请求URL
          */
         String              url;
+
         /**
          * 请求头
          */
         Map<String, String> headers;
+
         /**
          * URL参数
          */
         Map<String, String> queryParams;
+
         /**
          * form参数
          */
         Map<String, String> formParam;
+
         /**
          * 请求
          */
         String              charset;
+
         /**
          * 请求body，如果请求方法是get的话自动忽略该字段
          */
         String              entity;
+
         /**
          * 请求client
          */

@@ -8,6 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
 import com.joe.http.ws.exception.WsException;
+import com.joe.utils.common.Assert;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,13 +19,73 @@ import lombok.extern.slf4j.Slf4j;
  * @version 2018.08.21 14:23
  */
 @Slf4j
-public class JerseyResourceAnalyze extends ResourceAnalyze {
+public final class JerseyResourceAnalyze implements ResourceAnalyze {
+
+    /**
+     * 资源实例class
+     */
+    private final Class<?>  resourceClass;
+
+    /**
+     * 资源method
+     */
+    private final Method    method;
+
+    /**
+     * 资源方法参数
+     */
+    private final Object[]  args;
+
+    /**
+     * 资源前缀
+     */
+    private String          pathPrefix;
+
+    /**
+     * 资源后缀
+     */
+    private String          pathLast;
+
+    /**
+     * 资源参数
+     */
+    private ResourceParam[] params = ResourceAnalyze.EMPTY;
+
+    /**
+     * 资源方法
+     */
+    private ResourceMethod  resourceMethod;
+
+    /**
+     * 请求contentType
+     */
+    private String[]          requestContentTypes;
+
+    /**
+     * 响应contentType
+     */
+    private String[]          responseContentTypes;
+
+    /**
+     * 是否是一个资源
+     */
+    private boolean         isResource;
+
     JerseyResourceAnalyze(Class<?> resourceClass, Method method, Object[] args) {
-        super(resourceClass, method, args);
+        Assert.notNull(resourceClass, "resourceClass must not be null");
+        Assert.notNull(method, "method must not be null");
+        if (method.getDeclaringClass() != resourceClass) {
+            throw new IllegalArgumentException("指定method不是resourceClass中声明的");
+        }
+        this.resourceClass = resourceClass;
+        this.method = method;
+        this.args = args;
+
+        // 初始化
+        init();
     }
 
-    @Override
-    public void init() {
+    private void init() {
         {
             //解析路径
             Path prePath = resourceClass.getDeclaredAnnotation(Path.class);
@@ -58,6 +119,16 @@ public class JerseyResourceAnalyze extends ResourceAnalyze {
                 resourceMethod = ResourceMethod.DELETE;
             } else {
                 throw new WsException("未知请求方法");
+            }
+        }
+
+        {
+            if (method.getAnnotation(Produces.class) != null) {
+                responseContentTypes = method.getAnnotation(Produces.class).value();
+            }
+
+            if (method.getAnnotation(Consumes.class) != null) {
+                requestContentTypes = method.getAnnotation(Consumes.class).value();
             }
         }
 
@@ -126,5 +197,60 @@ public class JerseyResourceAnalyze extends ResourceAnalyze {
             }
 
         }
+    }
+
+    /**
+     * 是否是资源
+     * @return true表示是资源，false表示不是
+     */
+    @Override
+    public boolean isResource() {
+        return isResource;
+    }
+
+    /**
+     * path前缀
+     * @return path前缀
+     */
+    @Override
+    public String pathPrefix() {
+        return pathPrefix;
+    }
+
+    /**
+     * path结尾
+     * @return path结尾
+     */
+    @Override
+    public String pathLast() {
+        return pathLast;
+    }
+
+    /**
+     * 获取参数列表
+     * @return 参数列表
+     */
+    @Override
+    public ResourceParam[] getParams() {
+        return params;
+    }
+
+    /**
+     * 获取请求方法
+     * @return 请求方法
+     */
+    @Override
+    public ResourceMethod getResourceMethod() {
+        return resourceMethod;
+    }
+
+    @Override
+    public String[] getRequestContentTypes() {
+        return requestContentTypes;
+    }
+
+    @Override
+    public String[] getResponseContentTypes() {
+        return responseContentTypes;
     }
 }

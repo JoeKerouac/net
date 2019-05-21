@@ -97,8 +97,8 @@ public class HTTPProxy implements Interception {
     }
 
     @Override
-    public Object invoke(Object target, Object[] params, Invoker invoker,
-                         Method method) throws Throwable {
+    public Object invoke(Object target, Object[] params, Method method,
+                         Invoker invoker) throws Throwable {
         log.debug("开始构建资源分析");
 
         analyze = constructor.newInstance(method.getDeclaringClass(), method, params);

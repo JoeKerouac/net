@@ -61,7 +61,7 @@ public abstract class IHttpRequestBase {
      */
     String                     entity;
 
-    IHttpRequestBase(String url, IHttpClient client) {
+    IHttpRequestBase(String url) {
         Assert.notNull(url, "url不能为空");
         this.headers = new HashMap<>();
         this.queryParams = new HashMap<>();
@@ -74,7 +74,6 @@ public abstract class IHttpRequestBase {
         }
         this.contentType = CONTENT_TYPE_JSON;
         this.charset = Charset.defaultCharset().name();
-        this.client = client == null ? IHttpClient.DEFAULT_CLIENT : client;
     }
 
     /**
@@ -329,7 +328,7 @@ public abstract class IHttpRequestBase {
          * @return 配置好后的request
          */
         protected T configure(T request) {
-            request.client = client;
+            request.client = client == null ? IHttpClient.DEFAULT_CLIENT : client;
             request.httpConfig = httpConfig;
             request.contentType = StringUtils.isEmpty(contentType) ? CONTENT_TYPE_JSON
                 : contentType;

@@ -1,10 +1,8 @@
 package com.joe.http.request;
 
-import com.joe.http.client.IHttpClient;
-
 public class IHttpGet extends IHttpRequestBase {
-    IHttpGet(String url, IHttpClient client) {
-        super(url, client);
+    IHttpGet(String url) {
+        super(url);
     }
 
     /**
@@ -24,7 +22,7 @@ public class IHttpGet extends IHttpRequestBase {
 
         @Override
         public IHttpGet build() {
-            IHttpGet get = new IHttpGet(super.url, super.client);
+            IHttpGet get = new IHttpGet(super.url);
             super.configure(get);
             return get;
         }

@@ -54,7 +54,7 @@
             <groupId>com.github.JoeKerouac</groupId>
             <artifactId>utils</artifactId>
         </dependency>
-        <!--下面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
+        <!--下面cglib、JSR311、utils、spring、servlet都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->
         <dependency>
             <groupId>javax.ws.rs</groupId>
@@ -82,19 +82,14 @@
             <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- json依赖 -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
-        </dependency>
+
         <!--测试使用-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--上面cglib、JSR311、utils、spring、servlet、json包都是ResourceFactory需要使用的-->
+        <!--上面cglib、JSR311、utils、spring、servlet都是ResourceFactory需要使用的-->
     </dependencies>
 
     <build>
@@ -103,8 +98,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <encoding>${encode}</encoding>
                 </configuration>
             </plugin>

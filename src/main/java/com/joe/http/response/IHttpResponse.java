@@ -20,7 +20,7 @@ import org.apache.http.util.EntityUtils;
 import com.joe.http.config.HeaderEnum;
 import com.joe.http.exception.NetException;
 import com.joe.http.exception.ServerException;
-import com.joe.utils.common.StringUtils;
+import com.joe.utils.common.string.StringUtils;
 import com.joe.utils.serialize.json.JsonParser;
 
 import lombok.Data;

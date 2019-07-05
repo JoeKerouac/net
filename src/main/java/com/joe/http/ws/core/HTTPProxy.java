@@ -17,7 +17,7 @@ import com.joe.http.response.IHttpResponse;
 import com.joe.http.ws.exception.NotResourceException;
 import com.joe.http.ws.exception.WsException;
 import com.joe.utils.common.Assert;
-import com.joe.utils.common.StringUtils;
+import com.joe.utils.common.string.StringUtils;
 import com.joe.utils.exception.NoSupportException;
 import com.joe.utils.proxy.Interception;
 import com.joe.utils.proxy.Invoker;

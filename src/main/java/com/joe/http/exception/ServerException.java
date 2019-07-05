@@ -1,6 +1,6 @@
 package com.joe.http.exception;
 
-import com.joe.utils.common.StringUtils;
+import com.joe.utils.common.string.StringUtils;
 
 import lombok.Getter;
 import lombok.Setter;

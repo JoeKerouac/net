@@ -12,7 +12,7 @@ import com.joe.http.config.IHttpConfig;
 import com.joe.http.exception.NetException;
 import com.joe.http.response.IHttpResponse;
 import com.joe.utils.common.Assert;
-import com.joe.utils.common.StringUtils;
+import com.joe.utils.common.string.StringUtils;
 
 import lombok.Getter;
 import lombok.ToString;

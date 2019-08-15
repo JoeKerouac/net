@@ -1,5 +1,6 @@
 package com.joe.http.exception;
 
+import com.joe.utils.common.string.StringFormater;
 import com.joe.utils.common.string.StringUtils;
 
 import lombok.Getter;
@@ -54,7 +55,7 @@ public class ServerException extends NetException {
      */
     public ServerException(String path, String exceptionClass, String msg, String error,
                            int status) {
-        super(StringUtils.format(ERR_MSG, path, exceptionClass, msg, error, status));
+        super(StringFormater.simpleFormat(ERR_MSG, path, exceptionClass, msg, error, status));
         this.path = path;
         this.exceptionClass = exceptionClass;
         this.msg = msg;

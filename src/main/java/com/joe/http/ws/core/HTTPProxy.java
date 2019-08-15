@@ -17,6 +17,7 @@ import com.joe.http.response.IHttpResponse;
 import com.joe.http.ws.exception.NotResourceException;
 import com.joe.http.ws.exception.WsException;
 import com.joe.utils.common.Assert;
+import com.joe.utils.common.string.StringFormater;
 import com.joe.utils.common.string.StringUtils;
 import com.joe.utils.exception.NoSupportException;
 import com.joe.utils.proxy.Interception;
@@ -175,7 +176,7 @@ public class HTTPProxy implements Interception {
                 requestBuilder = IHttpPost.builder(url);
                 break;
             default:
-                throw new WsException(StringUtils.format("当前不支持的请求类型：[{0}]", method));
+                throw new WsException(StringFormater.simpleFormat("当前不支持的请求类型：[{0}]", method));
         }
 
         {
@@ -223,7 +224,7 @@ public class HTTPProxy implements Interception {
                         data = param.getParam();
                         break;
                     default:
-                        throw new WsException(StringUtils.format("未知参数类型[{}]", type));
+                        throw new WsException(StringFormater.simpleFormat("未知参数类型[{}]", type));
                 }
             }
 

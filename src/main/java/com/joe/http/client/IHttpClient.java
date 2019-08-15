@@ -57,6 +57,7 @@ import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
+import com.joe.utils.common.string.StringFormater;
 import com.joe.utils.common.string.StringUtils;
 
 import lombok.Builder;
@@ -146,7 +147,8 @@ public class IHttpClient implements AutoCloseable {
         } else if (request instanceof IHttpPost) {
             requestBase = build((IHttpPost) request);
         } else {
-            throw new NetException(StringUtils.format("不支持的请求类型：[{0}]", request.getClass()));
+            throw new NetException(
+                StringFormater.simpleFormat("不支持的请求类型：[{0}]", request.getClass()));
         }
         // 配置请求
         configure(requestBase, request);

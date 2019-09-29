@@ -1,6 +1,6 @@
 package com.joe.http.ws.core;
 
-import com.joe.utils.reflect.ClassUtils;
+import com.joe.utils.reflect.clazz.ClassUtils;
 
 /**
  * 资源类型

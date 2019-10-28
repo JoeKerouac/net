@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import com.joe.http.exception.NetException;
 import com.joe.utils.common.Assert;
 import com.joe.utils.common.string.StringUtils;
-import com.joe.utils.reflect.JavaTypeUtil;
+import com.joe.utils.reflect.type.JavaTypeUtil;
 
 import lombok.extern.slf4j.Slf4j;
 

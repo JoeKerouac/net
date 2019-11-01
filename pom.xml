@@ -29,9 +29,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git@github.com:JoeKerouac/net.git</connection>
-        <developerConnection>scm:git@github.com:JoeKerouac/net.git</developerConnection>
-        <url>git@github.com:JoeKerouac/net.git</url>
+        <url>https://github.com/JoeKerouac/net</url>
+        <connection>scm:git:https://github.com/JoeKerouac/net.git</connection>
+        <developerConnection>scm:git:https://github.com/JoeKerouac/net.git</developerConnection>
     </scm>
 
     <dependencies>

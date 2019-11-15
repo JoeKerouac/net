@@ -216,8 +216,8 @@ public class IHttpResponse implements Closeable {
 
     @Data
     private static final class ErrorResp {
-        private long   timestamp;
-        private long   status;
+        private String timestamp;
+        private int    status;
         private String error;
         private String exception;
         private String message;

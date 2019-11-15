@@ -9,6 +9,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
+import com.joe.utils.collection.CollectionUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,7 +34,6 @@ import lombok.NoArgsConstructor;
  * @author joe
  * @version 2018.08.23 14:28
  */
-@SpringBootApplication
 public class ResourceFactoryTest extends WebBaseTest {
 
     private static final ThreadLocal<Resource> SPRING_RESOURCE_FACTORY_THREAD_LOCAL = new ThreadLocal<>();
@@ -87,6 +87,13 @@ public class ResourceFactoryTest extends WebBaseTest {
         super.destroy();
         JERSEY_RESOURCE_FACTORY_THREAD_LOCAL.remove();
         SPRING_RESOURCE_FACTORY_THREAD_LOCAL.remove();
+    }
+
+    @Override
+    protected Class<?>[] getSource() {
+        Class<?>[] sources = CollectionUtil.addTo(SpringApi.class, super.getSource());
+        sources = CollectionUtil.addTo(JerseyResource.class, sources);
+        return sources;
     }
 
     /**

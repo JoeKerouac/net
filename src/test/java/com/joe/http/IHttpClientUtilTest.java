@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.request.IHttpRequestBase;
+import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.test.WebBaseTest;
 
 /**
@@ -54,6 +55,11 @@ public class IHttpClientUtilTest extends WebBaseTest {
         super.destroy();
         url.remove();
         clientHolder.remove();
+    }
+
+    @Override
+    protected Class<?>[] getSource() {
+        return CollectionUtil.addTo(SpringApi.class, super.getSource());
     }
 
     @Controller

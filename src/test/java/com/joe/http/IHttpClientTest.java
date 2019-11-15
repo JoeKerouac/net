@@ -2,6 +2,7 @@ package com.joe.http;
 
 import java.nio.charset.Charset;
 
+import com.joe.utils.collection.CollectionUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.stereotype.Controller;
@@ -27,12 +28,14 @@ public class IHttpClientTest extends WebBaseTest {
     @Test
     public void executeGet() {
         runCase(() -> {
+            Exception expect = null;
             IHttpGet get = IHttpGet.builder(url.get() + "hello").charset("utf8").build();
             try {
                 doRequest(clientHolder.get(), get, "hello");
             } catch (Exception e) {
-                Assert.assertNull("请求异常", e);
+                expect = e;
             }
+            Assert.assertNull("请求异常", expect);
         });
     }
 
@@ -79,6 +82,11 @@ public class IHttpClientTest extends WebBaseTest {
         super.destroy();
         clientHolder.remove();
         url.remove();
+    }
+
+    @Override
+    protected Class<?>[] getSource() {
+        return CollectionUtil.addTo(SpringApi.class, super.getSource());
     }
 
     @Controller

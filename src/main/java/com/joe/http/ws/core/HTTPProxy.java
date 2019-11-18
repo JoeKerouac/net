@@ -100,18 +100,16 @@ public class HTTPProxy implements Interception {
     @Override
     public Object invoke(Object target, Object[] params, Method method,
                          Invoker invoker) throws Throwable {
-        log.debug("开始构建资源分析");
-
         analyze = constructor.newInstance(method.getDeclaringClass(), method, params);
 
         if (!analyze.isResource()) {
             log.error("方法{}不是资源方法，不能调用", method);
             throw new NotResourceException(method);
         }
-        log.debug("开始构建HTTP请求");
         IHttpRequestBase request = build();
 
-        log.debug("开始发送HTTP请求");
+        log.debug("请求是：{}", request);
+
         IHttpResponse response = client.execute(request);
         log.debug("HTTP请求发送完成，HTTP请求状态码为：{}", response.getStatus());
         String result = response.getResult(responseCharset, false);

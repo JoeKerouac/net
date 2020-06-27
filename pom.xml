@@ -83,6 +83,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- 常用加密算法 -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+        </dependency>
+
         <!--测试使用-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -8,6 +8,7 @@ import java.security.SecureRandom;
 
 import com.joe.ssl.message.*;
 import com.joe.ssl.util.SSLUtil;
+import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -15,7 +16,8 @@ import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-import org.bouncycastle.crypto.tls.NamedCurve;
+import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.BigIntegers;
@@ -99,9 +101,7 @@ public class ClientHandshaker {
 
                 System.arraycopy(realData, 4, publicKeyData, 0, publicKeyLen);
 
-                // 这里因为getECParameters方法不是共有的，也懒得copy出来了，所以直接反射调用，其中23是服务器返回的Named Curve
-                ECDomainParameters domainParameters = ReflectUtil.invoke(NamedCurve.class,
-                    "getECParameters", new Class[] { int.class }, new Object[] { curveId });
+                ECDomainParameters domainParameters = NamedCurve.getECParameters(curveId);
                 // 使用指定数据解析出ECPoint
                 ECPoint Q = domainParameters.getCurve().decodePoint(publicKeyData);
 

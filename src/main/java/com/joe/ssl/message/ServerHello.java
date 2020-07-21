@@ -29,11 +29,6 @@ import sun.security.ssl.ProtocolVersion;
 @Getter
 public class ServerHello implements HandshakeMessage {
 
-    /**
-     * 握手类型，固定
-     */
-    private final HandshakeType              handshakType = HandshakeType.SERVER_HELLO;
-
     private int                              version;
 
     /**
@@ -52,7 +47,7 @@ public class ServerHello implements HandshakeMessage {
     public ServerHello(byte[] data) {
         try {
             WrapedInputStream inputStream = new WrapedInputStream(new ByteArrayInputStream(data));
-            Assert.isTrue(handshakType.getCode() == inputStream.readInt8());
+            Assert.isTrue(type().getCode() == inputStream.readInt8());
             this.version = inputStream.readInt16();
             this.serverRandom = inputStream.read(32);
             int sessionIdLen = inputStream.readInt8();
@@ -70,7 +65,7 @@ public class ServerHello implements HandshakeMessage {
 
     @Override
     public HandshakeType type() {
-        return null;
+        return HandshakeType.SERVER_HELLO;
     }
 
     @Override

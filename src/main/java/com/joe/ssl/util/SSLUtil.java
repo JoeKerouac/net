@@ -9,7 +9,6 @@ import java.security.interfaces.ECPublicKey;
 import javax.crypto.KeyAgreement;
 import javax.crypto.SecretKey;
 
-import com.joe.utils.collection.CollectionUtil;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
@@ -17,6 +16,8 @@ import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.Strings;
+
+import com.joe.utils.collection.CollectionUtil;
 
 /**
  * @author JoeKerouac
@@ -47,6 +48,14 @@ public class SSLUtil {
         return keyAgreement.generateSecret(algorithm);
     }
 
+    /**
+     * PRF算法
+     * @param secret 密钥
+     * @param asciiLabel label
+     * @param seed 种子
+     * @param size 结果长度
+     * @return 结果
+     */
     public static byte[] PRF(byte[] secret, String asciiLabel, byte[] seed, int size) {
         byte[] label = Strings.toByteArray(asciiLabel);
 

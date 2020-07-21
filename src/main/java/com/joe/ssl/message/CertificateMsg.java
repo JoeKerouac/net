@@ -21,7 +21,6 @@ import java.util.List;
  */
 public class CertificateMsg implements HandshakeMessage {
 
-    private final HandshakeType type          = HandshakeType.CERTIFICATE;
 
     /**
      * 要发送/接受的证书信息，最后一个是根证书，第一个是服务器证书
@@ -62,7 +61,7 @@ public class CertificateMsg implements HandshakeMessage {
 
     @Override
     public void write(WrapedOutputStream stream) throws IOException {
-        stream.write(type.getCode());
+        stream.write(type().getCode());
         stream.writeInt24(messageLength);
         for (byte[] certData : encodedChain) {
             stream.writeInt24(certData.length);
@@ -72,6 +71,6 @@ public class CertificateMsg implements HandshakeMessage {
 
     @Override
     public HandshakeType type() {
-        return type;
+        return HandshakeType.CERTIFICATE;
     }
 }

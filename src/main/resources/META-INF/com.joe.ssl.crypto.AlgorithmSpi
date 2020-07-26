@@ -1,0 +1,6 @@
+com.joe.ssl.crypto.impl.HmacMD5
+com.joe.ssl.crypto.impl.HmacSHA1
+com.joe.ssl.crypto.impl.HmacSHA224
+com.joe.ssl.crypto.impl.HmacSHA256
+com.joe.ssl.crypto.impl.HmacSHA384
+com.joe.ssl.crypto.impl.HmacSHA512

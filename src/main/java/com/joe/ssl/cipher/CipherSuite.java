@@ -133,4 +133,9 @@ public class CipherSuite {
      * RFC 5746
      */
     public static final int TLS_EMPTY_RENEGOTIATION_INFO_SCSV       = 0x00FF;
+
+
+    private int suite;
+
+
 }

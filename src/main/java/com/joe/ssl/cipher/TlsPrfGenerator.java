@@ -249,15 +249,15 @@ abstract class TlsPrfGenerator extends KeyGeneratorSpi {
      * @param output the output array
      */
     private static void expand(MessageDigest digest, int hmacSize, byte[] secret, int secOff,
-                               int secLen, byte[] label, byte[] seed, byte[] output, byte[] pad1,
-                               byte[] pad2) throws DigestException {
+                               int secLen, byte[] label, byte[] seed, byte[] output, byte[] ipad,
+                               byte[] opad) throws DigestException {
         /*
          * modify the padding used, by XORing the key into our copy of that
          * padding.  That's to avoid doing that for each HMAC computation.
          */
         for (int i = 0; i < secLen; i++) {
-            pad1[i] ^= secret[i + secOff];
-            pad2[i] ^= secret[i + secOff];
+            ipad[i] ^= secret[i + secOff];
+            opad[i] ^= secret[i + secOff];
         }
 
         byte[] tmp = new byte[hmacSize];
@@ -281,7 +281,7 @@ abstract class TlsPrfGenerator extends KeyGeneratorSpi {
              * compute A() ...
              */
             // inner digest
-            digest.update(pad1);
+            digest.update(ipad);
             if (aBytes == null) {
                 digest.update(label);
                 digest.update(seed);
@@ -291,7 +291,7 @@ abstract class TlsPrfGenerator extends KeyGeneratorSpi {
             digest.digest(tmp, 0, hmacSize);
 
             // outer digest
-            digest.update(pad2);
+            digest.update(opad);
             digest.update(tmp);
             if (aBytes == null) {
                 aBytes = new byte[hmacSize];
@@ -302,14 +302,14 @@ abstract class TlsPrfGenerator extends KeyGeneratorSpi {
              * compute HMAC_hash() ...
              */
             // inner digest
-            digest.update(pad1);
+            digest.update(ipad);
             digest.update(aBytes);
             digest.update(label);
             digest.update(seed);
             digest.digest(tmp, 0, hmacSize);
 
             // outer digest
-            digest.update(pad2);
+            digest.update(opad);
             digest.update(tmp);
             digest.digest(tmp, 0, hmacSize);
 

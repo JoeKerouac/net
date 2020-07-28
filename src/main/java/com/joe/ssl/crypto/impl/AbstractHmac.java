@@ -9,10 +9,26 @@ import com.joe.ssl.crypto.exception.InvalidKeyException;
 import sun.plugin.dom.exception.InvalidStateException;
 
 /**
+ * 抽象Hmac算法，不同hmac的差异实际上就是摘要算法的差异，所以可以对其公共算法进行统一封装
+ *
+ * <p>
+ *     一次初始化可以多次使用
+ * </p>
+ *
  * @author JoeKerouac
  * @version 2020年07月23日 16:46
  */
 public abstract class AbstractHmac implements HmacSpi {
+
+    /**
+     * 块长度
+     */
+    private final int blockLen;
+
+    /**
+     * hash算法结果长度，例如SHA-256，长度就是32（256/8=32，其中256单位是bit，不是byte）
+     */
+    private final int hashSize;
 
     /**
      * 初始化标志，true表示已经初始化
@@ -30,11 +46,6 @@ public abstract class AbstractHmac implements HmacSpi {
     private boolean   first;
 
     /**
-     * 块长度
-     */
-    private int       blockLen;
-
-    /**
      * 对应算法中的K XOR ipad
      */
     private byte[]    k_ipad;
@@ -44,9 +55,10 @@ public abstract class AbstractHmac implements HmacSpi {
      */
     private byte[]    k_opad;
 
-    protected AbstractHmac(DigestSpi digestSpi, int blockLen) {
+    protected AbstractHmac(DigestSpi digestSpi, int hashSize, int blockLen) {
         this.digestSpi = digestSpi;
         this.first = true;
+        this.hashSize = hashSize;
         this.blockLen = blockLen;
         this.k_ipad = new byte[blockLen];
         this.k_opad = new byte[blockLen];
@@ -72,9 +84,9 @@ public abstract class AbstractHmac implements HmacSpi {
 
         // 根据rfc2104生成k_ipad和k_opad
         for (int i = 0; i < this.blockLen; ++i) {
-            byte var5 = i < keyClone.length ? keyClone[i] : 0;
-            this.k_ipad[i] = (byte) (var5 ^ 0x36);
-            this.k_opad[i] = (byte) (var5 ^ 0x5C);
+            byte k = i < keyClone.length ? keyClone[i] : 0;
+            this.k_ipad[i] = (byte) (k ^ 0x36);
+            this.k_opad[i] = (byte) (k ^ 0x5C);
         }
 
         // 将内存中的数据尽快清空
@@ -96,7 +108,7 @@ public abstract class AbstractHmac implements HmacSpi {
     }
 
     @Override
-    public byte[] doFinal() {
+    public byte[] hmac() {
         if (!init) {
             throw new InvalidStateException("HMAC未初始化，请先初始化");
         }
@@ -129,45 +141,21 @@ public abstract class AbstractHmac implements HmacSpi {
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        /**
-         * 初始化标志，true表示已经初始化
-         */
-        private boolean   init;
+        AbstractHmac hmac = (AbstractHmac) super.clone();
+        hmac.digestSpi = (DigestSpi) this.digestSpi.clone();
+        hmac.init = this.init;
+        hmac.k_ipad = this.k_ipad.clone();
+        hmac.k_opad = this.k_opad.clone();
+        return hmac;
+    }
 
-        /**
-         * 摘要算法实现
-         */
-        private DigestSpi digestSpi;
+    @Override
+    public int macSize() {
+        return hashSize;
+    }
 
-        /**
-         * 当前是否是第一次更新
-         */
-        private boolean   first;
-
-        /**
-         * 块长度
-         */
-        private int       blockLen;
-
-        /**
-         * 对应算法中的K XOR ipad
-         */
-        private byte[]    k_ipad;
-
-        /**
-         * 对应算法中的K XOR opad
-         */
-        private byte[]    k_opad;
-
-        try {
-            AbstractHmac hmac = (AbstractHmac)super.clone();
-            hmac.digestSpi = (DigestSpi)this.digestSpi.clone();
-            hmac.init = this.init;
-            hmac.k_ipad = this.k_ipad.clone();
-            hmac.k_opad = this.k_opad.clone();
-        } catch (InstantiationException |IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
+    @Override
+    public int blockLen() {
+        return blockLen;
     }
 }

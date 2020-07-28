@@ -2113,7 +2113,7 @@ final public class SSLSocketImpl extends BaseSSLSocketImpl {
          * For PKCS11 ciphers, this will release any attached sessions,
          * and thus make finalization faster.
          *
-         * Since MAC's doFinal() is called for every SSL/TLS packet, it's
+         * Since MAC's hmac() is called for every SSL/TLS packet, it's
          * not necessary to do the same with MAC's.
          */
         oldCipher.dispose();

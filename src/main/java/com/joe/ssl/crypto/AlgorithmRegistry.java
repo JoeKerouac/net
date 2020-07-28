@@ -1,14 +1,20 @@
 package com.joe.ssl.crypto;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.joe.ssl.crypto.exception.CryptoException;
 import com.joe.ssl.crypto.exception.NoSuchAlgorithmException;
 import com.joe.utils.common.Assert;
 import com.joe.utils.reflect.clazz.ClassUtils;
@@ -34,6 +40,7 @@ public class AlgorithmRegistry {
      * @throws NoSuchAlgorithmException 指定算法不存在时抛出异常
      */
     public static <T extends AlgorithmSpi> T newInstance(String algorithmName) throws NoSuchAlgorithmException {
+        Assert.notBlank(algorithmName, "algorithmName不能为空");
         return newInstance(ClassUtils.getDefaultClassLoader(), algorithmName);
     }
 
@@ -53,6 +60,7 @@ public class AlgorithmRegistry {
      * @return 所有指定类型的算法实现的名字
      */
     public static Set<String> getAllAlgorithm(Class<? extends AlgorithmSpi> algorithmClass) {
+        Assert.notNull(algorithmClass, "algorithmClass不能为null");
         return getAllAlgorithm(ClassUtils.getDefaultClassLoader(), algorithmClass);
     }
 
@@ -60,7 +68,7 @@ public class AlgorithmRegistry {
      * 加载指定ClassLoader下所有算法实现
      * @param cl ClassLoader
      */
-    public static void load(ClassLoader cl) {
+    private static void load(ClassLoader cl) {
         REGISTRY.compute(cl, (loader, stringAlgorithmSpiMap) -> {
             if (stringAlgorithmSpiMap == null) {
                 ServiceLoader<AlgorithmSpi> serviceLoader = ServiceLoader.load(AlgorithmSpi.class,
@@ -97,11 +105,21 @@ public class AlgorithmRegistry {
     public static <T extends AlgorithmSpi> T newInstance(@NotNull ClassLoader loader,
                                                          String algorithmName) throws NoSuchAlgorithmException {
         Assert.notNull(loader, "ClassLoader不能为null");
+        Assert.notBlank(algorithmName, "algorithmName不能为空");
+
         // 先加载
         load(loader);
-        // 最后加载不到就抛出异常
-        return (T) Optional.ofNullable(REGISTRY.get(loader)).map(map -> map.get(algorithmName))
-            .orElseThrow(() -> new NoSuchAlgorithmException(algorithmName))1;
+        try {
+            List<AlgorithmSpi> list = find(loader,
+                algorithmSpi -> algorithmSpi.name().equals(algorithmName));
+            if (list.isEmpty()) {
+                throw new NoSuchAlgorithmException(algorithmName);
+            }
+
+            return (T) list.get(0).clone();
+        } catch (CloneNotSupportedException e) {
+            throw new CryptoException(e);
+        }
     }
 
     /**
@@ -112,10 +130,12 @@ public class AlgorithmRegistry {
      */
     public static Set<String> getAllAlgorithm(@NotNull ClassLoader loader) {
         Assert.notNull(loader, "ClassLoader不能为null");
+
         // 先加载
         load(loader);
-        return Optional.ofNullable(REGISTRY.get(loader)).map(Map::keySet).map(HashSet::new)
-            .orElseGet(HashSet::new);
+
+        List<AlgorithmSpi> list = find(loader, algorithmSpi -> true);
+        return list.stream().map(AlgorithmSpi::name).collect(Collectors.toSet());
     }
 
     /**
@@ -128,18 +148,31 @@ public class AlgorithmRegistry {
     public static Set<String> getAllAlgorithm(@NotNull ClassLoader loader,
                                               Class<? extends AlgorithmSpi> algorithmClass) {
         Assert.notNull(loader, "ClassLoader不能为null");
+        Assert.notNull(algorithmClass, "algorithmClass不能为null");
+
         // 先加载
         load(loader);
-        Set<String> set = new HashSet<>();
 
-        Optional.ofNullable(REGISTRY.get(loader)).orElseGet(ConcurrentHashMap::new)
-            .forEach((k, v) -> {
-                if (algorithmClass.isAssignableFrom(v.getClass())) {
-                    set.add(k);
-                }
-            });
+        List<AlgorithmSpi> list = find(loader,
+            algorithmSpi -> algorithmClass.isAssignableFrom(algorithmSpi.getClass()));
+        return list.stream().map(AlgorithmSpi::name).collect(Collectors.toSet());
+    }
 
-        return set;
+    /**
+     * 查找指定算法
+     * @param loader 指定ClassLoader
+     * @param filter 过滤器，过滤器返回true
+     * @return 对应的算法列表，会返回过滤器返回true的算法
+     */
+    private static List<AlgorithmSpi> find(@NotNull ClassLoader loader,
+                                           @NotNull Predicate<AlgorithmSpi> filter) {
+        ConcurrentMap<String, AlgorithmSpi> map = REGISTRY.get(loader);
+
+        if (map == null || map.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return map.values().stream().filter(filter).collect(Collectors.toList());
     }
 
 }

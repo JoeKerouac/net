@@ -24,8 +24,8 @@ public interface Cipher extends AlgorithmSpi {
 
     /**
      * 初始化密钥
-     * @param key 密钥
-     * @param mode 密码器模式
+     * @param key 加密密钥
+     * @param mode 密码器模式，1表示加密模式，2表示解密模式
      */
     void init(byte[] key, int mode);
 
@@ -40,4 +40,9 @@ public interface Cipher extends AlgorithmSpi {
      * @return 加密结果
      */
     byte[] doFinal();
+
+    @Override
+    default int type() {
+        return AlgorithmSpi.CIPHER;
+    }
 }

@@ -9,7 +9,7 @@ import com.joe.ssl.crypto.AlgorithmRegistry;
 public class HmacSHA384 extends AbstractHmac {
 
     public HmacSHA384() {
-        super(AlgorithmRegistry.newInstance("SHA-384"), 128);
+        super(AlgorithmRegistry.newInstance("SHA-384"), 48, 128);
     }
 
     @Override

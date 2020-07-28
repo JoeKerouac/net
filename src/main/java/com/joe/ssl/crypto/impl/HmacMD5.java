@@ -11,7 +11,7 @@ import com.joe.ssl.crypto.AlgorithmRegistry;
 public class HmacMD5 extends AbstractHmac {
 
     public HmacMD5() {
-        super(AlgorithmRegistry.newInstance("MD5"), 64);
+        super(AlgorithmRegistry.newInstance("MD5"), 16, 64);
     }
 
     @Override

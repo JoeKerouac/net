@@ -46,16 +46,16 @@ public interface HmacSpi extends AlgorithmSpi {
      * 对所有源数据进行hmac认证加密
      * @return 认证数据
      */
-    byte[] doFinal();
+    byte[] hmac();
 
     /**
      * 对指定数据生成认证数据
      * @param data 数据
      * @return 认证数据
      */
-    default byte[] doFinal(byte[] data) {
+    default byte[] hmac(byte[] data) {
         update(data);
-        return doFinal();
+        return hmac();
     }
 
     /**
@@ -64,8 +64,24 @@ public interface HmacSpi extends AlgorithmSpi {
     void reset();
 
     /**
+     * hmac算法块大小
+     * @return hmac算法块大小
+     */
+    int blockLen();
+
+    /**
+     * mac算法结果长度
+     * @return mac算法结果长度（实际是对应的hash算法长度，注意单位是bit不是byte）
+     */
+    int macSize();
+
+    /**
      * hash算法名
      * @return hash算法名
      */
     String hashAlgorithm();
+
+    default int type() {
+        return AlgorithmSpi.HMAC;
+    }
 }

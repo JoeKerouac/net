@@ -46,4 +46,9 @@ public interface DigestSpi extends AlgorithmSpi {
      * 重置摘要，重新生成摘要
      */
     void reset();
+
+    @Override
+    default int type() {
+        return AlgorithmSpi.DIGEST;
+    }
 }

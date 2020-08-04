@@ -119,33 +119,8 @@ public class ClientHandshaker {
                 // 这里就先不验签了
                 break;
             case SERVER_HELLO_DONE:
-                // 处理服务端握手完毕消息
-                AsymmetricCipherKeyPair ecAgreeClientKeyPair = generateECKeyPair(
-                    ecAgreeServerPublicKey.getParameters());
-                ecAgreeClientPrivateKey = (ECPrivateKeyParameters) ecAgreeClientKeyPair
-                    .getPrivate();
-                // 缓存
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                WrapedOutputStream outputStream = new WrapedOutputStream(byteArrayOutputStream);
-                byte[] sendData = ((ECPublicKeyParameters) ecAgreeClientKeyPair.getPublic()).getQ()
-                    .getEncoded();
-                // 将客户端公钥写出
-                // 总长度
-                outputStream.writeInt24(sendData.length + 1);
-                // 公钥长度
-                outputStream.writeInt8(sendData.length);
-                // 客户端公钥
-                outputStream.write(sendData);
-
-                byte[] pms = calculateECDHBasicAgreement(ecAgreeServerPublicKey,
-                    ecAgreeClientPrivateKey);
-
-                masterSecret = SSLUtil.PRF(pms, "master secret",
-                    CollectionUtil.merge(clientRandom, serverHello.getServerRandom()), 48);
-
-                // 确保pms被释放，RFC 2246中指导PremasterSecret应该在MasterSecret生成后立即被从内存删除
-                Arrays.fill(pms, (byte) 0);
-
+                // 详见README中，有详细算法
+                break;
         }
     }
 

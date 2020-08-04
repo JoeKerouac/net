@@ -100,7 +100,7 @@ public class ClientHandshaker {
             case SERVER_KEY_EXCHANGE:
                 // 处理服务端的密钥交换
                 int curveType = realData[0];
-                // 这个必须等于3， 其他不处理
+                // 这个必须等于3，其他不处理
                 Assert.isTrue(curveType == 3);
                 int curveId = realData[1] << 8 | realData[2];
                 // 这个必须等于23，其他不处理

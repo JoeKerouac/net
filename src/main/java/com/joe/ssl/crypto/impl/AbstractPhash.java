@@ -91,4 +91,9 @@ public abstract class AbstractPhash implements PhashSpi {
             remaining -= k;
         }
     }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }

@@ -329,12 +329,13 @@ final class X509TrustManagerImpl extends X509ExtendedTrustManager
     private static X509Certificate[] validate(Validator v,
             X509Certificate[] chain, AlgorithmConstraints constraints,
             String authType) throws CertificateException {
-        Object o = JsseJce.beginFipsProvider();
-        try {
-            return v.validate(chain, null, constraints, authType);
-        } finally {
-            JsseJce.endFipsProvider(o);
-        }
+//        Object o = JsseJce.beginFipsProvider();
+//        try {
+//            return v.validate(chain, null, constraints, authType);
+//        } finally {
+//            JsseJce.endFipsProvider(o);
+//        }
+        return null;
     }
 
     // Get string representation of HostName from a list of server names.

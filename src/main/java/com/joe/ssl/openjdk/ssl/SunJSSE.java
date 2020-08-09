@@ -231,9 +231,6 @@ public abstract class SunJSSE extends Provider {
     }
 
     private void subclassCheck() {
-        if (getClass() != com.sun.net.ssl.internal.ssl.Provider.class) {
-            throw new AssertionError("Illegal subclass: " + getClass());
-        }
     }
 
     @Override

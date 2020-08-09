@@ -236,7 +236,7 @@ final class ServerHandshaker extends Handshaker {
 
         switch (type) {
             case HandshakeMessage.ht_client_hello:
-                ClientHello ch = new ClientHello(input, message_len);
+                HandshakeMessage.ClientHello ch = new HandshakeMessage.ClientHello(input, message_len);
                 handshakeState.update(ch, resumingSession);
                 /*
                  * send it off for processing.
@@ -250,7 +250,8 @@ final class ServerHandshaker extends Handshaker {
                                 "client sent unsolicited cert chain");
                     // NOTREACHED
                 }
-                CertificateMsg certificateMsg = new CertificateMsg(input);
+
+                HandshakeMessage.CertificateMsg certificateMsg = new HandshakeMessage.CertificateMsg(input);
                 handshakeState.update(certificateMsg, resumingSession);
                 this.clientCertificate(certificateMsg);
                 break;
@@ -326,16 +327,16 @@ final class ServerHandshaker extends Handshaker {
                 break;
 
             case HandshakeMessage.ht_certificate_verify:
-                CertificateVerify cvm =
-                        new CertificateVerify(input,
+                HandshakeMessage.CertificateVerify cvm =
+                        new HandshakeMessage.CertificateVerify(input,
                             getLocalSupportedSignAlgs(), protocolVersion);
                 handshakeState.update(cvm, resumingSession);
                 this.clientCertificateVerify(cvm);
                 break;
 
             case HandshakeMessage.ht_finished:
-                Finished cfm =
-                    new Finished(protocolVersion, input, cipherSuite);
+                HandshakeMessage.Finished cfm =
+                    new HandshakeMessage.Finished(protocolVersion, input, cipherSuite);
                 handshakeState.update(cfm, resumingSession);
                 this.clientFinished(cfm);
                 break;
@@ -357,7 +358,7 @@ final class ServerHandshaker extends Handshaker {
      * All these messages are terminated by a ServerHelloDone message.  In
      * most cases, all this can be sent in a single Record.
      */
-    private void clientHello(ClientHello mesg) throws IOException {
+    private void clientHello(HandshakeMessage.ClientHello mesg) throws IOException {
         if (debug != null && Debug.isOn("handshake")) {
             mesg.print(System.out);
         }
@@ -546,7 +547,7 @@ final class ServerHandshaker extends Handshaker {
          * There are a bunch of minor tasks here, and one major one: deciding
          * if the short or the full handshake sequence will be used.
          */
-        ServerHello m1 = new ServerHello();
+        HandshakeMessage.ServerHello m1 = new HandshakeMessage.ServerHello();
 
         clientRequestedVersion = mesg.protocolVersion;
 
@@ -915,7 +916,7 @@ final class ServerHandshaker extends Handshaker {
                 throw new RuntimeException("no certificates");
             }
 
-            CertificateMsg m2 = new CertificateMsg(certs);
+            HandshakeMessage.CertificateMsg m2 = new HandshakeMessage.CertificateMsg(certs);
 
             /*
              * Set local certs in the SSLSession, output
@@ -948,7 +949,7 @@ final class ServerHandshaker extends Handshaker {
          * to use short RSA keys, even when the key/cert encrypts OK.
          */
 
-        ServerKeyExchange m3;
+        HandshakeMessage.ServerKeyExchange m3;
         switch (keyExchange) {
         case K_RSA:
         case K_KRB5:
@@ -959,7 +960,7 @@ final class ServerHandshaker extends Handshaker {
         case K_RSA_EXPORT:
             if (JsseJce.getRSAKeyLength(certs[0].getPublicKey()) > 512) {
                 try {
-                    m3 = new RSA_ServerKeyExchange(
+                    m3 = new HandshakeMessage.RSA_ServerKeyExchange(
                         tempPublicKey, privateKey,
                         clnt_random, svr_random,
                         sslContext.getSecureRandom());
@@ -977,7 +978,7 @@ final class ServerHandshaker extends Handshaker {
         case K_DHE_RSA:
         case K_DHE_DSS:
             try {
-                m3 = new DH_ServerKeyExchange(dh,
+                m3 = new HandshakeMessage.DH_ServerKeyExchange(dh,
                     privateKey,
                     clnt_random.random_bytes,
                     svr_random.random_bytes,
@@ -990,13 +991,13 @@ final class ServerHandshaker extends Handshaker {
             }
             break;
         case K_DH_ANON:
-            m3 = new DH_ServerKeyExchange(dh, protocolVersion);
+            m3 = new HandshakeMessage.DH_ServerKeyExchange(dh, protocolVersion);
             break;
         case K_ECDHE_RSA:
         case K_ECDHE_ECDSA:
         case K_ECDH_ANON:
             try {
-                m3 = new ECDH_ServerKeyExchange(ecdh,
+                m3 = new HandshakeMessage.ECDH_ServerKeyExchange(ecdh,
                     privateKey,
                     clnt_random.random_bytes,
                     svr_random.random_bytes,
@@ -1040,7 +1041,7 @@ final class ServerHandshaker extends Handshaker {
                 keyExchange != K_DH_ANON && keyExchange != K_ECDH_ANON &&
                 keyExchange != K_KRB5 && keyExchange != K_KRB5_EXPORT) {
 
-            CertificateRequest m4;
+            HandshakeMessage.CertificateRequest m4;
             X509Certificate caCerts[];
 
             Collection<SignatureAndHashAlgorithm> localSignAlgs = null;
@@ -1065,7 +1066,7 @@ final class ServerHandshaker extends Handshaker {
             }
 
             caCerts = sslContext.getX509TrustManager().getAcceptedIssuers();
-            m4 = new CertificateRequest(caCerts, keyExchange,
+            m4 = new HandshakeMessage.CertificateRequest(caCerts, keyExchange,
                                             localSignAlgs, protocolVersion);
 
             if (debug != null && Debug.isOn("handshake")) {
@@ -1078,7 +1079,7 @@ final class ServerHandshaker extends Handshaker {
         /*
          * FIFTH, say ServerHelloDone.
          */
-        ServerHelloDone m5 = new ServerHelloDone();
+        HandshakeMessage.ServerHelloDone m5 = new HandshakeMessage.ServerHelloDone();
 
         if (debug != null && Debug.isOn("handshake")) {
             m5.print(System.out);
@@ -1099,7 +1100,7 @@ final class ServerHandshaker extends Handshaker {
      * Choose cipher suite from among those supported by client. Sets
      * the cipherSuite and keyExchange variables.
      */
-    private void chooseCipherSuite(ClientHello mesg) throws IOException {
+    private void chooseCipherSuite(HandshakeMessage.ClientHello mesg) throws IOException {
         CipherSuiteList prefered;
         CipherSuiteList proposed;
         if (preferLocalCipherSuites) {
@@ -1188,7 +1189,7 @@ final class ServerHandshaker extends Handshaker {
             return false;
         }
 
-        KeyExchange keyExchange = suite.keyExchange;
+        CipherSuite.KeyExchange keyExchange = suite.keyExchange;
 
         // null out any existing references
         privateKey = null;
@@ -1216,8 +1217,8 @@ final class ServerHandshaker extends Handshaker {
                     case K_ECDH_RSA:
                     case K_ECDHE_RSA:
                         algorithm = SignatureAndHashAlgorithm.valueOf(
-                                HashAlgorithm.SHA1.value,
-                                SignatureAlgorithm.RSA.value, 0);
+                                SignatureAndHashAlgorithm.HashAlgorithm.SHA1.value,
+                                SignatureAndHashAlgorithm.SignatureAlgorithm.RSA.value, 0);
                         break;
                     // If the negotiated key exchange algorithm is one of
                     // (DHE_DSS, DH_DSS), behave as if the client had
@@ -1225,8 +1226,8 @@ final class ServerHandshaker extends Handshaker {
                     case K_DHE_DSS:
                     case K_DH_DSS:
                         algorithm = SignatureAndHashAlgorithm.valueOf(
-                                HashAlgorithm.SHA1.value,
-                                SignatureAlgorithm.DSA.value, 0);
+                                SignatureAndHashAlgorithm.HashAlgorithm.SHA1.value,
+                                SignatureAndHashAlgorithm.SignatureAlgorithm.DSA.value, 0);
                         break;
                     // If the negotiated key exchange algorithm is one of
                     // (ECDH_ECDSA, ECDHE_ECDSA), behave as if the client
@@ -1234,8 +1235,8 @@ final class ServerHandshaker extends Handshaker {
                     case K_ECDH_ECDSA:
                     case K_ECDHE_ECDSA:
                         algorithm = SignatureAndHashAlgorithm.valueOf(
-                                HashAlgorithm.SHA1.value,
-                                SignatureAlgorithm.ECDSA.value, 0);
+                                SignatureAndHashAlgorithm.HashAlgorithm.SHA1.value,
+                                SignatureAndHashAlgorithm.SignatureAlgorithm.ECDSA.value, 0);
                         break;
                     default:
                         // no peer supported signature algorithms
@@ -1730,7 +1731,7 @@ final class ServerHandshaker extends Handshaker {
      * the _exact_ identity of the client is less fundamental to protocol
      * security than its role in selecting keys via the pre-master secret.
      */
-    private void clientCertificateVerify(CertificateVerify mesg)
+    private void clientCertificateVerify(HandshakeMessage.CertificateVerify mesg)
             throws IOException {
 
         if (debug != null && Debug.isOn("handshake")) {
@@ -1780,7 +1781,7 @@ final class ServerHandshaker extends Handshaker {
      * When we're resuming a session, we'll have already sent our own
      * Finished message so just the verification is needed.
      */
-    private void clientFinished(Finished mesg) throws IOException {
+    private void clientFinished(HandshakeMessage.Finished mesg) throws IOException {
         if (debug != null && Debug.isOn("handshake")) {
             mesg.print(System.out);
         }
@@ -1808,7 +1809,7 @@ final class ServerHandshaker extends Handshaker {
          * Verify the client's message with the "before" digest of messages,
          * and forget about continuing to use that digest.
          */
-        boolean verified = mesg.verify(handshakeHash, Finished.CLIENT,
+        boolean verified = mesg.verify(handshakeHash, HandshakeMessage.Finished.CLIENT,
             session.getMasterSecret());
 
         if (!verified) {
@@ -1865,8 +1866,8 @@ final class ServerHandshaker extends Handshaker {
 
         output.flush();
 
-        Finished mesg = new Finished(protocolVersion, handshakeHash,
-            Finished.SERVER, session.getMasterSecret(), cipherSuite);
+        HandshakeMessage.Finished mesg = new HandshakeMessage.Finished(protocolVersion, handshakeHash,
+            HandshakeMessage.Finished.SERVER, session.getMasterSecret(), cipherSuite);
 
         /*
          * Send the change_cipher_spec record; then our Finished handshake
@@ -1889,7 +1890,7 @@ final class ServerHandshaker extends Handshaker {
      */
     @Override
     HandshakeMessage getKickstartMessage() {
-        return new HelloRequest();
+        return new HandshakeMessage.HelloRequest();
     }
 
 
@@ -1944,7 +1945,7 @@ final class ServerHandshaker extends Handshaker {
      * to indicate it does not have an appropriate chain. (In SSLv3 mode,
      * it would send a no certificate alert).
      */
-    private void clientCertificate(CertificateMsg mesg) throws IOException {
+    private void clientCertificate(HandshakeMessage.CertificateMsg mesg) throws IOException {
         if (debug != null && Debug.isOn("handshake")) {
             mesg.print(System.out);
         }

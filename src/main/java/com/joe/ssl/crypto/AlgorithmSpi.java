@@ -1,51 +1,50 @@
 package com.joe.ssl.crypto;
 
 /**
- * Ëã·¨½Ó¿Ú£¬ËùÓĞËã·¨¶¼¼Ì³Ğ×Ô¸Ã½Ó¿Ú
+ * ç®—æ³•æ¥å£ï¼Œæ‰€æœ‰ç®—æ³•éƒ½ç»§æ‰¿è‡ªè¯¥æ¥å£
  * 
  * @author JoeKerouac
- * @version 2020Äê07ÔÂ23ÈÕ 16:00
+ * @version 2020å¹´07æœˆ23æ—¥ 16:00
  */
 public interface AlgorithmSpi extends Cloneable {
 
     /**
-     * ÕªÒªËã·¨ÀàĞÍ
+     * æ‘˜è¦ç®—æ³•ç±»å‹
      */
     int DIGEST = 0;
 
     /**
-     * ¼ÓÃÜËã·¨ÀàĞÍ
+     * åŠ å¯†ç®—æ³•ç±»å‹
      */
     int CIPHER = 1;
 
     /**
-     * HmacËã·¨ÀàĞÍ
+     * Hmacç®—æ³•ç±»å‹
      */
     int HMAC   = 2;
 
     /**
-     * PhashËã·¨ÀàĞÍ
+     * Phashç®—æ³•ç±»å‹
      */
     int PHASH  = 3;
 
     /**
-     * Ëã·¨Ãû
-     * @return Ëã·¨Ãû
+     * ç®—æ³•å
+     * @return ç®—æ³•å
      */
     String name();
 
     /**
-     * Ëã·¨ÀàĞÍ
-     * @return Ëã·¨ÀàĞÍ
+     * ç®—æ³•ç±»å‹
+     * @return ç®—æ³•ç±»å‹
      */
     int type();
 
     /**
-     * ¿ËÂ¡£¬Ä¬ÈÏ²»Ö§³Ö£¬Çë×ÔĞĞÊµÏÖ
-     * @return ¿ËÂ¡½á¹û
-     * @throws CloneNotSupportedException Òì³£
+     * å…‹éš†ï¼Œé»˜è®¤ä¸æ”¯æŒï¼Œè¯·è‡ªè¡Œå®ç°
+     * @return å…‹éš†ç»“æœ
      */
     default Object clone() throws CloneNotSupportedException {
-        throw new CloneNotSupportedException("²»Ö§³Öclone²Ù×÷");
+        throw new CloneNotSupportedException(String.format("[%s]ä¸æ”¯æŒcloneæ“ä½œ", this.getClass().getName()));
     }
 }

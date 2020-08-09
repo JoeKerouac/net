@@ -90,6 +90,7 @@ public class ClientHandshaker {
         HandshakeType type = HandshakeType.getByCode(handshakeData[0]);
         byte[] realData = new byte[handshakeData.length - 4];
         System.arraycopy(handshakeData, 4, realData, 0, realData.length);
+        System.out.println("收到\"" + type + "\"类型的握手数据");
         switch (type) {
             case SERVER_HELLO:
                 this.serverHello = new ServerHello(handshakeData);

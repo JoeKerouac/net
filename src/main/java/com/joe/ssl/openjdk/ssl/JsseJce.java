@@ -44,7 +44,6 @@ import sun.security.jca.ProviderList;
 
 import sun.security.util.ECUtil;
 
-import static SunJSSE.cryptoProvider;
 
 /**
  * This class contains a few static methods for interaction with the JCA/JCE
@@ -53,6 +52,8 @@ import static SunJSSE.cryptoProvider;
  * @author  Andreas Sterbenz
  */
 final class JsseJce {
+
+    private static Provider cryptoProvider;
 
     private final static ProviderList fipsProviderList;
 

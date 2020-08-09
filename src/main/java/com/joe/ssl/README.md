@@ -96,10 +96,10 @@ PRF结果包含以下内容：
 
 三、ECDH密钥交换算法详情：
 官方算法：com.joe.ssl.openjdk.ssl.HandshakeMessage.ECDH_ServerKeyExchange.ECDH_ServerKeyExchange(com.joe.ssl.openjdk.ssl.HandshakeInStream, java.security.PublicKey, byte[], byte[], java.util.Collection<com.joe.ssl.openjdk.ssl.SignatureAndHashAlgorithm>, com.joe.ssl.openjdk.ssl.ProtocolVersion)
-1、首先读取服务端的ECDHParams，先是8个字节的curveType，判断是否是CURVE_NAMED_CURVE（值为3）类型，如果不是抛出异常；
+1、首先读取服务端的ECDHParams（就是曲线的类型，选定曲线类型后曲线参数是固定的），先是8个字节的curveType，判断是否是CURVE_NAMED_CURVE（值为3）类型，如果不是抛出异常；
 2、读取16个字节的curveId，根据curveId找到对应的ECParameterSpec（这个主要为了用来还原生成服务端的EC参数）；
-3、读取8个字节的长度信息（单位byte），然后读取该长度的byte数组作为ECpoint数据，然后根据point数据和上边读出的服务端param解析出ECPoint；
-4、根据该ECPoint信息获取出公钥信息，这个公钥用于后边DH协商公私钥使用，详细算法见sun.security.ec.ECKeyFactory.engineGeneratePublic；
+3、读取8个字节的长度信息（单位byte），然后读取该长度的byte数组作为ECpoint数据，然后根据point数据和上边读出的椭圆曲线类型对应的参数（ECParameterSpec）解析出服务端的ECPoint；
+4、根据该服务端的ECPoint信息获取出公钥信息，这个公钥用于后边DH协商公私钥使用，详细算法见sun.security.ec.ECKeyFactory.engineGeneratePublic；
 5、如果serverKey（Certificate步骤中获取的）为空，则不继续，如果不为空则使用该公钥进行验签；
 6、开始验签，先读取8个字节的hash算法id，然后读取8个字节的签名算法id，根据这两个id获取出来签名器，然后使用serverKey初始化签名器；
 7、读取服务端发来的签名信息，读取方式：先读取16个字节的长度信息（单位byte），然后根据该长度信息读取相应长度的byte数组作为签名；

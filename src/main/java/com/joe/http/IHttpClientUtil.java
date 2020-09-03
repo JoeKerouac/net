@@ -150,7 +150,7 @@ public class IHttpClientUtil {
      */
     public String executePost(String url, String data, String resultCharset, String requestCharset,
                               String contentType) throws IOException {
-        IHttpRequestBase.Builder builder = IHttpPost.builder(url);
+        IHttpRequestBase.Builder<IHttpPost> builder = IHttpPost.builder(url);
         builder.entity(data);
         builder.charset(
             StringUtils.isEmpty(requestCharset) ? IHttpRequestBase.CHARSET : requestCharset);
@@ -166,7 +166,7 @@ public class IHttpClientUtil {
      * @return 请求结果流
      * @throws IOException IO异常
      */
-    private InputStream executeAsStream(IHttpRequestBase.Builder builder) throws IOException {
+    private InputStream executeAsStream(IHttpRequestBase.Builder<? extends IHttpRequestBase> builder) throws IOException {
         builder.config(new IHttpConfig());
         return client.execute(builder.build()).getResultAsStream();
     }
@@ -179,7 +179,7 @@ public class IHttpClientUtil {
      * @return 请求结果字符串
      * @throws IOException IO异常
      */
-    public String execute(IHttpRequestBase.Builder builder,
+    public String execute(IHttpRequestBase.Builder<? extends IHttpRequestBase> builder,
                           String resultCharset) throws IOException {
         builder.config(new IHttpConfig());
         IHttpResponse response = client.execute(builder.build());

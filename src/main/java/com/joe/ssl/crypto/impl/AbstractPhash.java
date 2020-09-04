@@ -3,7 +3,6 @@ package com.joe.ssl.crypto.impl;
 import com.joe.ssl.crypto.HmacSpi;
 import com.joe.ssl.crypto.PhashSpi;
 
-import sun.plugin.dom.exception.InvalidStateException;
 
 /**
  * Phash算法抽象，非线程安全
@@ -42,7 +41,7 @@ public abstract class AbstractPhash implements PhashSpi {
     @Override
     public void phash(byte[] seed, byte[] output) {
         if (!init) {
-            throw new InvalidStateException("PHASH未初始化，请先初始化");
+            throw new IllegalStateException("PHASH未初始化，请先初始化");
         }
 
         int hmacSize = hmacSpi.macSize();

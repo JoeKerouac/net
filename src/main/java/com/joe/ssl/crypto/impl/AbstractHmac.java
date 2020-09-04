@@ -6,7 +6,6 @@ import com.joe.ssl.crypto.DigestSpi;
 import com.joe.ssl.crypto.HmacSpi;
 import com.joe.ssl.crypto.exception.InvalidKeyException;
 
-import sun.plugin.dom.exception.InvalidStateException;
 
 /**
  * 抽象Hmac算法，不同hmac的差异实际上就是摘要算法的差异，所以可以对其公共算法进行统一封装
@@ -97,7 +96,7 @@ public abstract class AbstractHmac implements HmacSpi {
     @Override
     public void update(byte[] data) {
         if (!init) {
-            throw new InvalidStateException("HMAC未初始化，请先初始化");
+            throw new IllegalStateException("HMAC未初始化，请先初始化");
         }
 
         if (this.first) {
@@ -110,7 +109,7 @@ public abstract class AbstractHmac implements HmacSpi {
     @Override
     public byte[] hmac() {
         if (!init) {
-            throw new InvalidStateException("HMAC未初始化，请先初始化");
+            throw new IllegalStateException("HMAC未初始化，请先初始化");
         }
 
         if (this.first) {

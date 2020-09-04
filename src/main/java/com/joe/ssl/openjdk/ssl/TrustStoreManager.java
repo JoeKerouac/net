@@ -35,7 +35,6 @@ import java.security.cert.Certificate;
 
 import sun.security.action.*;
 
-import sun.security.validator.TrustStoreUtil;
 
 /**
  * Collection of static utility methods to manage the default trusted KeyStores
@@ -390,7 +389,8 @@ final class TrustStoreManager {
                 return Collections.<X509Certificate>emptySet();
             }
 
-            return TrustStoreUtil.getTrustedCerts(ks);
+//            return TrustStoreUtil.getTrustedCerts(ks);
+            return Collections.emptySet();
         }
     }
 }

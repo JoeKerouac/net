@@ -34,7 +34,6 @@ import javax.net.ssl.*;
 
 
 import sun.security.validator.Validator;
-import sun.security.validator.TrustStoreUtil;
 
 abstract class TrustManagerFactoryImpl extends TrustManagerFactorySpi {
 
@@ -78,7 +77,7 @@ abstract class TrustManagerFactoryImpl extends TrustManagerFactorySpi {
                     "problem accessing trust store", e);
             }
         } else {
-            trustManager = getInstance(TrustStoreUtil.getTrustedCerts(ks));
+//            trustManager = getInstance(TrustStoreUtil.getTrustedCerts(ks));
         }
 
         isInitialized = true;

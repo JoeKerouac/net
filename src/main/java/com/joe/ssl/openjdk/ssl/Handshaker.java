@@ -1353,6 +1353,7 @@ abstract class Handshaker {
         try {
             KeyGenerator kg = JsseJce.getKeyGenerator(keyMaterialAlg);
             kg.init(spec);
+            // 实现使用TlsKeyMaterialGenerator
             TlsKeyMaterialSpec keySpec = (TlsKeyMaterialSpec)kg.generateKey();
 
             // Return null if cipher keys are not supposed to be generated.

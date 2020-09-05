@@ -2,10 +2,21 @@ package com.joe.ssl.cipher;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.joe.ssl.crypto.exception.CryptoException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * int类型的静态字段的字段名必须是加密套件名，值是对应的id
@@ -177,14 +188,97 @@ public class CipherSuite {
         }
     }
 
+    public static final List<CipherSuite> CIPHER_SUITES = new ArrayList<>();
+
+
+    static {
+        CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, "SHA384", KeyExchange.ECDH_RSA, CipherDesc.AES_256_GCM));
+    }
+
     /**
      * 加密套件id
      */
     private int suite;
 
     /**
-     * mac算法
+     * mac算法（对应的hash算法）
      */
     private String macAlg;
 
+    /**
+     * 密钥交换算法名
+     */
+    private KeyExchange keyExchange;
+
+    /**
+     * 加密算法名
+     */
+    private CipherDesc cipher;
+
+    public CipherSuite(int suite, String macAlg, KeyExchange keyExchange, CipherDesc cipher) {
+        this.suite = suite;
+        this.macAlg = macAlg;
+        this.keyExchange = keyExchange;
+        this.cipher = cipher;
+    }
+
+
+    private enum KeyExchange{
+        ECDH_RSA,
+    }
+
+    private enum CipherDesc{
+
+        AES_128("AES/CBC/NoPadding", 16, 16, 0),
+
+        AES_128_GCM("AES/GCM/NoPadding", 16, 12, 4),
+
+        AES_256("AES/CBC/NoPadding", 32, 16, 0),
+
+        AES_256_GCM("AES/GCM/NoPadding", 32, 12, 4),
+        ;
+
+        private String cipherName;
+        private int keyLen;
+        private int ivLen;
+        private int fixedIvLen;
+
+        CipherDesc(String cipherName, int keyLen, int ivLen, int fixedIvLen) {
+            this.cipherName = cipherName;
+            this.keyLen = keyLen;
+            this.ivLen = ivLen;
+            this.fixedIvLen = fixedIvLen;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        // 注册BouncyCastle:
+        Security.addProvider(new BouncyCastleProvider());
+
+//        Cipher cipher = Cipher.getInstance(CipherDesc.AES_256_GCM.cipherName, "BC");
+        Cipher cipher = Cipher.getInstance(CipherDesc.AES_256.cipherName,new BouncyCastleProvider());
+
+        byte[] iv = new byte[CipherDesc.AES_256.ivLen];
+        IvParameterSpec ivps = new IvParameterSpec(iv);
+
+
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+        byte[] key = "1234567890abcdef1234567890abcdef".getBytes("UTF-8");
+
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256, new SecureRandom());
+
+        SecretKey secretKey = keyGen.generateKey();
+
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivps, new SecureRandom());
+
+
+
+
+        System.out.println(cipher);
+        System.out.println(cipher.getClass());
+    }
 }

@@ -65,11 +65,17 @@ client接到ServerHelloDone需要处理的事情：
 
 
 
+## 算法套件
+AHEAD模式：
+加密不需要mac算法；
+有fixedIv
+
+BLOCK_CIPHER（CBC）模式：
+需要mac算法
+没有fixedIv
 
 
-
-
-算法细节：
+## 算法细节：
 一、根据preMasterKey计算masterKey：
 官方算法：com.sun.crypto.provider.TlsMasterSecretGenerator
 实现逻辑：使用PRF算法的结果作为masterKey

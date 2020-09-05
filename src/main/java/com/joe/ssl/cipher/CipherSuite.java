@@ -227,15 +227,19 @@ public class CipherSuite {
         ECDH_RSA,
     }
 
+    public enum CipherType{
+        BLOCK, AHEAD;
+    }
+
     public enum CipherDesc {
 
-        AES_128("AES/CBC/NoPadding", 16, 16, 0),
+        AES_128("AES/CBC/NoPadding", CipherType.BLOCK, 16, 16, 0),
 
-        AES_128_GCM("AES/GCM/NoPadding", 16, 12, 4),
+        AES_128_GCM("AES/GCM/NoPadding", CipherType.AHEAD, 16, 12, 4),
 
-        AES_256("AES/CBC/NoPadding", 32, 16, 0),
+        AES_256("AES/CBC/NoPadding", CipherType.BLOCK, 32, 16, 0),
 
-        AES_256_GCM("AES/GCM/NoPadding", 32, 12, 4),
+        AES_256_GCM("AES/GCM/NoPadding", CipherType.AHEAD, 32, 12, 4),
 
         ;
 
@@ -255,12 +259,18 @@ public class CipherSuite {
         public int ivLen;
 
         /**
-         *
+         * GCM模式下会大于0，表示实际的ivLen，因为对于GCM模式来说iv等于fixedIv+nonce
          */
         public int fixedIvLen;
 
-        CipherDesc(String cipherName, int keySize, int ivLen, int fixedIvLen) {
+        /**
+         * 加密类型
+         */
+        public CipherType cipherType;
+
+        CipherDesc(String cipherName, CipherType cipherType, int keySize, int ivLen, int fixedIvLen) {
             this.cipherName = cipherName;
+            this.cipherType = cipherType;
             this.keySize = keySize;
             this.ivLen = ivLen;
             this.fixedIvLen = fixedIvLen;

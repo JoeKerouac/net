@@ -915,6 +915,7 @@ final class CipherBox {
      */
     int applyExplicitNonce(Authenticator authenticator, byte contentType,
                            ByteBuffer bb) throws BadPaddingException {
+        // 读取数据时调用，解密用
         switch (cipherType) {
             case BLOCK_CIPHER:
                 // sanity check length of the ciphertext
@@ -1016,6 +1017,7 @@ final class CipherBox {
      */
     byte[] createExplicitNonce(Authenticator authenticator,
                                byte contentType, int fragmentLength) {
+        // 写出数据时调用，加密用
 
         byte[] nonce = new byte[0];
         switch (cipherType) {
@@ -1033,6 +1035,7 @@ final class CipherBox {
             case AEAD_CIPHER:
                 // To be unique and aware of overflow-wrap, sequence number
                 // is used as the nonce_explicit of AEAD cipher suites.
+                // 应该是32 bit的
                 nonce = authenticator.sequenceNumber();
 
                 // initialize the AEAD cipher for the unique IV
@@ -1080,7 +1083,7 @@ final class CipherBox {
         int blockSize = cipher.getBlockSize();
         if ((fragmentLen % blockSize) == 0) {
             int minimal = tagLen + 1;
-            minimal = (minimal >= blockSize) ? minimal : blockSize;
+            minimal = Math.max(minimal, blockSize);
             if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
                 minimal += blockSize;   // plus the size of the explicit IV
             }

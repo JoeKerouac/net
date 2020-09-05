@@ -66,13 +66,26 @@ client接到ServerHelloDone需要处理的事情：
 
 
 ## 算法套件
-AHEAD模式：
-加密不需要mac算法；
+### AES
+AHEAD模式(GCM)：
+加密不需要mac算法，自带mac算法（消息认证）；
 有fixedIv
+GCM有一个tagSize的概念，表示身份验证的长度，目前已知的都是128bit，即16 byte
+GCM有一个recordIvSize的概念，recordIvSize = ivSize - fixedIvSize，表示随机数的大小，对于GCM来说，iv = fixedIv + nonce，nonce就是TCP的seqNumber（32 bit）
+
 
 BLOCK_CIPHER（CBC）模式：
 需要mac算法
 没有fixedIv
+
+
+AES算法加密数据长度必须是16（单位byte）的整数倍，长度不足需要填充，如果加密模式选用的是NoPadding那么必须手动填充数据，算法的密钥长度必须是16、24
+或者32（单位byte），算法iv长度固定16（单位byte）；
+
+常用填充方式：
+
+- NoPadding
+- PKCS7Padding
 
 
 ## 算法细节：

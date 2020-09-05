@@ -3,13 +3,13 @@ package com.joe.ssl.cipher;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.joe.ssl.crypto.exception.CryptoException;
+import com.joe.utils.collection.CollectionUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.Cipher;
@@ -223,11 +223,11 @@ public class CipherSuite {
     }
 
 
-    private enum KeyExchange{
+    private enum KeyExchange {
         ECDH_RSA,
     }
 
-    private enum CipherDesc{
+    public enum CipherDesc {
 
         AES_128("AES/CBC/NoPadding", 16, 16, 0),
 
@@ -236,49 +236,34 @@ public class CipherSuite {
         AES_256("AES/CBC/NoPadding", 32, 16, 0),
 
         AES_256_GCM("AES/GCM/NoPadding", 32, 12, 4),
+
         ;
 
-        private String cipherName;
-        private int keyLen;
-        private int ivLen;
-        private int fixedIvLen;
+        /**
+         * 加密算法名
+         */
+        public String cipherName;
 
-        CipherDesc(String cipherName, int keyLen, int ivLen, int fixedIvLen) {
+        /**
+         * 密钥大小，单位byte
+         */
+        public int keySize;
+
+        /**
+         * iv大小，单位byte
+         */
+        public int ivLen;
+
+        /**
+         *
+         */
+        public int fixedIvLen;
+
+        CipherDesc(String cipherName, int keySize, int ivLen, int fixedIvLen) {
             this.cipherName = cipherName;
-            this.keyLen = keyLen;
+            this.keySize = keySize;
             this.ivLen = ivLen;
             this.fixedIvLen = fixedIvLen;
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        // 注册BouncyCastle:
-        Security.addProvider(new BouncyCastleProvider());
-
-//        Cipher cipher = Cipher.getInstance(CipherDesc.AES_256_GCM.cipherName, "BC");
-        Cipher cipher = Cipher.getInstance(CipherDesc.AES_256.cipherName,new BouncyCastleProvider());
-
-        byte[] iv = new byte[CipherDesc.AES_256.ivLen];
-        IvParameterSpec ivps = new IvParameterSpec(iv);
-
-
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
-
-        byte[] key = "1234567890abcdef1234567890abcdef".getBytes("UTF-8");
-
-        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256, new SecureRandom());
-
-        SecretKey secretKey = keyGen.generateKey();
-
-        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivps, new SecureRandom());
-
-
-
-
-        System.out.println(cipher);
-        System.out.println(cipher.getClass());
     }
 }

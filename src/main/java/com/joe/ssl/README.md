@@ -92,6 +92,67 @@ AES算法加密数据长度必须是16（单位byte）的整数倍，长度不�
 - NoPadding
 - PKCS7Padding
 
+## 加密数据格式
+明文：
+- 1 byte的record类型
+- 2 byte 版本信息
+- 2 byte长度信息，单位byte
+- 4 byte的nonce信息（AEAD模式有）
+
+密文：
+- 结尾MAClen长度的mac认证信息（AEAD模式没有）
+
+## record层数据结构：
+struct {
+    uint8 major;
+    uint8 minor;
+} ProtocolVersion;（2 byte）
+
+enum {
+    change_cipher_spec(20), alert(21), handshake(22),
+    application_data(23), (255)
+} ContentType;（1 byte）
+
+struct {
+    ContentType type;（1 byte）
+    ProtocolVersion version;（2 byte）
+    uint16 length;（TLSPlaintext.fragment的长度，虽然有16bit，但是一般不能超过2^14，因为record必须全部数据接收完才能做解密操作，太长的话需要等很久才能完成一个包的接受）
+    opaque fragment[TLSPlaintext.length];（负载数据，部分加密的）
+} TLSPlaintext;
+
+## record负载数据TLSPlaintext的数据结构：
+struct {
+    ContentType type;
+    ProtocolVersion version;
+    uint16 length;
+    select (SecurityParameters.cipher_type) {
+        case stream: GenericStreamCipher;
+        case block:  GenericBlockCipher;
+        case aead:   GenericAEADCipher;
+    } fragment;
+} TLSCiphertext;
+
+## GenericBlockCipher
+struct {
+    opaque IV[SecurityParameters.record_iv_length];（实际上是一个blockSize的随机数，用random生成，并不会使用，本项数据会一起加密，cipher初始化使用的iv是密钥交换时的）
+    block-ciphered struct {
+        opaque content[TLSCompressed.length];（负载数据）
+        opaque MAC[SecurityParameters.mac_length];（mac认证信息，这里认证的是认证添加数据+负载数据，认证添加数据 = 8 byte的seqNumber + 1 byte的recordType + 2 byte的protocolVersion + 2 byte的负载数据长度）
+        uint8 padding[GenericBlockCipher.padding_length];（padding信息，会加密）
+        uint8 padding_length;（padding的长度）
+    };
+} GenericBlockCipher;
+
+
+## GenericAEADCipher
+struct {
+   opaque nonce_explicit[SecurityParameters.record_iv_length];（这里是显式iv，实际的iv是隐式iv（即密钥交换的iv） + 显式iv（即nonce）组成），这部分数据是不加密的
+   aead-ciphered struct {
+       opaque content[TLSCompressed.length];（负载数据）
+   };
+} GenericAEADCipher;
+
+
 
 ## 读取加密数据步骤
 SSLEngineImpl#readNetRecord：
@@ -119,9 +180,14 @@ EngineInputRecord#decrypt：
 - 如果是AEAD模式加密，那么跳过nonceSize的数据，也就是说明AEAD模式下nonce是不加密传输的
 - 开始实际解密，如果是AEAD模式，直接使用doFinal方法，并记录解密结果长度为newLen，如果不是AEAD模式，则调用update方法，并记录结果长度newLen
 - 重置缓冲区的limit
-- 如果是BLOCK模式，那么将缓冲区的position置为0，移除padding后返回新的长度newLen（不包含padding，newLen = len - padLen - 1），并且版本大于等于TLS1.1时newLen应该大于等于blockSize；
+- 如果是BLOCK模式，那么将缓冲区的position置为0，移除padding后返回新的长度newLen（不包含padding，newLen = len - padLen - 1），并且版本大于等于TLS1.1时newLen应该大于等于blockSize，不满足就抛出异常；
   > padding移除算法：获取当前缓冲区数据的最后一个byte，表示的是padLen
 - 如果上一步计算的newLen-tagLen小于0那么抛出异常
+- 跳过缓冲区nonceSize的数据
+- 校验mac，对缓冲区数据进行摘要（不包含mac数据），然后和缓冲区中的认证信息对比，最终将缓冲区的position还原，limit缩小到mac认证信息处，也就是后续就不需要mac认证信息了；
+  > 计算认证信息的时候，需要先将添加数据update到mac认证器中，然后才是传输数据；添加认证信息（com.joe.ssl.openjdk.ssl.Authenticator.acquireAuthenticationBytes）：13byte，组成：8 byte的seqNumber + 1 byte的recordType + 2 byte的protocolVersion + 2 byte的record length，其中protocolVersion是先放major，然后放minor，这里recordLen等于要认证的数据的长度（不包含缓冲区中mac认证信息）
+- 如果是BLOCK模式，需要对内部buf进行mac校验（为了什么？没太看懂，实际效果就是将sequence number + 1了）
+- 返回解密后的数据，不包含头部的nonce和尾部的mac信息（如有）
 
 
 

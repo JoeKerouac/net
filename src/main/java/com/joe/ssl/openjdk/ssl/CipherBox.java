@@ -793,8 +793,7 @@ final class CipherBox {
             //
             // Note that it is a dummy check, so we won't care about what is
             // the actual padding data.
-            // 这里其实类似于sleep，没有什么实际意义，只是为了空跑一会儿，里边的一些逻辑也仅仅是为了防止Hotspot优化做的
-            // 为什么这么做？
+            // 这里是为了安全，所以加了段这个逻辑
             checkPadding(bb.duplicate(), (byte)(padLen & 0xFF));
 
             throw new BadPaddingException("Invalid Padding length: " + padLen);

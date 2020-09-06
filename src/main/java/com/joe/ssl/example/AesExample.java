@@ -192,13 +192,26 @@ public class AesExample {
         return cipher.doFinal(data);
     }
 
+    /**
+     * 填充算法：如果源数据长度是6，blockSize是8，那么可以选择填充1，也可以填充9，也可以是17，只要填充后长度是8的整数倍即可，同时填充最大只能到254
+     *
+     * 注：为什么数据长度6，blockSize是8，只需要填充1？因为最后还会填充一个byte的长度信息，表示填充了多少byte的数据
+     *
+     * @param src       源数据
+     * @param blockSize 块大小
+     * @return 填充后的数据
+     */
     private static byte[] padding(byte[] src, int blockSize) {
-        int paddingLen = blockSize - src.length % blockSize;
+        int paddingLen = blockSize - (src.length + 1) % blockSize;
 
         if (paddingLen == blockSize) {
             return src;
         }
 
-        return CollectionUtil.merge(src, new byte[paddingLen]);
+        // 注意这里的操作，填充的内容就是paddingLen
+        byte[] padding = new byte[paddingLen + 1];
+        Arrays.fill(padding, (byte) paddingLen);
+
+        return CollectionUtil.merge(src, padding);
     }
 }

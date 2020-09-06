@@ -227,7 +227,7 @@ public class CipherSuite {
         ECDH_RSA,
     }
 
-    public enum CipherType{
+    public enum CipherType {
         BLOCK, AHEAD;
     }
 

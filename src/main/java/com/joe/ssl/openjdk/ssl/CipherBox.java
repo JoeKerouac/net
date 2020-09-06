@@ -911,10 +911,11 @@ final class CipherBox {
      * @param  contentType the content type of the input record
      * @param  bb the byte buffer to get the explicit nonce from
      *
-     * @return the explicit nonce size of the cipher.
+     * @return the explicit nonce size of the cipher.如果是BLOCK模式，那么返回blockSize（=ivSize），如果是AHEAD模式，那么返回nonceSize
      */
     int applyExplicitNonce(Authenticator authenticator, byte contentType,
                            ByteBuffer bb) throws BadPaddingException {
+
         // 读取数据时调用，解密用
         switch (cipherType) {
             case BLOCK_CIPHER:
@@ -947,7 +948,9 @@ final class CipherBox {
                 // initialize the AEAD cipher for the unique IV
                 byte[] iv = Arrays.copyOf(fixedIv,
                                     fixedIv.length + recordIvSize);
+                // 从bb中读取出来nonce补充到iv中，因为GCM模式下iv不是固定的，所以后半部分的nonce要每次读取
                 bb.get(iv, fixedIv.length, recordIvSize);
+                // 因为上述读取操作会更改读写指针，所以这里要把指针重置回来
                 bb.position(bb.position() - recordIvSize);
                 GCMParameterSpec spec = new GCMParameterSpec(tagSize * 8, iv);
                 try {

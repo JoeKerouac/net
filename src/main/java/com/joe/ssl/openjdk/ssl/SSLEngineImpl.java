@@ -778,7 +778,7 @@ final public class SSLEngineImpl extends SSLEngine {
     @Override
     public SSLEngineResult unwrap(ByteBuffer netData, ByteBuffer [] appData,
             int offset, int length) throws SSLException {
-
+        // netData是从网络读取到的流量，appData指的应该是用户传入进来的缓冲区，offset和length应该也是用户传进来的，指定最多读取多长，以及写入缓冲区的位置
         EngineArgs ea = new EngineArgs(netData, appData, offset, length);
 
         try {
@@ -832,6 +832,7 @@ final public class SSLEngineImpl extends SSLEngine {
          * If we're still in cs_HANDSHAKE, make sure it's been
          * started.
          */
+        // 这里我理解应该是因为网络包可能会有乱序，有可能最终握手数据还没收到，但是已经收到应用数据了，此时应该开始启动握手（如果是start状态）
         synchronized (this) {
             if ((connectionState == cs_HANDSHAKE) ||
                     (connectionState == cs_START)) {
@@ -874,6 +875,7 @@ final public class SSLEngineImpl extends SSLEngine {
          * Check the packet to make sure enough is here.
          * This will also indirectly check for 0 len packets.
          */
+        // 本次数据的总长度（从header中读取的，不是实际网络传输数据，如果header不完整不足以读出长度数据则返回-1）
         int packetLen = inputRecord.bytesInCompletePacket(ea.netData);
 
         // Is this packet bigger than SSL/TLS normally allows?
@@ -968,6 +970,7 @@ final public class SSLEngineImpl extends SSLEngine {
              * format checking (e.g. V2).
              */
             try {
+                // 注意，这里只有body，没有5个byte的header了
                 readBB = inputRecord.read(ea.netData);
             } catch (IOException e) {
                 fatal(Alerts.alert_unexpected_message, e);

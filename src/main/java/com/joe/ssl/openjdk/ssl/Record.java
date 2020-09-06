@@ -36,7 +36,7 @@ package com.joe.ssl.openjdk.ssl;
  *
  * @author David Brownell
  */
-interface Record {
+public interface Record {
     /*
      * There are four SSL record types, which are part of the interface
      * to this level (along with the maximum record size)

@@ -65,6 +65,10 @@ client接到ServerHelloDone需要处理的事情：
 
 
 
+- SSLEngineImpl可以看做是SSLSocketImpl的优化版本
+- netData是从网络读取到的流量，appData指的应该是用户传入进来的缓冲区，offset和length应该也是用户传进来的，指定最多读取多长，以及写入缓冲区的位置
+- internalData：只要不是application_data就是internalData
+
 ## 算法套件
 ### AES
 AHEAD模式(GCM)：
@@ -72,11 +76,12 @@ AHEAD模式(GCM)：
 有fixedIv
 GCM有一个tagSize的概念，表示身份验证的长度，目前已知的都是128bit，即16 byte
 GCM有一个recordIvSize的概念，recordIvSize = ivSize - fixedIvSize，表示随机数的大小，对于GCM来说，iv = fixedIv + nonce，nonce就是TCP的seqNumber（32 bit）
-
+authenticator直接使用Authenticator，new出来一个对象，传入版本号
 
 BLOCK_CIPHER（CBC）模式：
 需要mac算法
 没有fixedIv
+authenticator使用的是mac算法，如果是客户端，则使用服务端秘钥（MacSecret），如果是服务端，则使用客户端秘钥（MacSecret）
 
 
 AES算法加密数据长度必须是16（单位byte）的整数倍，长度不足需要填充，如果加密模式选用的是NoPadding那么必须手动填充数据，算法的密钥长度必须是16、24
@@ -86,6 +91,42 @@ AES算法加密数据长度必须是16（单位byte）的整数倍，长度不�
 
 - NoPadding
 - PKCS7Padding
+
+
+## 读取加密数据步骤
+SSLEngineImpl#readNetRecord：
+- 检查当前是否需要上报一些SSLException（checkTaskThrown）
+- 如果当前读取通道已经关闭，那么返回CLOSE
+- 如果当前链接状态还是cs_HANDSHAKE或者cs_START，调用kickstartHandshake开始握手（如果当前是start状态）
+- 检查当前握手状态，如果是NEED_WRAP则返回OK，并且返回消费/处理0字节数据；
+- 检查当前握手状态，如果是NEED_TASK同上（NEED_TASK表示当前有些必须要处理的任务未完成，例如finish消息要处理更换密码）
+- 检查当前网络传输的数据长度，如果不够5byte（因为SSLv2的长度信息是在0、1位置，而SSLv3/TLS的长度信息是在3、4位置，所以这里最少要读到5个byte，才能保证获取到长度信息）则返回-1
+- 获取网络数据中的第0byte数据，表示当前record类型（20表示ct_change_cipher_spec，21表示ct_alert，22表示ct_handshake，23表示ct_application_data）；
+- 如果是ct_handshake或者ct_alert或者formatVerified（这是什么概念？好像表示的是SSLv3/TLS），那么获取版本号，在网络数据的第1、2byte，检查是否支持，读取长度信息+固定的5byte的头信息长度返回作为packetLen，长度信息在网络数据的第3、4位
+- 检查packetLen是否大于当前包的最大大小(33305 byte = maxRecordSize + 16384的maxDataSize， maxRecordSize = headerPlusMaxIVSize + 16384的maxDataSize + 256的maxPadding + 20的trailerSize，headerPlusMaxIVSize = 5的headerSize + 256的maxIVLength，trailerSize是MAC或者AHEAD tag)，
+- 检查packetLen - Record.headerSize（5 byte）是否大于appData的剩余大小，如果大于说明用户缓冲中存不下了，将会返回BUFFER_OVERFLOW；
+- 检查packetLen等于-1或者网络数据剩余未读的小于packetLen，如果成立则返回BUFFER_UNDERFLOW，表示当前包读取不完整；
+- 接下来就能调用readRecord真正的读取了；
+
+SSLEngineImpl#readRecord：
+- 如果当前链接状态是cs_ERROR，那么直接返回
+- 将当前网络数据copy到一个新的缓冲区（readBB），方便操作使用（注意，这里只copy了body，没有copy5个byte的header）
+- 将当前网络数据的position和limit设置为原始的limit（position设置为limit表示已经读取完毕了）
+- 开始解析数据
+
+
+com.joe.ssl.openjdk.ssl.CipherBox.applyExplicitNonce(com.joe.ssl.openjdk.ssl.Authenticator, byte, java.nio.ByteBuffer)：
+如果是BLOCK模式：
+- 校验密文完整性
+- 返回ivSize
+
+如果是AHEAD（GCM）模式：
+- 读取nonce（长度固定为4 byte，其实就是TCP的seqNumber）补充到iv中；
+- 将缓冲区的读写指针往前调整recordIvSize大小（也就是4byte的nonce大小）
+- 初始化cipher；（因为上述操作导致实际的iv变化，所以实际上cipher是要每次都重新初始化的）
+- 获取认证信息（实际上是13byte，组成：8 byte的seqNumber + 1 byte的recordType + 2 byte的protocolVersion + 2 byte的record length，其中protocolVersion是先放major，然后放minor，recordLen = 传输数据长度 - recordIvSize - tagSize）
+- 将认证信息更新到cipher中
+- 返回recordIvSize（nonce的长度，固定4 byte）
 
 
 ## 算法细节：

@@ -178,7 +178,7 @@ SSLEngineImpl#readRecord：
 EngineInputRecord#decrypt：
 - 如果cipher不为空，开始解密，cipheredLength = 当前缓冲区可读长度，如果是BLOCK模式加密tagLen = MAClen，否则等于0
 - 如果是AEAD模式加密，那么跳过nonceSize的数据，也就是说明AEAD模式下nonce是不加密传输的
-- 开始实际解密，如果是AEAD模式，直接使用doFinal方法，并记录解密结果长度为newLen，如果不是AEAD模式，则调用update方法，并记录结果长度newLen
+- 开始实际解密，如果是AEAD模式，直接使用doFinal方法，并记录解密结果长度为newLen，如果不是AEAD模式，则调用update方法，并记录结果长度newLen，还要跟加密的数据长度对比，必须一致
 - 重置缓冲区的limit
 - 如果是BLOCK模式，那么将缓冲区的position置为0，移除padding后返回新的长度newLen（不包含padding，newLen = len - padLen - 1），并且版本大于等于TLS1.1时newLen应该大于等于blockSize，不满足就抛出异常；
   > padding移除算法：获取当前缓冲区数据的最后一个byte，表示的是padLen

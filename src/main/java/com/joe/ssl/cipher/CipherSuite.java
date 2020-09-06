@@ -228,18 +228,18 @@ public class CipherSuite {
     }
 
     public enum CipherType {
-        BLOCK, AHEAD;
+        BLOCK, AEAD;
     }
 
     public enum CipherDesc {
 
         AES_128("AES/CBC/NoPadding", CipherType.BLOCK, 16, 16, 0),
 
-        AES_128_GCM("AES/GCM/NoPadding", CipherType.AHEAD, 16, 12, 4),
+        AES_128_GCM("AES/GCM/NoPadding", CipherType.AEAD, 16, 12, 4),
 
         AES_256("AES/CBC/NoPadding", CipherType.BLOCK, 32, 16, 0),
 
-        AES_256_GCM("AES/GCM/NoPadding", CipherType.AHEAD, 32, 12, 4),
+        AES_256_GCM("AES/GCM/NoPadding", CipherType.AEAD, 32, 12, 4),
 
         ;
 

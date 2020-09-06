@@ -71,7 +71,7 @@ client接到ServerHelloDone需要处理的事情：
 
 ## 算法套件
 ### AES
-AHEAD模式(GCM)：
+AEAD模式(GCM)：
 加密不需要mac算法，自带mac算法（消息认证）；
 有fixedIv
 GCM有一个tagSize的概念，表示身份验证的长度，目前已知的都是128bit，即16 byte
@@ -103,7 +103,7 @@ SSLEngineImpl#readNetRecord：
 - 检查当前网络传输的数据长度，如果不够5byte（因为SSLv2的长度信息是在0、1位置，而SSLv3/TLS的长度信息是在3、4位置，所以这里最少要读到5个byte，才能保证获取到长度信息）则返回-1
 - 获取网络数据中的第0byte数据，表示当前record类型（20表示ct_change_cipher_spec，21表示ct_alert，22表示ct_handshake，23表示ct_application_data）；
 - 如果是ct_handshake或者ct_alert或者formatVerified（这是什么概念？好像表示的是SSLv3/TLS），那么获取版本号，在网络数据的第1、2byte，检查是否支持，读取长度信息+固定的5byte的头信息长度返回作为packetLen，长度信息在网络数据的第3、4位
-- 检查packetLen是否大于当前包的最大大小(33305 byte = maxRecordSize + 16384的maxDataSize， maxRecordSize = headerPlusMaxIVSize + 16384的maxDataSize + 256的maxPadding + 20的trailerSize，headerPlusMaxIVSize = 5的headerSize + 256的maxIVLength，trailerSize是MAC或者AHEAD tag)，
+- 检查packetLen是否大于当前包的最大大小(33305 byte = maxRecordSize + 16384的maxDataSize， maxRecordSize = headerPlusMaxIVSize + 16384的maxDataSize + 256的maxPadding + 20的trailerSize，headerPlusMaxIVSize = 5的headerSize + 256的maxIVLength，trailerSize是MAC或者AEAD tag)，
 - 检查packetLen - Record.headerSize（5 byte）是否大于appData的剩余大小，如果大于说明用户缓冲中存不下了，将会返回BUFFER_OVERFLOW；
 - 检查packetLen等于-1或者网络数据剩余未读的小于packetLen，如果成立则返回BUFFER_UNDERFLOW，表示当前包读取不完整；
 - 接下来就能调用readRecord真正的读取了；
@@ -112,7 +112,18 @@ SSLEngineImpl#readRecord：
 - 如果当前链接状态是cs_ERROR，那么直接返回
 - 将当前网络数据copy到一个新的缓冲区（readBB），方便操作使用（注意，这里只copy了body，没有copy5个byte的header）
 - 将当前网络数据的position和limit设置为原始的limit（position设置为limit表示已经读取完毕了）
-- 开始解析数据
+- 开始调用decrypt解密数据
+
+EngineInputRecord#decrypt：
+- 如果cipher不为空，开始解密，cipheredLength = 当前缓冲区可读长度，如果是BLOCK模式加密tagLen = MAClen，否则等于0
+- 如果是AEAD模式加密，那么跳过nonceSize的数据，也就是说明AEAD模式下nonce是不加密传输的
+- 开始实际解密，如果是AEAD模式，直接使用doFinal方法，并记录解密结果长度为newLen，如果不是AEAD模式，则调用update方法，并记录结果长度newLen
+- 重置缓冲区的limit
+- 如果是BLOCK模式，那么将缓冲区的position置为0，移除padding后返回新的长度newLen（不包含padding，newLen = len - padLen - 1），并且版本大于等于TLS1.1时newLen应该大于等于blockSize；
+  > padding移除算法：获取当前缓冲区数据的最后一个byte，表示的是padLen
+- 如果上一步计算的newLen-tagLen小于0那么抛出异常
+
+
 
 
 com.joe.ssl.openjdk.ssl.CipherBox.applyExplicitNonce(com.joe.ssl.openjdk.ssl.Authenticator, byte, java.nio.ByteBuffer)：
@@ -120,7 +131,7 @@ com.joe.ssl.openjdk.ssl.CipherBox.applyExplicitNonce(com.joe.ssl.openjdk.ssl.Aut
 - 校验密文完整性
 - 返回ivSize
 
-如果是AHEAD（GCM）模式：
+如果是AEAD（GCM）模式：
 - 读取nonce（长度固定为4 byte，其实就是TCP的seqNumber）补充到iv中；
 - 将缓冲区的读写指针往前调整recordIvSize大小（也就是4byte的nonce大小）
 - 初始化cipher；（因为上述操作导致实际的iv变化，所以实际上cipher是要每次都重新初始化的）

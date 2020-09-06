@@ -793,6 +793,8 @@ final class CipherBox {
             //
             // Note that it is a dummy check, so we won't care about what is
             // the actual padding data.
+            // 这里其实类似于sleep，没有什么实际意义，只是为了空跑一会儿，里边的一些逻辑也仅仅是为了防止Hotspot优化做的
+            // 为什么这么做？
             checkPadding(bb.duplicate(), (byte)(padLen & 0xFF));
 
             throw new BadPaddingException("Invalid Padding length: " + padLen);
@@ -911,7 +913,7 @@ final class CipherBox {
      * @param  contentType the content type of the input record
      * @param  bb the byte buffer to get the explicit nonce from
      *
-     * @return the explicit nonce size of the cipher.如果是BLOCK模式，那么返回blockSize（=ivSize），如果是AHEAD模式，那么返回nonceSize
+     * @return the explicit nonce size of the cipher.如果是BLOCK模式，那么返回blockSize（=ivSize），如果是AEAD模式，那么返回nonceSize
      */
     int applyExplicitNonce(Authenticator authenticator, byte contentType,
                            ByteBuffer bb) throws BadPaddingException {

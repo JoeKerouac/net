@@ -94,7 +94,7 @@ public class AesExample {
     private static void handleException(CipherSuite.CipherDesc value, Exception e) {
         // GCM模式下，因为自带认证，所以解密的时候直接抛出了BadPaddingException异常，而普通模式下因为没有认证信息，所以解密的时候
         // 并不会对信息进行校验，可以解密成功，但是解密出来的结果跟源数据肯定是对不上的
-        if (value.cipherType == CipherSuite.CipherType.AHEAD) {
+        if (value.cipherType == CipherSuite.CipherType.AEAD) {
             if (!(e instanceof BadPaddingException) || !e.getMessage().equals("mac check in GCM failed")) {
                 throw new RuntimeException("预期不符合");
             }
@@ -110,7 +110,7 @@ public class AesExample {
      *
      * @param algorithm 算法
      * @param secretKey 密钥
-     * @param change    是否更改加密结果，主要为了验证AHEAD模式（GCM）的认证信息是否生效
+     * @param change    是否更改加密结果，主要为了验证AEAD模式（GCM）的认证信息是否生效
      * @throws Exception Exception
      */
     private static void baseTest(CipherSuite.CipherDesc algorithm, SecretKey secretKey, boolean change) throws Exception {
@@ -127,7 +127,7 @@ public class AesExample {
 
         // 使用JDK自带的JCE实现来加密，注意对于jce实现来说，这里是要区分加密模式的
         byte[] jceResult = null;
-        if (algorithm.cipherType == CipherSuite.CipherType.AHEAD) {
+        if (algorithm.cipherType == CipherSuite.CipherType.AEAD) {
             // 这里16 * 8 是固定的，实际上加解密时也不会用到
             jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, null, new GCMParameterSpec(16 * 8, iv));
         } else if (algorithm.cipherType == CipherSuite.CipherType.BLOCK) {
@@ -162,7 +162,7 @@ public class AesExample {
      * @param mode                   加密或者解密模式
      * @param secretKey              密钥
      * @param provider               提供器，为空时使用JCE实现
-     * @param algorithmParameterSpec IV，BC模式下无论什么模式的AES都是IvParameterSpec，而JCE模式下如果是AHEAD模式的AES需要传入GCMParameterSpec
+     * @param algorithmParameterSpec IV，BC模式下无论什么模式的AES都是IvParameterSpec，而JCE模式下如果是AEAD模式的AES需要传入GCMParameterSpec
      * @return 加/解密结果
      * @throws Exception Exception
      */

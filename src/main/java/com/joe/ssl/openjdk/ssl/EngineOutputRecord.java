@@ -223,6 +223,7 @@ final class EngineOutputRecord extends OutputRecord {
             length = Math.min(ea.getAppRemaining(),
                         maxDataSizeMinusOneByteRecord);
         } else {
+            // TLS1.2走这里
             length = Math.min(ea.getAppRemaining(), maxDataSize);
         }
 
@@ -255,6 +256,7 @@ final class EngineOutputRecord extends OutputRecord {
         /*
          * transfer application data into the network data buffer
          */
+        // 将app数据写入到网络缓冲区，最多写入length
         ea.gather(length);
         dstBB.limit(dstBB.position());
         dstBB.position(dstData);

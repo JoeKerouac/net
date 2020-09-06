@@ -154,6 +154,23 @@ struct {
 
 
 
+com.joe.ssl.openjdk.ssl.CipherBox.createExplicitNonce
+com.joe.ssl.openjdk.ssl.CipherBox.applyExplicitNonce
+
+
+## 写出数据
+
+- 如果是CBC模式，需要mac，则对传输数据进行签名计算（此时会将sequence number + 1），然后将签名也放入传输数据中
+- 调用createExplicitNonce创建一个随机数，创建算法：如果是BLOCK模式，那么生成一个随机数返回，如果是AEAD模式，使用当前sequenceNumber作为随机数，初始化cipher，使用acquireAuthenticationBytes获得一个添加数据，update到cipher中；
+- 将nonce放入网络缓冲区（注意：AEAD模式不会加密该nonce，而BLOCK模式会）；
+- 加密缓冲区数据，如果是BLOCK模式，先对数据进行padding
+  > padding算法：可以参考AesExample#padding
+- 开始实际的加密：
+  - 如果是AEAD模式，先调用cipher.getOutputSize（要写出的数据长度）来获取加密输出长度，如果缓冲区不够则扩容，然后调用cipher.doFinal进行加密
+  - 如果是BLOCK模式，直接调用update来加密（注意校验加密结果长度等于源数据长度）
+- 补充缓冲区5个byte的header（TLSCiphertext结构的header）
+
+
 ## 读取加密数据步骤
 SSLEngineImpl#readNetRecord：
 - 检查当前是否需要上报一些SSLException（checkTaskThrown）

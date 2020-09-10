@@ -171,6 +171,7 @@ com.joe.ssl.openjdk.ssl.CipherBox.applyExplicitNonce
   - 如果是AEAD模式，先调用cipher.getOutputSize（要写出的数据长度）来获取加密输出长度，如果缓冲区不够则扩容，然后调用cipher.doFinal进行加密
   - 如果是BLOCK模式，直接调用update来加密（注意校验加密结果长度等于源数据长度）
 - 补充缓冲区5个byte的header（TLSCiphertext结构的header）
+- 数据写出；
 
 
 ## 读取加密数据步骤

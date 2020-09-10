@@ -60,6 +60,11 @@ public class CertificateMsg implements HandshakeMessage {
     }
 
     @Override
+    public int size() {
+        throw new RuntimeException("未实现");
+    }
+
+    @Override
     public void write(WrapedOutputStream stream) throws IOException {
         stream.write(type().getCode());
         stream.writeInt24(messageLength);

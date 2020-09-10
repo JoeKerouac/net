@@ -18,19 +18,47 @@ import java.util.List;
 public class ClientHello implements HandshakeMessage {
 
     /**
-     * 客户端随机数，32位
+     * 客户端随机数，32byte
      */
-    private byte[] clientRandom = new byte[4];
+    private byte[] clientRandom = new byte[32];
 
     /**
      * sessionId，最大256
      */
     private byte[] sessionId = new byte[0];
 
-    private ProtocolVersion protocolVersion;
+    private TlsVersion tlsVersion;
+
+    private List<CipherSuite> cipherSuites;
+
+    private List<HelloExtension> extensions;
+
+    public ClientHello() {
+        this.init();
+    }
 
     public void init() {
         new SecureRandom().nextBytes(clientRandom);
+        this.tlsVersion = TlsVersion.TLS1_2;
+        this.cipherSuites = new ArrayList<>(CipherSuite.CIPHER_SUITES);
+        this.extensions = new ArrayList<>();
+
+        // 初始化扩展
+        // TODO 完善扩展
+        {
+            // 判断加密套件是否包含ECC算法
+            boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst().map(CipherSuite::isEc).orElse(Boolean.FALSE);
+            if (containEc) {
+                extensions.add(new EllipticCurvesExtension());
+                extensions.add(EllipticPointFormatsExtension.DEFAULT);
+            }
+
+            // 大于等于TLS1.2需要写出本地支持的签名算法
+            extensions.add(new SignatureAndHashAlgorithmExtension());
+
+            // master secret扩展
+            extensions.add(new ExtendedMasterSecretExtension());
+        }
     }
 
 
@@ -40,17 +68,26 @@ public class ClientHello implements HandshakeMessage {
     }
 
     @Override
+    public int size() {
+        // 1byte type + 3byte 长度字段 + 2byte版本号 + 32byte随机数 + 1byte的sessionId长度字段 + sessionId的实际长度 + 2byte加密
+        // 套件的长度字段 + 加密套件实际长度 + 2byte压缩算法长度+算法信息（写死不使用压缩算法） + 2byte扩展长度字段 + 扩展实际长度
+        return 1 + 3 + 2 + 32 + 1 + sessionId.length + 2 + cipherSuites.size() * 2 + 2 + 2 + extensions.stream().mapToInt(HelloExtension::size).sum();
+    }
+
+    @Override
     public void write(WrapedOutputStream stream) throws IOException {
-        stream.writeInt8(protocolVersion.major);
-        stream.writeInt8(protocolVersion.minor);
+        stream.writeInt8(type().getCode());
+        stream.writeInt24(size() - 4);
+        stream.writeInt8(tlsVersion.getMajorVersion());
+        stream.writeInt8(tlsVersion.getMinorVersion());
         stream.write(clientRandom);
         stream.putBytes8(sessionId);
         {
             // 写出加密套件
             // 加密套件的总长度，一个加密套件是2 byte，所以需要*2
-            stream.writeInt16(2 * CipherSuite.CIPHER_SUITES.size());
+            stream.writeInt16(2 * cipherSuites.size());
             // 实际加密套件写出
-            for (CipherSuite cipherSuite : CipherSuite.CIPHER_SUITES) {
+            for (CipherSuite cipherSuite : cipherSuites) {
                 stream.writeInt16(cipherSuite.getSuite());
             }
 
@@ -60,37 +97,21 @@ public class ClientHello implements HandshakeMessage {
             // 写出compression_methods，固定写出null，表示不使用
             stream.writeInt8(1);
             stream.writeInt8(0);
-
         }
 
-        List<HelloExtension> extensionList = new ArrayList<>();
 
 
-        // TODO 写出extensions
+        // 写出extensions
         {
-            // 判断加密套件是否包含ECC算法
-            boolean containEc = CipherSuite.CIPHER_SUITES.stream().filter(CipherSuite::isEc).findFirst().map(CipherSuite::isEc).orElse(Boolean.FALSE);
-            if (containEc) {
-                extensionList.add(new EllipticCurvesExtension());
-                extensionList.add(EllipticPointFormatsExtension.DEFAULT);
-            }
-
-            // 大于等于TLS1.2需要写出本地支持的签名算法
-            extensionList.add(new SignatureAndHashAlgorithmExtension());
-
-            // master secret扩展
-            extensionList.add(new ExtendedMasterSecretExtension());
-
             // 计算扩展总长度，单位byte
-            int size = extensionList.stream().mapToInt(HelloExtension::size).sum();
+            int size = extensions.stream().mapToInt(HelloExtension::size).sum();
             // 写出扩展长度
             stream.writeInt16(size);
             // 写出各个扩展
-            for (HelloExtension helloExtension : extensionList) {
+            for (HelloExtension helloExtension : extensions) {
                 helloExtension.write(stream);
             }
         }
-
     }
 
 

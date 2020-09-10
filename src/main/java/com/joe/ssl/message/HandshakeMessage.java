@@ -10,9 +10,15 @@ public interface HandshakeMessage {
 
     /**
      * 握手消息类型
-     * @return
+     * @return 类型
      */
     HandshakeType type();
+
+    /**
+     * 消息大小，单位byte
+     * @return 消息大小
+     */
+    int size();
 
     /**
      * 将消息写入输出流

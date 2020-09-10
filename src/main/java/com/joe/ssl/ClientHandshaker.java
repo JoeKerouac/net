@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -15,7 +16,6 @@ import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
-import org.bouncycastle.util.Arrays;
 import org.bouncycastle.util.BigIntegers;
 
 import com.joe.http.IHttpClientUtil;
@@ -133,17 +133,23 @@ public class ClientHandshaker {
 
     public static void main(String[] args) throws Exception {
 
-        IHttpClientUtil clientUtil = new IHttpClientUtil();
-        clientUtil.executeGet("https://baidu.com");
+        Socket socket = new Socket("39.156.66.14", 443);
 
-        // clientHello
-        String clientHelloData = "16030100d7010000d3030380eed28245a1607a2233ae75adec9d8fe8e59644b5e19093cef34fdb7b9fecd7000054c030c02cc028c024c014c00a009f006b0039cca9cca8ccaaff8500c400880081009d003d003500c00084c02fc02bc027c023c013c009009e0067003300be0045009c003c002f00ba0041c012c0080016000a00ff010000560000000e000c00000962616964752e636f6d000b00020100000a00080006001d00170018000d001c001a06010603efef0501050304010403eeeeeded03010303020102030010000e000c02683208687474702f312e31";
-        // 转换为byte数组
-        byte[] clientHello = Hex.decodeHex(clientHelloData);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        Socket socket = new Socket("www.baidu.com", 443);
-        OutputStream stream = socket.getOutputStream();
-        stream.write(clientHello);
+        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
+//        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
+
+        ClientHello hello = new ClientHello();
+        wrapedOutputStream.writeInt8(ContentType.HANDSHAKE.getCode());
+        wrapedOutputStream.writeInt8(TlsVersion.TLS1_2.getMajorVersion());
+        wrapedOutputStream.writeInt8(TlsVersion.TLS1_2.getMinorVersion());
+        wrapedOutputStream.writeInt16(hello.size());
+        hello.write(wrapedOutputStream);
+        wrapedOutputStream.flush();
+
+        System.out.println(Arrays.toString(outputStream.toByteArray()));
+        System.exit(1);
 
         WrapedInputStream inputStream = new WrapedInputStream(socket.getInputStream());
         ClientHandshaker handshaker = new ClientHandshaker();
@@ -162,10 +168,6 @@ public class ClientHandshaker {
         }
     }
 
-
-    private void clientHello() {
-
-    }
 
     /**
      * 生成非对称加密密钥

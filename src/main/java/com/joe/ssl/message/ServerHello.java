@@ -66,6 +66,11 @@ public class ServerHello implements HandshakeMessage {
     }
 
     @Override
+    public int size() {
+        throw new RuntimeException("未实现");
+    }
+
+    @Override
     public HandshakeType type() {
         return HandshakeType.SERVER_HELLO;
     }

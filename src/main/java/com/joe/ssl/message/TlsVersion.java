@@ -8,28 +8,28 @@ package com.joe.ssl.message;
  */
 public enum TlsVersion implements EnumInterface {
 
-                                                 TLS1_2(0x0303, 0x03, 0x03, "TLS 1.2"),
+                                                 TLS1_2(0x0303, 0x03, 0x01, "TLS 1.2"),
 
     ;
 
     /**
      * 枚举code
      */
-    private int    code;
+    private final int    code;
 
-    private int majorVersion;
+    private final int majorVersion;
 
-    private int minorVersion;
+    private final int minorVersion;
 
     /**
      * 枚举英文名
      */
-    private String englishName;
+    private final String englishName;
 
     /**
      * 枚举中文名
      */
-    private String chinesName;
+    private final String chinesName;
 
     static {
         EnumInterface.duplicateCheck(TlsVersion.class);
@@ -41,6 +41,22 @@ public enum TlsVersion implements EnumInterface {
         this.minorVersion = minorVersion;
         this.englishName = englishName;
         this.chinesName = englishName;
+    }
+
+    public int getMajorVersion() {
+        return majorVersion;
+    }
+
+    public int getMinorVersion() {
+        return minorVersion;
+    }
+
+    public String getEnglishName() {
+        return englishName;
+    }
+
+    public String getChinesName() {
+        return chinesName;
     }
 
     @Override

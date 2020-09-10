@@ -2,7 +2,8 @@ package com.joe.ssl.message;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.extension.EllipticCurvesExtension;
-import com.joe.ssl.message.extension.Extension;
+import com.joe.ssl.message.extension.EllipticPointFormatsExtension;
+import com.joe.ssl.message.extension.HelloExtension;
 import com.joe.ssl.openjdk.ssl.ProtocolVersion;
 import lombok.Data;
 
@@ -63,7 +64,7 @@ public class ClientHello implements HandshakeMessage {
 
         }
 
-        List<Extension> extensionList = new ArrayList<>();
+        List<HelloExtension> extensionList = new ArrayList<>();
 
 
         // TODO 写出extensions
@@ -72,7 +73,10 @@ public class ClientHello implements HandshakeMessage {
             boolean containEc = CipherSuite.CIPHER_SUITES.stream().filter(CipherSuite::isEc).findFirst().map(CipherSuite::isEc).orElse(Boolean.FALSE);
             if (containEc) {
                 extensionList.add(new EllipticCurvesExtension());
+                extensionList.add(EllipticPointFormatsExtension.DEFAULT);
             }
+
+            // 大于等于TLS1.2需要写出本地支持的签名算法
         }
 
     }

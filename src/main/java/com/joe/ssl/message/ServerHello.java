@@ -4,7 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import com.joe.ssl.message.extension.Extension;
+import com.joe.ssl.message.extension.HelloExtension;
 import com.joe.ssl.message.extension.ExtensionType;
 import com.joe.utils.common.Assert;
 
@@ -44,7 +44,7 @@ public class ServerHello implements HandshakeMessage {
 
     private ClientHello                      clientHello;
 
-    private Map<ExtensionType, Extension<?>> extensions;
+    private Map<ExtensionType, HelloExtension<?>> extensions;
 
     public ServerHello(byte[] data) {
         try {

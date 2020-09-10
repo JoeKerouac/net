@@ -13,7 +13,7 @@ import java.io.IOException;
  * @author JoeKerouac
  * @version 2020年06月13日 16:44
  */
-public interface Extension {
+public interface HelloExtension {
 
     /**
      * 写出扩展到指定输出流

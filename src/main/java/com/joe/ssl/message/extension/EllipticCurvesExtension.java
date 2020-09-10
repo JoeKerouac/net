@@ -12,9 +12,7 @@ import java.io.IOException;
  * @version 1.0
  * @date 2020-09-10 10:16
  */
-public class EllipticCurvesExtension implements Extension {
-
-    private static final ExtensionType TYPE = ExtensionType.EXT_ELLIPTIC_CURVES;
+public class EllipticCurvesExtension implements HelloExtension {
 
     private int[] curveIds;
 
@@ -34,11 +32,11 @@ public class EllipticCurvesExtension implements Extension {
 
     @Override
     public ExtensionType getExtensionType() {
-        return TYPE;
+        return ExtensionType.EXT_ELLIPTIC_CURVES;
     }
 
     @Override
     public int size() {
-        return curveIds.length * 2 + 4;
+        return curveIds.length * 2 + 6;
     }
 }

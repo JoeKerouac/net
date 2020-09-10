@@ -44,7 +44,7 @@ public class ServerHello implements HandshakeMessage {
 
     private ClientHello                      clientHello;
 
-    private Map<ExtensionType, HelloExtension<?>> extensions;
+    private Map<ExtensionType, HelloExtension> extensions;
 
     public ServerHello(byte[] data) {
         try {

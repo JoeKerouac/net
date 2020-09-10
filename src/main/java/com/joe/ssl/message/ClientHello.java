@@ -4,6 +4,7 @@ import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.extension.EllipticCurvesExtension;
 import com.joe.ssl.message.extension.EllipticPointFormatsExtension;
 import com.joe.ssl.message.extension.HelloExtension;
+import com.joe.ssl.message.extension.SignatureAndHashAlgorithmExtension;
 import com.joe.ssl.openjdk.ssl.ProtocolVersion;
 import lombok.Data;
 
@@ -77,6 +78,7 @@ public class ClientHello implements HandshakeMessage {
             }
 
             // 大于等于TLS1.2需要写出本地支持的签名算法
+            extensionList.add(new SignatureAndHashAlgorithmExtension());
         }
 
     }

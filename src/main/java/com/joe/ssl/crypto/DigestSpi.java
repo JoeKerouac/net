@@ -1,41 +1,41 @@
 package com.joe.ssl.crypto;
 
 /**
- * ÏûÏ¢ÕªÒªSPI
+ * æ¶ˆæ¯æ‘˜è¦SPI
  *
  * <p>
- *     ·ÇÏß³Ì°²È«
+ *     éçº¿ç¨‹å®‰å…¨
  * </p>
  * @author JoeKerouac
- * @version 2020Äê07ÔÂ23ÈÕ 14:46
+ * @version 2020å¹´07æœˆ23æ—¥ 14:46
  */
 public interface DigestSpi extends AlgorithmSpi {
 
     /**
-     * ¸üĞÂÊı¾İ
+     * æ›´æ–°æ•°æ®
      *
-     * @param data Ô´Êı¾İ
+     * @param data æºæ•°æ®
      */
     void update(byte[] data);
 
     /**
-     * ¶ÔËùÓĞÔ´Êı¾İ½øĞĞÕªÒª
-     * @return ÕªÒª½á¹û
+     * å¯¹æ‰€æœ‰æºæ•°æ®è¿›è¡Œæ‘˜è¦
+     * @return æ‘˜è¦ç»“æœ
      */
     byte[] digest();
 
     /**
-     * ½«µ±Ç°ÄÚ´æÖĞÊı¾İµÄÕªÒªÊä³öµ½Ö¸¶¨Êı×é£¬Êä³öÊı×éoffsetºó±ØĞëÓĞ×ã¹»µÄ¿Õ¼ä´æ·ÅÕªÒª
+     * å°†å½“å‰å†…å­˜ä¸­æ•°æ®çš„æ‘˜è¦è¾“å‡ºåˆ°æŒ‡å®šæ•°ç»„ï¼Œè¾“å‡ºæ•°ç»„offsetåå¿…é¡»æœ‰è¶³å¤Ÿçš„ç©ºé—´å­˜æ”¾æ‘˜è¦
      *
-     * @param output Êä³öÊı×é
-     * @param offset Êä³öÆğÊ¼Î»ÖÃ£¬»á´ÓÊä³öÊı×éµÄ¸ÃÎ»ÖÃ½«ÕªÒªÊä³öµ½Êä³öÊı×é
+     * @param output è¾“å‡ºæ•°ç»„
+     * @param offset è¾“å‡ºèµ·å§‹ä½ç½®ï¼Œä¼šä»è¾“å‡ºæ•°ç»„çš„è¯¥ä½ç½®å°†æ‘˜è¦è¾“å‡ºåˆ°è¾“å‡ºæ•°ç»„
      */
     void digest(byte[] output, int offset);
 
     /**
-     * ¶ÔÖ¸¶¨Êı¾İÉú³ÉÕªÒª
-     * @param data Êı¾İ
-     * @return ÕªÒª
+     * å¯¹æŒ‡å®šæ•°æ®ç”Ÿæˆæ‘˜è¦
+     * @param data æ•°æ®
+     * @return æ‘˜è¦
      */
     default byte[] digest(byte[] data) {
         update(data);
@@ -43,7 +43,7 @@ public interface DigestSpi extends AlgorithmSpi {
     }
 
     /**
-     * ÖØÖÃÕªÒª£¬ÖØĞÂÉú³ÉÕªÒª
+     * é‡ç½®æ‘˜è¦ï¼Œé‡æ–°ç”Ÿæˆæ‘˜è¦
      */
     void reset();
 

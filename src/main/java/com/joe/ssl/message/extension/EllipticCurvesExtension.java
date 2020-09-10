@@ -14,11 +14,7 @@ import java.io.IOException;
  */
 public class EllipticCurvesExtension implements HelloExtension {
 
-    private int[] curveIds;
-
-    public EllipticCurvesExtension() {
-        this.curveIds = NamedCurve.getAllSupportCurve().stream().mapToInt(NamedCurve::getId).toArray();
-    }
+    private final int[] curveIds = NamedCurve.getAllSupportCurve().stream().mapToInt(NamedCurve::getId).toArray();
 
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {

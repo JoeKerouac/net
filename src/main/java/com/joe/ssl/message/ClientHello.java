@@ -1,14 +1,12 @@
 package com.joe.ssl.message;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.extension.EllipticCurvesExtension;
-import com.joe.ssl.message.extension.EllipticPointFormatsExtension;
-import com.joe.ssl.message.extension.HelloExtension;
-import com.joe.ssl.message.extension.SignatureAndHashAlgorithmExtension;
+import com.joe.ssl.message.extension.*;
 import com.joe.ssl.openjdk.ssl.ProtocolVersion;
 import lombok.Data;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +20,7 @@ public class ClientHello implements HandshakeMessage {
     /**
      * 客户端随机数，32位
      */
-    private byte[] clientRandom;
+    private byte[] clientRandom = new byte[4];
 
     /**
      * sessionId，最大256
@@ -32,7 +30,7 @@ public class ClientHello implements HandshakeMessage {
     private ProtocolVersion protocolVersion;
 
     public void init() {
-
+        new SecureRandom().nextBytes(clientRandom);
     }
 
 
@@ -79,9 +77,23 @@ public class ClientHello implements HandshakeMessage {
 
             // 大于等于TLS1.2需要写出本地支持的签名算法
             extensionList.add(new SignatureAndHashAlgorithmExtension());
+
+            // master secret扩展
+            extensionList.add(new ExtendedMasterSecretExtension());
+
+            // 计算扩展总长度，单位byte
+            int size = extensionList.stream().mapToInt(HelloExtension::size).sum();
+            // 写出扩展长度
+            stream.writeInt16(size);
+            // 写出各个扩展
+            for (HelloExtension helloExtension : extensionList) {
+                helloExtension.write(stream);
+            }
         }
 
     }
+
+
 
 
 }

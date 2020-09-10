@@ -1,9 +1,14 @@
 package com.joe.ssl.message;
 
+import com.joe.ssl.cipher.CipherSuite;
+import com.joe.ssl.message.extension.EllipticCurvesExtension;
+import com.joe.ssl.message.extension.Extension;
 import com.joe.ssl.openjdk.ssl.ProtocolVersion;
 import lombok.Data;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author JoeKerouac
@@ -40,9 +45,37 @@ public class ClientHello implements HandshakeMessage {
         stream.writeInt8(protocolVersion.minor);
         stream.write(clientRandom);
         stream.putBytes8(sessionId);
-        // TODO 写出加密套件
-        // TODO 写出compression_methods
+        {
+            // 写出加密套件
+            // 加密套件的总长度，一个加密套件是2 byte，所以需要*2
+            stream.writeInt16(2 * CipherSuite.CIPHER_SUITES.size());
+            // 实际加密套件写出
+            for (CipherSuite cipherSuite : CipherSuite.CIPHER_SUITES) {
+                stream.writeInt16(cipherSuite.getSuite());
+            }
+
+        }
+
+        {
+            // 写出compression_methods，固定写出null，表示不使用
+            stream.writeInt8(1);
+            stream.writeInt8(0);
+
+        }
+
+        List<Extension> extensionList = new ArrayList<>();
+
+
         // TODO 写出extensions
+        {
+            // 判断加密套件是否包含ECC算法
+            boolean containEc = CipherSuite.CIPHER_SUITES.stream().filter(CipherSuite::isEc).findFirst().map(CipherSuite::isEc).orElse(Boolean.FALSE);
+            if (containEc) {
+                extensionList.add(new EllipticCurvesExtension());
+            }
+        }
 
     }
+
+
 }

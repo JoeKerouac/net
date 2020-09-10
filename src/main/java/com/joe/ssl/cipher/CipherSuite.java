@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.joe.ssl.crypto.exception.CryptoException;
+import com.joe.ssl.message.WrapedOutputStream;
 import com.joe.utils.collection.CollectionUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -32,34 +33,34 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class CipherSuite {
 
-    public static final int TLS_NULL_WITH_NULL_NULL = 0x0000;
-    public static final int TLS_RSA_WITH_NULL_MD5 = 0x0001;
-    public static final int TLS_RSA_WITH_NULL_SHA = 0x0002;
-    public static final int TLS_RSA_EXPORT_WITH_RC4_40_MD5 = 0x0003;
-    public static final int TLS_RSA_WITH_RC4_128_MD5 = 0x0004;
-    public static final int TLS_RSA_WITH_RC4_128_SHA = 0x0005;
-    public static final int TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5 = 0x0006;
-    public static final int TLS_RSA_WITH_IDEA_CBC_SHA = 0x0007;
-    public static final int TLS_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x0008;
-    public static final int TLS_RSA_WITH_DES_CBC_SHA = 0x0009;
-    public static final int TLS_RSA_WITH_3DES_EDE_CBC_SHA = 0x000A;
-    public static final int TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA = 0x000B;
-    public static final int TLS_DH_DSS_WITH_DES_CBC_SHA = 0x000C;
-    public static final int TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA = 0x000D;
-    public static final int TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x000E;
-    public static final int TLS_DH_RSA_WITH_DES_CBC_SHA = 0x000F;
-    public static final int TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA = 0x0010;
-    public static final int TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA = 0x0011;
-    public static final int TLS_DHE_DSS_WITH_DES_CBC_SHA = 0x0012;
-    public static final int TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA = 0x0013;
-    public static final int TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x0014;
-    public static final int TLS_DHE_RSA_WITH_DES_CBC_SHA = 0x0015;
-    public static final int TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA = 0x0016;
-    public static final int TLS_DH_anon_EXPORT_WITH_RC4_40_MD5 = 0x0017;
-    public static final int TLS_DH_anon_WITH_RC4_128_MD5 = 0x0018;
-    public static final int TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA = 0x0019;
-    public static final int TLS_DH_anon_WITH_DES_CBC_SHA = 0x001A;
-    public static final int TLS_DH_anon_WITH_3DES_EDE_CBC_SHA = 0x001B;
+    private static final int TLS_NULL_WITH_NULL_NULL = 0x0000;
+    private static final int TLS_RSA_WITH_NULL_MD5 = 0x0001;
+    private static final int TLS_RSA_WITH_NULL_SHA = 0x0002;
+    private static final int TLS_RSA_EXPORT_WITH_RC4_40_MD5 = 0x0003;
+    private static final int TLS_RSA_WITH_RC4_128_MD5 = 0x0004;
+    private static final int TLS_RSA_WITH_RC4_128_SHA = 0x0005;
+    private static final int TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5 = 0x0006;
+    private static final int TLS_RSA_WITH_IDEA_CBC_SHA = 0x0007;
+    private static final int TLS_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x0008;
+    private static final int TLS_RSA_WITH_DES_CBC_SHA = 0x0009;
+    private static final int TLS_RSA_WITH_3DES_EDE_CBC_SHA = 0x000A;
+    private static final int TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA = 0x000B;
+    private static final int TLS_DH_DSS_WITH_DES_CBC_SHA = 0x000C;
+    private static final int TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA = 0x000D;
+    private static final int TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x000E;
+    private static final int TLS_DH_RSA_WITH_DES_CBC_SHA = 0x000F;
+    private static final int TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA = 0x0010;
+    private static final int TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA = 0x0011;
+    private static final int TLS_DHE_DSS_WITH_DES_CBC_SHA = 0x0012;
+    private static final int TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA = 0x0013;
+    private static final int TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA = 0x0014;
+    private static final int TLS_DHE_RSA_WITH_DES_CBC_SHA = 0x0015;
+    private static final int TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA = 0x0016;
+    private static final int TLS_DH_anon_EXPORT_WITH_RC4_40_MD5 = 0x0017;
+    private static final int TLS_DH_anon_WITH_RC4_128_MD5 = 0x0018;
+    private static final int TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA = 0x0019;
+    private static final int TLS_DH_anon_WITH_DES_CBC_SHA = 0x001A;
+    private static final int TLS_DH_anon_WITH_3DES_EDE_CBC_SHA = 0x001B;
 
     /*
      * RFC 3268
@@ -138,22 +139,22 @@ public class CipherSuite {
     /*
      * RFC 5289
      */
-    public static final int TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 = 0xC023;
-    public static final int TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 = 0xC024;
-    public static final int TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 = 0xC025;
-    public static final int TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384 = 0xC026;
-    public static final int TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 = 0xC027;
-    public static final int TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 = 0xC028;
-    public static final int TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256 = 0xC029;
-    public static final int TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384 = 0xC02A;
-    public static final int TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 = 0xC02B;
-    public static final int TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 = 0xC02C;
-    public static final int TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 = 0xC02D;
-    public static final int TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384 = 0xC02E;
-    public static final int TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 = 0xC02F;
-    public static final int TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 = 0xC030;
-    public static final int TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256 = 0xC031;
-    public static final int TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 = 0xC032;
+    private static final int TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 = 0xC023;
+    private static final int TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 = 0xC024;
+    private static final int TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 = 0xC025;
+    private static final int TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384 = 0xC026;
+    private static final int TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 = 0xC027;
+    private static final int TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 = 0xC028;
+    private static final int TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256 = 0xC029;
+    private static final int TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384 = 0xC02A;
+    private static final int TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 = 0xC02B;
+    private static final int TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 = 0xC02C;
+    private static final int TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 = 0xC02D;
+    private static final int TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384 = 0xC02E;
+    private static final int TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 = 0xC02F;
+    private static final int TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 = 0xC030;
+    private static final int TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256 = 0xC031;
+    private static final int TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 = 0xC032;
 
     /*
      * RFC 5746
@@ -192,7 +193,7 @@ public class CipherSuite {
 
 
     static {
-        CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, "SHA384", KeyExchange.ECDH_RSA, CipherDesc.AES_256_GCM));
+        CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, "SHA384", KeyExchange.ECDH_RSA, CipherDesc.AES_256_GCM, true));
     }
 
     /**
@@ -215,22 +216,78 @@ public class CipherSuite {
      */
     private CipherDesc cipher;
 
-    public CipherSuite(int suite, String macAlg, KeyExchange keyExchange, CipherDesc cipher) {
+    /**
+     * 是否是包含ECC算法
+     */
+    private boolean ec;
+
+    public CipherSuite(int suite, String macAlg, KeyExchange keyExchange, CipherDesc cipher, boolean ec) {
         this.suite = suite;
         this.macAlg = macAlg;
         this.keyExchange = keyExchange;
         this.cipher = cipher;
+        this.ec = ec;
     }
 
+    public int getSuite() {
+        return suite;
+    }
 
+    public void setSuite(int suite) {
+        this.suite = suite;
+    }
+
+    public String getMacAlg() {
+        return macAlg;
+    }
+
+    public void setMacAlg(String macAlg) {
+        this.macAlg = macAlg;
+    }
+
+    public KeyExchange getKeyExchange() {
+        return keyExchange;
+    }
+
+    public void setKeyExchange(KeyExchange keyExchange) {
+        this.keyExchange = keyExchange;
+    }
+
+    public CipherDesc getCipher() {
+        return cipher;
+    }
+
+    public void setCipher(CipherDesc cipher) {
+        this.cipher = cipher;
+    }
+
+    public boolean isEc() {
+        return ec;
+    }
+
+    public void setEc(boolean ec) {
+        this.ec = ec;
+    }
+
+    /**
+     * 密钥交换算法
+     */
     private enum KeyExchange {
         ECDH_RSA,
     }
 
+    /**
+     * 加密类型
+     */
     public enum CipherType {
         BLOCK, AEAD;
     }
 
+
+
+    /**
+     * 加密算法
+     */
     public enum CipherDesc {
 
         AES_128("AES/CBC/NoPadding", CipherType.BLOCK, 16, 16, 0),
@@ -246,27 +303,27 @@ public class CipherSuite {
         /**
          * 加密算法名
          */
-        public String cipherName;
+        private String cipherName;
 
         /**
          * 密钥大小，单位byte
          */
-        public int keySize;
+        private int keySize;
 
         /**
          * iv大小，单位byte
          */
-        public int ivLen;
+        private int ivLen;
 
         /**
          * GCM模式下会大于0，表示实际的ivLen，因为对于GCM模式来说iv等于fixedIv+nonce
          */
-        public int fixedIvLen;
+        private int fixedIvLen;
 
         /**
          * 加密类型
          */
-        public CipherType cipherType;
+        private CipherType cipherType;
 
         CipherDesc(String cipherName, CipherType cipherType, int keySize, int ivLen, int fixedIvLen) {
             this.cipherName = cipherName;
@@ -274,6 +331,46 @@ public class CipherSuite {
             this.keySize = keySize;
             this.ivLen = ivLen;
             this.fixedIvLen = fixedIvLen;
+        }
+
+        public String getCipherName() {
+            return cipherName;
+        }
+
+        public void setCipherName(String cipherName) {
+            this.cipherName = cipherName;
+        }
+
+        public int getKeySize() {
+            return keySize;
+        }
+
+        public void setKeySize(int keySize) {
+            this.keySize = keySize;
+        }
+
+        public int getIvLen() {
+            return ivLen;
+        }
+
+        public void setIvLen(int ivLen) {
+            this.ivLen = ivLen;
+        }
+
+        public int getFixedIvLen() {
+            return fixedIvLen;
+        }
+
+        public void setFixedIvLen(int fixedIvLen) {
+            this.fixedIvLen = fixedIvLen;
+        }
+
+        public CipherType getCipherType() {
+            return cipherType;
+        }
+
+        public void setCipherType(CipherType cipherType) {
+            this.cipherType = cipherType;
         }
     }
 }

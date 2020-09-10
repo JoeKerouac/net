@@ -4,63 +4,89 @@ import org.bouncycastle.asn1.sec.SECNamedCurves;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * RFC 4492 5.1.1
- *
+ * <p>
  * The named curves defined here are those specified in SEC 2 [13]. Note that many of
  * these curves are also recommended in ANSI X9.62 [7] and FIPS 186-2 [11]. Values 0xFE00
  * through 0xFEFF are reserved for private use. Values 0xFF01 and 0xFF02 indicate that the
  * client supports arbitrary prime and characteristic-2 curves, respectively (the curve
  * parameters must be encoded explicitly in ECParameters).
- * 
- * 
+ *
  * @author JoeKerouac
  * @version 2020年06月27日 17:20
  */
 public class NamedCurve {
-    public static final int       sect163k1  = 1;
-    public static final int       sect163r1  = 2;
-    public static final int       sect163r2  = 3;
-    public static final int       sect193r1  = 4;
-    public static final int       sect193r2  = 5;
-    public static final int       sect233k1  = 6;
-    public static final int       sect233r1  = 7;
-    public static final int       sect239k1  = 8;
-    public static final int       sect283k1  = 9;
-    public static final int       sect283r1  = 10;
-    public static final int       sect409k1  = 11;
-    public static final int       sect409r1  = 12;
-    public static final int       sect571k1  = 13;
-    public static final int       sect571r1  = 14;
-    public static final int       secp160k1  = 15;
-    public static final int       secp160r1  = 16;
-    public static final int       secp160r2  = 17;
-    public static final int       secp192k1  = 18;
-    public static final int       secp192r1  = 19;
-    public static final int       secp224k1  = 20;
-    public static final int       secp224r1  = 21;
-    public static final int       secp256k1  = 22;
-    public static final int       secp256r1  = 23;
-    public static final int       secp384r1  = 24;
-    public static final int       secp521r1  = 25;
 
-    private static final String[] curveNames = new String[] { "sect163k1", "sect163r1", "sect163r2",
-                                                              "sect193r1", "sect193r2", "sect233k1",
-                                                              "sect233r1", "sect239k1", "sect283k1",
-                                                              "sect283r1", "sect409k1", "sect409r1",
-                                                              "sect571k1", "sect571r1", "secp160k1",
-                                                              "secp160r1", "secp160r2", "secp192k1",
-                                                              "secp192r1", "secp224k1", "secp224r1",
-                                                              "secp256k1", "secp256r1", "secp384r1",
-                                                              "secp521r1", };
+    // 支持的全部椭圆曲线
+    private static final Map<Integer, NamedCurve> ALL = new HashMap<>();
 
-    public static ECDomainParameters getECParameters(int namedCurve) {
-        int index = namedCurve - 1;
-        if (index < 0 || index >= curveNames.length) {
+    static {
+        ALL.put(1, new NamedCurve(1, "sect163k1"));
+        ALL.put(2, new NamedCurve(2, "sect163r1"));
+        ALL.put(3, new NamedCurve(3, "sect163r2"));
+        ALL.put(4, new NamedCurve(4, "sect193r1"));
+        ALL.put(5, new NamedCurve(5, "sect193r2"));
+        ALL.put(6, new NamedCurve(6, "sect233k1"));
+        ALL.put(7, new NamedCurve(7, "sect233r1"));
+        ALL.put(8, new NamedCurve(8, "sect239k1"));
+        ALL.put(9, new NamedCurve(9, "sect283k1"));
+        ALL.put(10, new NamedCurve(10, "sect283r1"));
+        ALL.put(11, new NamedCurve(11, "sect409k1"));
+        ALL.put(12, new NamedCurve(12, "sect409r1"));
+        ALL.put(13, new NamedCurve(13, "sect571k1"));
+        ALL.put(14, new NamedCurve(14, "sect571r1"));
+        ALL.put(15, new NamedCurve(15, "secp160k1"));
+        ALL.put(16, new NamedCurve(16, "secp160r1"));
+        ALL.put(17, new NamedCurve(17, "secp160r2"));
+        ALL.put(18, new NamedCurve(18, "secp192k1"));
+        ALL.put(19, new NamedCurve(19, "secp192r1"));
+        ALL.put(20, new NamedCurve(20, "secp224k1"));
+        ALL.put(21, new NamedCurve(21, "secp224r1"));
+        ALL.put(22, new NamedCurve(22, "secp256k1"));
+        ALL.put(23, new NamedCurve(23, "secp256r1"));
+        ALL.put(24, new NamedCurve(24, "secp384r1"));
+        ALL.put(25, new NamedCurve(25, "secp521r1"));
+    }
+
+    /**
+     * 曲线ID
+     */
+    private int id;
+
+    /**
+     * 曲线名
+     */
+    private String name;
+
+    private NamedCurve(int id, String name) {
+
+    }
+
+    /**
+     * 根据曲线ID获取ECDomainParameters
+     *
+     * @param curveId 曲线ID
+     * @return ECDomainParameters
+     */
+    public static ECDomainParameters getECParameters(int curveId) {
+        // 使用Bouncy Castle实现，支持的椭圆曲线：https://github.com/bcgit/bc-java/wiki/Support-for-ECDSA,-ECGOST-Curves.
+        // 支持的椭圆曲线定义：org.bouncycastle.asn1.sec.SECNamedCurves
+        // 支持的椭圆曲线定义：org.bouncycastle.asn1.x9.X962NamedCurves
+        // 支持的椭圆曲线定义：org.bouncycastle.asn1.nist.NISTNamedCurves
+        // 支持的椭圆曲线定义：org.bouncycastle.asn1.teletrust.TeleTrusTNamedCurves
+
+        NamedCurve namedCurveObj = ALL.get(curveId);
+        if (namedCurveObj == null) {
             return null;
         }
 
-        String curveName = curveNames[index];
+        String curveName = namedCurveObj.getName();
 
         // Lazily created the first time a particular curve is accessed
         X9ECParameters ecP = SECNamedCurves.getByName(curveName);
@@ -71,6 +97,32 @@ public class NamedCurve {
 
         // It's a bit inefficient to do this conversion every time
         return new ECDomainParameters(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(),
-            ecP.getSeed());
+                ecP.getSeed());
+    }
+
+    /**
+     * 获取所有支持的曲线类型副本
+     *
+     * @return 所有曲线副本
+     */
+    public static List<NamedCurve> getAllSupportCurve() {
+        return new ArrayList<>(ALL.values());
+    }
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

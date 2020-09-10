@@ -158,10 +158,12 @@ com.joe.ssl.openjdk.ssl.CipherBox.createExplicitNonce
 com.joe.ssl.openjdk.ssl.CipherBox.applyExplicitNonce
 
 
-## 写出数据
+## seqNumber说明
+如果是BLOCK模式，那么在计算MAC的时候+1，如果是AEAD模式，那么在初始化cipher（applyExplicitNonce）的时候+1；
 
-- 如果是CBC模式，需要mac，则对传输数据进行签名计算（此时会将sequence number + 1），然后将签名也放入传输数据中
-- 调用createExplicitNonce创建一个随机数，创建算法：如果是BLOCK模式，那么生成一个随机数返回，如果是AEAD模式，使用当前sequenceNumber作为随机数，初始化cipher，使用acquireAuthenticationBytes获得一个添加数据，update到cipher中；
+## 写出数据
+- 如果是CBC模式，需要mac，则对传输数据进行签名计算（此时如果是BLOCK模式，会将seqNumber + 1），然后将签名也放入传输数据中
+- 调用createExplicitNonce创建一个随机数，创建算法：如果是BLOCK模式，那么生成一个随机数返回，如果是AEAD模式，使用当前sequenceNumber作为随机数，初始化cipher，使用acquireAuthenticationBytes获得一个添加数据（seqNumber+1），update到cipher中；
 - 将nonce放入网络缓冲区（注意：AEAD模式不会加密该nonce，而BLOCK模式会）；
 - 加密缓冲区数据，如果是BLOCK模式，先对数据进行padding
   > padding算法：可以参考AesExample#padding

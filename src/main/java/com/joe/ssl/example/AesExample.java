@@ -4,12 +4,15 @@ import com.joe.ssl.cipher.CipherSuite;
 import com.joe.utils.collection.CollectionUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import javax.crypto.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.ByteBuffer;
-import java.security.*;
+import java.security.Provider;
+import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 
@@ -40,7 +43,7 @@ public class AesExample {
             {
                 // 密钥随机生成
                 KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-                keyGen.init(value.keySize * 8, new SecureRandom());
+                keyGen.init(value.getKeySize() * 8, new SecureRandom());
                 secretKey = keyGen.generateKey();
             }
 
@@ -67,7 +70,7 @@ public class AesExample {
             SecretKey secretKey;
             {
                 // 用指定密钥生成，对应秘钥已经交换完成，使用指定秘钥完成加密
-                byte[] key = new byte[value.keySize];
+                byte[] key = new byte[value.getKeySize()];
                 // 这里不填充全用0也行，只是演示用，实际上这里是客户端和服务端协商的
                 Arrays.fill(key, (byte) 10);
                 secretKey = new SecretKeySpec(key, "AES");
@@ -94,11 +97,11 @@ public class AesExample {
     private static void handleException(CipherSuite.CipherDesc value, Exception e) {
         // GCM模式下，因为自带认证，所以解密的时候直接抛出了BadPaddingException异常，而普通模式下因为没有认证信息，所以解密的时候
         // 并不会对信息进行校验，可以解密成功，但是解密出来的结果跟源数据肯定是对不上的
-        if (value.cipherType == CipherSuite.CipherType.AEAD) {
+        if (value.getCipherType() == CipherSuite.CipherType.AEAD) {
             if (!(e instanceof BadPaddingException) || !e.getMessage().equals("mac check in GCM failed")) {
                 throw new RuntimeException("预期不符合");
             }
-        } else if (value.cipherType == CipherSuite.CipherType.BLOCK) {
+        } else if (value.getCipherType() == CipherSuite.CipherType.BLOCK) {
             if (!(e instanceof RuntimeException) || !e.getMessage().equals("解密失败，解密结果跟原数据不一致")) {
                 throw new RuntimeException("预期不符合");
             }
@@ -116,7 +119,7 @@ public class AesExample {
     private static void baseTest(CipherSuite.CipherDesc algorithm, SecretKey secretKey, boolean change) throws Exception {
         // 模拟iv，如果是GCM模式，实际上这里的iv应该是 fixedIv + nonce，fixedIvLen + nonce = ivLen
         // 这里只是为了演示，所以也只是初始化为0
-        byte[] iv = new byte[algorithm.ivLen];
+        byte[] iv = new byte[algorithm.getIvLen()];
 
         // 要加密的数据
         String data = "你好啊，这是一段加密测试文本，如果运行正确应该原样返回，随机数据：三六九等费卢卡斯极度分裂加上代理开发机阿杀戮空间发" +
@@ -127,10 +130,10 @@ public class AesExample {
 
         // 使用JDK自带的JCE实现来加密，注意对于jce实现来说，这里是要区分加密模式的
         byte[] jceResult = null;
-        if (algorithm.cipherType == CipherSuite.CipherType.AEAD) {
+        if (algorithm.getCipherType() == CipherSuite.CipherType.AEAD) {
             // 这里16 * 8 是固定的，实际上加解密时也不会用到
             jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, null, new GCMParameterSpec(16 * 8, iv));
-        } else if (algorithm.cipherType == CipherSuite.CipherType.BLOCK) {
+        } else if (algorithm.getCipherType() == CipherSuite.CipherType.BLOCK) {
             jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, null, new IvParameterSpec(iv));
         }
 
@@ -172,20 +175,20 @@ public class AesExample {
         Cipher cipher;
 
         if (provider == null) {
-            cipher = Cipher.getInstance(algorithm.cipherName);
+            cipher = Cipher.getInstance(algorithm.getCipherName());
         } else {
-            cipher = Cipher.getInstance(algorithm.cipherName, provider);
+            cipher = Cipher.getInstance(algorithm.getCipherName(), provider);
         }
 
         // 因为我们的选定的算法都是NoPadding，所以需要自己填充对齐，确定算法后就可以获取块大小然后进行填充了，GCM模式不需要填充
-        if (algorithm.cipherType == CipherSuite.CipherType.BLOCK) {
+        if (algorithm.getCipherType() == CipherSuite.CipherType.BLOCK) {
             // 实际上这里的blockSize固定一直都是16
             data = padding(data, cipher.getBlockSize());
         }
 
         // 生成密钥
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(algorithm.keySize * 8, new SecureRandom());
+        keyGen.init(algorithm.getKeySize() * 8, new SecureRandom());
 
         // 加密模式
         cipher.init(mode, secretKey, algorithmParameterSpec, new SecureRandom());
@@ -194,7 +197,7 @@ public class AesExample {
 
     /**
      * 填充算法：如果源数据长度是6，blockSize是8，那么可以选择填充1，也可以填充9，也可以是17，只要填充后长度是8的整数倍即可，同时填充最大只能到254
-     *
+     * <p>
      * 注：为什么数据长度6，blockSize是8，只需要填充1？因为最后还会填充一个byte的长度信息，表示填充了多少byte的数据
      *
      * @param src       源数据

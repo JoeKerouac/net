@@ -67,6 +67,7 @@ public class ClientHandshaker {
 
     // 从org.bouncycastle.crypto.tls.NamedCurve中copy出来的
     // RFC 4492中定义了该值
+    // NamedEllipticCurve这里定义的也有
     private static final String[]  curveNames   = new String[] { "sect163k1", "sect163r1",
                                                                  "sect163r2", "sect193r1",
                                                                  "sect193r2", "sect233k1",
@@ -96,7 +97,7 @@ public class ClientHandshaker {
                 this.serverHello = new ServerHello(handshakeData);
                 break;
             case CERTIFICATE:
-                // 这里先不管证书
+                // 这里先不管证书，采用ECC相关算法时证书只用来签名
                 break;
             case SERVER_KEY_EXCHANGE:
                 // 处理服务端的密钥交换
@@ -104,14 +105,19 @@ public class ClientHandshaker {
                 // 这个必须等于3，其他不处理
                 Assert.isTrue(curveType == 3);
                 int curveId = realData[1] << 8 | realData[2];
-                // 这个必须等于23，其他不处理
-                Assert.isTrue(curveId == 23);
+
+                ECDomainParameters domainParameters = NamedCurve.getECParameters(curveId);
+
+                // 如果等于null表示不支持
+                if (domainParameters == null) {
+                    throw new RuntimeException(String.format("不支持的椭圆曲线id：%d", curveId));
+                }
+
                 int publicKeyLen = realData[3];
                 byte[] publicKeyData = new byte[publicKeyLen];
 
                 System.arraycopy(realData, 4, publicKeyData, 0, publicKeyLen);
 
-                ECDomainParameters domainParameters = NamedCurve.getECParameters(curveId);
                 // 使用指定数据解析出ECPoint
                 ECPoint Q = domainParameters.getCurve().decodePoint(publicKeyData);
 
@@ -128,7 +134,7 @@ public class ClientHandshaker {
     public static void main(String[] args) throws Exception {
 
         IHttpClientUtil clientUtil = new IHttpClientUtil();
-        clientUtil.executeGet("https://www.baidu.com");
+        clientUtil.executeGet("https://baidu.com");
 
         // clientHello
         String clientHelloData = "16030100d7010000d3030380eed28245a1607a2233ae75adec9d8fe8e59644b5e19093cef34fdb7b9fecd7000054c030c02cc028c024c014c00a009f006b0039cca9cca8ccaaff8500c400880081009d003d003500c00084c02fc02bc027c023c013c009009e0067003300be0045009c003c002f00ba0041c012c0080016000a00ff010000560000000e000c00000962616964752e636f6d000b00020100000a00080006001d00170018000d001c001a06010603efef0501050304010403eeeeeded03010303020102030010000e000c02683208687474702f312e31";

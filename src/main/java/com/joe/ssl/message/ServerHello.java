@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 
+import com.joe.ssl.message.extension.Extension;
+import com.joe.ssl.message.extension.ExtensionType;
 import com.joe.utils.common.Assert;
 
 import lombok.Getter;

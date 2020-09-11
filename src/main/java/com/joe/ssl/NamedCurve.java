@@ -57,7 +57,7 @@ public class NamedCurve {
     /**
      * 曲线ID
      */
-    private int id;
+    private int    id;
 
     /**
      * 曲线名
@@ -98,7 +98,7 @@ public class NamedCurve {
 
         // It's a bit inefficient to do this conversion every time
         return new ECDomainParameters(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(),
-                ecP.getSeed());
+            ecP.getSeed());
     }
 
     /**
@@ -109,7 +109,6 @@ public class NamedCurve {
     public static List<NamedCurve> getAllSupportCurve() {
         return new ArrayList<>(ALL.values());
     }
-
 
     public int getId() {
         return id;

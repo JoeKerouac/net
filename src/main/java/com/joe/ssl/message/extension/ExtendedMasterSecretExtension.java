@@ -1,8 +1,8 @@
 package com.joe.ssl.message.extension;
 
-import com.joe.ssl.message.WrapedOutputStream;
-
 import java.io.IOException;
+
+import com.joe.ssl.message.WrapedOutputStream;
 
 /**
  * 该扩展定义master_secret的计算方式:
@@ -28,7 +28,7 @@ import java.io.IOException;
  *
  * https://tools.ietf.org/html/rfc7627
  */
-public class ExtendedMasterSecretExtension implements HelloExtension{
+public class ExtendedMasterSecretExtension implements HelloExtension {
 
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {

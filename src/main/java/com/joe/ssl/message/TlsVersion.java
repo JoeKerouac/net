@@ -21,9 +21,9 @@ public enum TlsVersion implements EnumInterface {
      */
     private final int    code;
 
-    private final int majorVersion;
+    private final int    majorVersion;
 
-    private final int minorVersion;
+    private final int    minorVersion;
 
     /**
      * 枚举英文名

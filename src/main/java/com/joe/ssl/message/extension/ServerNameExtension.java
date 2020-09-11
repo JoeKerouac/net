@@ -1,8 +1,8 @@
 package com.joe.ssl.message.extension;
 
-import com.joe.ssl.message.WrapedOutputStream;
-
 import java.io.IOException;
+
+import com.joe.ssl.message.WrapedOutputStream;
 
 /**
  * @author JoeKerouac
@@ -20,7 +20,7 @@ public class ServerNameExtension implements HelloExtension {
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {
         outputStream.writeInt16(getExtensionType().id);
-        outputStream.writeInt16(2 +1 + 2 + serverName.length);
+        outputStream.writeInt16(2 + 1 + 2 + serverName.length);
         outputStream.writeInt16(1 + 2 + serverName.length);
         // type字段，这里先写死host_name类型
         outputStream.writeInt8(0);
@@ -29,7 +29,7 @@ public class ServerNameExtension implements HelloExtension {
 
     @Override
     public int size() {
-        return 2 +1 + 2 + serverName.length + 4;
+        return 2 + 1 + 2 + serverName.length + 4;
     }
 
     @Override

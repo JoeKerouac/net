@@ -1,13 +1,5 @@
 package com.joe.ssl.crypto;
 
-import com.joe.ssl.crypto.exception.CryptoException;
-import com.joe.ssl.crypto.exception.NoSuchAlgorithmException;
-import com.joe.utils.common.Assert;
-import com.joe.utils.reflect.clazz.ClassUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -17,6 +9,16 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.validation.constraints.NotNull;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.joe.ssl.crypto.exception.CryptoException;
+import com.joe.ssl.crypto.exception.NoSuchAlgorithmException;
+import com.joe.utils.common.Assert;
+import com.joe.utils.reflect.clazz.ClassUtils;
+
 /**
  * 全局算法注册器
  *
@@ -25,8 +27,8 @@ import java.util.stream.Collectors;
  */
 public class AlgorithmRegistry {
 
-    private static final Logger LOGGER = LoggerFactory
-            .getLogger(AlgorithmRegistry.class);
+    private static final Logger                                                          LOGGER   = LoggerFactory
+        .getLogger(AlgorithmRegistry.class);
 
     private static final ConcurrentMap<ClassLoader, ConcurrentMap<String, AlgorithmSpi>> REGISTRY = new ConcurrentHashMap<>();
 
@@ -72,14 +74,14 @@ public class AlgorithmRegistry {
         REGISTRY.compute(cl, (loader, stringAlgorithmSpiMap) -> {
             if (stringAlgorithmSpiMap == null) {
                 ServiceLoader<AlgorithmSpi> serviceLoader = ServiceLoader.load(AlgorithmSpi.class,
-                        loader);
+                    loader);
                 ConcurrentHashMap<String, AlgorithmSpi> map = new ConcurrentHashMap<>();
 
                 for (AlgorithmSpi algorithm : serviceLoader) {
                     if (map.containsKey(algorithm.name())) {
                         LOGGER.warn("ClassLoader[{}]下算法名[{}]重复，当前系统实现[{}]，实现[{}]将被忽略", loader,
-                                algorithm.name(), map.get(algorithm.name()).getClass(),
-                                algorithm.getClass());
+                            algorithm.name(), map.get(algorithm.name()).getClass(),
+                            algorithm.getClass());
                         continue;
                     }
 
@@ -155,7 +157,7 @@ public class AlgorithmRegistry {
         load(loader);
 
         List<AlgorithmSpi> list = find(loader,
-                algorithmSpi -> algorithmClass.isAssignableFrom(algorithmSpi.getClass()));
+            algorithmSpi -> algorithmClass.isAssignableFrom(algorithmSpi.getClass()));
         return list.stream().map(AlgorithmSpi::name).collect(Collectors.toSet());
     }
 

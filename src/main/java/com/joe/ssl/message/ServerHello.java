@@ -4,8 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import com.joe.ssl.message.extension.HelloExtension;
 import com.joe.ssl.message.extension.ExtensionType;
+import com.joe.ssl.message.extension.HelloExtension;
 import com.joe.utils.common.Assert;
 
 import lombok.Getter;
@@ -31,18 +31,18 @@ import sun.security.ssl.ProtocolVersion;
 @Getter
 public class ServerHello implements HandshakeMessage {
 
-    private int                              version;
+    private int                                version;
 
     /**
      * 消息长度
      */
-    private int                              len;
+    private int                                len;
 
-    private byte[]                           serverRandom;
+    private byte[]                             serverRandom;
 
-    private ProtocolVersion                  protocolVersion;
+    private ProtocolVersion                    protocolVersion;
 
-    private ClientHello                      clientHello;
+    private ClientHello                        clientHello;
 
     private Map<ExtensionType, HelloExtension> extensions;
 
@@ -54,7 +54,7 @@ public class ServerHello implements HandshakeMessage {
             this.serverRandom = inputStream.read(32);
             int sessionIdLen = inputStream.readInt8();
             // 跳过session
-//            Assert.isTrue(sessionIdLen == 0);
+            //            Assert.isTrue(sessionIdLen == 0);
             inputStream.read(sessionIdLen);
             // 密码套件
             int cipherSuite = inputStream.readInt16();

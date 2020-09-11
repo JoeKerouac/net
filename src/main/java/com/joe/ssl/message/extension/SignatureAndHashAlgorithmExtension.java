@@ -1,11 +1,11 @@
 package com.joe.ssl.message.extension;
 
-import com.joe.ssl.message.SignatureAndHashAlgorithm;
-import com.joe.ssl.message.WrapedOutputStream;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.joe.ssl.message.SignatureAndHashAlgorithm;
+import com.joe.ssl.message.WrapedOutputStream;
 
 /**
  * 签名算法支持
@@ -16,7 +16,8 @@ import java.util.List;
  */
 public class SignatureAndHashAlgorithmExtension implements HelloExtension {
 
-    private static final List<SignatureAndHashAlgorithm> ALL_SUPPORTS = new ArrayList<>(SignatureAndHashAlgorithm.getAllSupports().values());
+    private static final List<SignatureAndHashAlgorithm> ALL_SUPPORTS = new ArrayList<>(
+        SignatureAndHashAlgorithm.getAllSupports().values());
 
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {

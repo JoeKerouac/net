@@ -21,21 +21,20 @@ import java.util.List;
  */
 public class CertificateMsg implements HandshakeMessage {
 
-
     /**
      * 要发送/接受的证书信息，最后一个是根证书，第一个是服务器证书
      */
-    private X509Certificate[]   chain;
+    private X509Certificate[] chain;
 
     /**
      * 证书链{@link #chain}编码后的信息，顺序与{@link #chain}一致
      */
-    private List<byte[]>        encodedChain;
+    private List<byte[]>      encodedChain;
 
     /**
      * 消息长度，对应Certificates len
      */
-    private int                 messageLength = -1;
+    private int               messageLength = -1;
 
     /**
      * 将X509Certificate[]解析为传输的数据List<byte[]>

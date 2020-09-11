@@ -1,9 +1,9 @@
 package com.joe.ssl.message.extension;
 
+import java.io.IOException;
+
 import com.joe.ssl.NamedCurve;
 import com.joe.ssl.message.WrapedOutputStream;
-
-import java.io.IOException;
 
 /**
  * ECC椭圆曲线扩展
@@ -14,7 +14,8 @@ import java.io.IOException;
  */
 public class EllipticCurvesExtension implements HelloExtension {
 
-    private final int[] curveIds = NamedCurve.getAllSupportCurve().stream().mapToInt(NamedCurve::getId).toArray();
+    private final int[] curveIds = NamedCurve.getAllSupportCurve().stream()
+        .mapToInt(NamedCurve::getId).toArray();
 
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {

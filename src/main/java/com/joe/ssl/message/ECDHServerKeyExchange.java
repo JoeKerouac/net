@@ -14,34 +14,6 @@ import org.bouncycastle.jce.provider.JCEECPublicKey;
  */
 public class ECDHServerKeyExchange implements HandshakeMessage {
 
-    // 从org.bouncycastle.crypto.tls.NamedCurve中copy出来的
-    // RFC 4492中定义了该值
-    private static final String[]                        curveNames = new String[] { "sect163k1",
-                                                                                     "sect163r1",
-                                                                                     "sect163r2",
-                                                                                     "sect193r1",
-                                                                                     "sect193r2",
-                                                                                     "sect233k1",
-                                                                                     "sect233r1",
-                                                                                     "sect239k1",
-                                                                                     "sect283k1",
-                                                                                     "sect283r1",
-                                                                                     "sect409k1",
-                                                                                     "sect409r1",
-                                                                                     "sect571k1",
-                                                                                     "sect571r1",
-                                                                                     "secp160k1",
-                                                                                     "secp160r1",
-                                                                                     "secp160r2",
-                                                                                     "secp192k1",
-                                                                                     "secp192r1",
-                                                                                     "secp224k1",
-                                                                                     "secp224r1",
-                                                                                     "secp256k1",
-                                                                                     "secp256r1",
-                                                                                     "secp384r1",
-                                                                                     "secp521r1", };
-
     /**
      * clientHello中的随机数
      */

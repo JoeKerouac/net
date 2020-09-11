@@ -1,8 +1,8 @@
 package com.joe.ssl.message.extension;
 
-import com.joe.ssl.message.WrapedOutputStream;
-
 import java.io.IOException;
+
+import com.joe.ssl.message.WrapedOutputStream;
 
 /**
  * extension格式如下：

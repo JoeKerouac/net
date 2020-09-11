@@ -1,8 +1,8 @@
 package com.joe.ssl.message.extension;
 
-import com.joe.ssl.message.WrapedOutputStream;
-
 import java.io.IOException;
+
+import com.joe.ssl.message.WrapedOutputStream;
 
 /**
  *
@@ -13,13 +13,12 @@ import java.io.IOException;
  */
 public class EllipticPointFormatsExtension implements HelloExtension {
 
-    final static int FMT_UNCOMPRESSED = 0;
+    final static int                                  FMT_UNCOMPRESSED = 0;
 
-    public static final EllipticPointFormatsExtension DEFAULT =
-            new EllipticPointFormatsExtension(
-                    new byte[]{FMT_UNCOMPRESSED});
+    public static final EllipticPointFormatsExtension DEFAULT          = new EllipticPointFormatsExtension(
+        new byte[] { FMT_UNCOMPRESSED });
 
-    private byte[] format;
+    private byte[]                                    format;
 
     public EllipticPointFormatsExtension(byte[] format) {
         this.format = format;

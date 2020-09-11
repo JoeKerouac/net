@@ -1,10 +1,5 @@
 package com.joe.ssl.message;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.extension.*;
-import com.joe.utils.codec.Hex;
-import lombok.Data;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -12,6 +7,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import com.joe.ssl.cipher.CipherSuite;
+import com.joe.ssl.message.extension.*;
+import com.joe.utils.codec.Hex;
+
+import lombok.Data;
 
 /**
  * @author JoeKerouac
@@ -23,37 +24,37 @@ public class ClientHello implements HandshakeMessage {
     /**
      * 客户端随机数，32byte
      */
-    private byte[] clientRandom = new byte[32];
+    private byte[]               clientRandom = new byte[32];
 
     /**
      * sessionId，最大256
      */
-    private byte[] sessionId = new byte[0];
+    private byte[]               sessionId    = new byte[0];
 
     /**
      * 版本号
      */
-    private TlsVersion tlsVersion;
+    private TlsVersion           tlsVersion;
 
     /**
      * 加密套件
      */
-    private List<CipherSuite> cipherSuites = Collections.emptyList();
+    private List<CipherSuite>    cipherSuites = Collections.emptyList();
 
     /**
      * 扩展
      */
-    private List<HelloExtension> extensions = Collections.emptyList();
+    private List<HelloExtension> extensions   = Collections.emptyList();
 
     /**
      * 服务器名，可能为null
      */
-    private String serverName;
+    private String               serverName;
 
     /**
      * toString，性能考虑，存储起来不用每次计算
      */
-    private String toString = "exception or incomplete";
+    private String               toString     = "exception or incomplete";
 
     public ClientHello(String serverName) {
         this.serverName = serverName;
@@ -118,7 +119,7 @@ public class ClientHello implements HandshakeMessage {
             if (temp < Integer.MAX_VALUE) {
                 gmt_unix_time = (int) temp;
             } else {
-                gmt_unix_time = Integer.MAX_VALUE;          // Whoops!
+                gmt_unix_time = Integer.MAX_VALUE; // Whoops!
             }
 
             clientRandom[0] = (byte) (gmt_unix_time >> 24);
@@ -136,7 +137,8 @@ public class ClientHello implements HandshakeMessage {
         // TODO 完善扩展
         {
             // 判断加密套件是否包含ECC算法
-            boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst().map(CipherSuite::isEc).orElse(Boolean.FALSE);
+            boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst()
+                .map(CipherSuite::isEc).orElse(Boolean.FALSE);
             if (containEc) {
                 extensions.add(new EllipticCurvesExtension());
                 extensions.add(EllipticPointFormatsExtension.DEFAULT);
@@ -159,7 +161,6 @@ public class ClientHello implements HandshakeMessage {
         calcToString();
     }
 
-
     @Override
     public HandshakeType type() {
         return HandshakeType.CLIENT_HELLO;
@@ -169,7 +170,8 @@ public class ClientHello implements HandshakeMessage {
     public int size() {
         // 1byte type + 3byte 长度字段 + 2byte版本号 + 32byte随机数 + 1byte的sessionId长度字段 + sessionId的实际长度 + 2byte加密
         // 套件的长度字段 + 加密套件实际长度 + 2byte压缩算法长度+算法信息（写死不使用压缩算法） + 2byte扩展长度字段 + 扩展实际长度
-        return 1 + 3 + 2 + 32 + 1 + sessionId.length + 2 + cipherSuites.size() * 2 + 2 + 2 + extensions.stream().mapToInt(HelloExtension::size).sum();
+        return 1 + 3 + 2 + 32 + 1 + sessionId.length + 2 + cipherSuites.size() * 2 + 2 + 2
+               + extensions.stream().mapToInt(HelloExtension::size).sum();
     }
 
     @Override
@@ -197,7 +199,6 @@ public class ClientHello implements HandshakeMessage {
             stream.writeInt8(0);
         }
 
-
         // 写出extensions
         {
             // 计算扩展总长度，单位byte
@@ -212,14 +213,10 @@ public class ClientHello implements HandshakeMessage {
     }
 
     public void calcToString() {
-        this.toString = String.format("Handshake Type : %s\n" +
-                "Len : %d\n" +
-                "version: %s\n" +
-                "random : %s\n" +
-                "sessionId : %s\n" +
-                "cipherSuites: %s\n" +
-                "extension : %s", type(), size() - 4, tlsVersion,
-                new String(Hex.encodeHex(clientRandom, false)),
+        this.toString = String
+            .format("Handshake Type : %s\n" + "Len : %d\n" + "version: %s\n" + "random : %s\n"
+                    + "sessionId : %s\n" + "cipherSuites: %s\n" + "extension : %s",
+                type(), size() - 4, tlsVersion, new String(Hex.encodeHex(clientRandom, false)),
                 Arrays.toString(sessionId), cipherSuites, extensions);
     }
 
@@ -227,6 +224,5 @@ public class ClientHello implements HandshakeMessage {
     public String toString() {
         return this.toString;
     }
-
 
 }

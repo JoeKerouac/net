@@ -3,7 +3,6 @@ package com.joe.ssl.crypto.impl;
 import com.joe.ssl.crypto.HmacSpi;
 import com.joe.ssl.crypto.PhashSpi;
 
-
 /**
  * Phash算法抽象，非线程安全
  *
@@ -21,7 +20,6 @@ public abstract class AbstractPhash implements PhashSpi {
      * hmac算法实现
      */
     private HmacSpi hmacSpi;
-
 
     protected AbstractPhash(HmacSpi hmacSpi) {
         this.hmacSpi = hmacSpi;

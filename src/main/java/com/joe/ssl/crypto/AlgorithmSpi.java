@@ -21,12 +21,12 @@ public interface AlgorithmSpi extends Cloneable {
     /**
      * Hmac算法类型
      */
-    int HMAC = 2;
+    int HMAC   = 2;
 
     /**
      * Phash算法类型
      */
-    int PHASH = 3;
+    int PHASH  = 3;
 
     /**
      * 算法名
@@ -48,6 +48,7 @@ public interface AlgorithmSpi extends Cloneable {
      * @return 克隆结果
      */
     default Object clone() throws CloneNotSupportedException {
-        throw new CloneNotSupportedException(String.format("[%s]不支持clone操作", this.getClass().getName()));
+        throw new CloneNotSupportedException(
+            String.format("[%s]不支持clone操作", this.getClass().getName()));
     }
 }

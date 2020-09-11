@@ -1,8 +1,11 @@
 package com.joe.ssl;
 
-import com.joe.ssl.message.*;
-import com.joe.ssl.openjdk.ssl.CipherSuiteList;
-import com.joe.utils.common.Assert;
+import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
+import java.net.Socket;
+import java.security.SecureRandom;
+import java.util.Arrays;
+
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -13,11 +16,9 @@ import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
-import java.net.Socket;
-import java.security.SecureRandom;
-import java.util.Arrays;
+import com.joe.ssl.message.*;
+import com.joe.ssl.openjdk.ssl.CipherSuiteList;
+import com.joe.utils.common.Assert;
 
 /**
  * JDK自带：sun.security.ssl.ClientHandshaker
@@ -33,31 +34,31 @@ public class ClientHandshaker {
     /**
      * 服务端密钥交换公钥
      */
-    private ECPublicKeyParameters ecAgreeServerPublicKey;
+    private ECPublicKeyParameters  ecAgreeServerPublicKey;
 
     /**
      * 客户端密钥交换私钥
      */
     private ECPrivateKeyParameters ecAgreeClientPrivateKey;
 
-    private SecureRandom secureRandom = new SecureRandom();
+    private SecureRandom           secureRandom = new SecureRandom();
 
     /**
      * 客户端随机数
      */
-    private byte[] clientRandom;
+    private byte[]                 clientRandom;
 
     /**
      * 主密钥
      */
-    private byte[] masterSecret;
+    private byte[]                 masterSecret;
 
-    private ServerHello serverHello;
+    private ServerHello            serverHello;
 
     /**
      * 加密套件
      */
-    private CipherSuiteList cipherSuiteList;
+    private CipherSuiteList        cipherSuiteList;
 
     /**
      * 处理握手数据
@@ -114,7 +115,7 @@ public class ClientHandshaker {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-//        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
+        //        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
         WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
 
         ClientHello hello = new ClientHello("baidu.com");
@@ -126,7 +127,7 @@ public class ClientHandshaker {
         wrapedOutputStream.flush();
 
         byte[] helloData = outputStream.toByteArray();
-//        socket.getOutputStream().write(helloData);
+        //        socket.getOutputStream().write(helloData);
 
         System.out.println(hello);
         System.out.println("\n\n");
@@ -143,7 +144,7 @@ public class ClientHandshaker {
         while (true) {
             int contentType = inputStream.read();
             System.out
-                    .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
+                .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
             int version = inputStream.readInt16();
             System.out.println(String.format("version: %x", version));
             int len = inputStream.readInt16();
@@ -154,7 +155,6 @@ public class ClientHandshaker {
         }
     }
 
-
     /**
      * 生成非对称加密密钥
      *
@@ -164,7 +164,7 @@ public class ClientHandshaker {
     protected AsymmetricCipherKeyPair generateECKeyPair(ECDomainParameters ecParams) {
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenerationParameters = new ECKeyGenerationParameters(ecParams,
-                secureRandom);
+            secureRandom);
         keyPairGenerator.init(keyGenerationParameters);
         return keyPairGenerator.generateKeyPair();
     }

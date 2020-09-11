@@ -47,6 +47,16 @@ public enum TlsVersion implements EnumInterface {
         this.chinesName = englishName;
     }
 
+    public static TlsVersion valueOf(int majorVersion, int minorVersion) {
+        for (TlsVersion value : TlsVersion.values()) {
+            if (value.majorVersion == majorVersion && value.minorVersion == minorVersion) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
     public int getMajorVersion() {
         return majorVersion;
     }

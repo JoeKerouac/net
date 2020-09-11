@@ -1,9 +1,7 @@
 package com.joe.ssl.cipher;
 
-import com.joe.ssl.crypto.exception.CryptoException;
+import lombok.Getter;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -151,69 +149,54 @@ public class CipherSuite {
      */
     public static final int TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF;
 
-    /**
-     * 名字到id的映射
-     */
-    private static final Map<String, Integer> NAME2ID = new HashMap<>();
 
-    /**
-     * id到名字的映射
-     */
-    private static final Map<Integer, String> ID2NAME = new HashMap<>();
-
-    static {
-        try {
-            Field[] fields = CipherSuite.class.getFields();
-            for (Field field : fields) {
-                // 只用公共、静态并且是int类型的字段
-                if (Modifier.isPublic(field.getModifiers())
-                        && Modifier.isStatic(field.getModifiers()) && field.getType() == int.class) {
-                    String name = field.getName();
-                    int id = field.getInt(CipherSuite.class);
-                    NAME2ID.put(name, id);
-                    ID2NAME.put(id, name);
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException exception) {
-            throw new CryptoException(exception);
-        }
-    }
-
-    public static final List<CipherSuite> CIPHER_SUITES = new ArrayList<>();
+    public static final Map<Integer, CipherSuite> ALL_SUPPORTS = new HashMap<>();
 
 
     static {
         // 百度不支持AES256的，只能用AES128的
-        CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, "SHA256", KeyExchange.ECDH_RSA, CipherDesc.AES_128_GCM, true));
-        CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, "SHA384", KeyExchange.ECDH_RSA, CipherDesc.AES_256_GCM, true));
+        ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, new CipherSuite("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, "SHA256", KeyExchange.ECDH_RSA, CipherDesc.AES_128_GCM, true));
+        ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, new CipherSuite("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, "SHA384", KeyExchange.ECDH_RSA, CipherDesc.AES_256_GCM, true));
     }
+
+    /**
+     * 套件名
+     */
+    @Getter
+    private final String name;
 
     /**
      * 加密套件id
      */
-    private int suite;
+    @Getter
+    private final int suite;
 
     /**
      * mac算法（对应的hash算法）
      */
-    private String macAlg;
+    @Getter
+    private final String macAlg;
 
     /**
      * 密钥交换算法名
      */
-    private KeyExchange keyExchange;
+    @Getter
+    private final KeyExchange keyExchange;
 
     /**
      * 加密算法名
      */
-    private CipherDesc cipher;
+    @Getter
+    private final CipherDesc cipher;
 
     /**
      * 是否是包含ECC算法
      */
-    private boolean ec;
+    @Getter
+    private final boolean ec;
 
-    public CipherSuite(int suite, String macAlg, KeyExchange keyExchange, CipherDesc cipher, boolean ec) {
+    public CipherSuite(String name, int suite, String macAlg, KeyExchange keyExchange, CipherDesc cipher, boolean ec) {
+        this.name = name;
         this.suite = suite;
         this.macAlg = macAlg;
         this.keyExchange = keyExchange;
@@ -221,44 +204,28 @@ public class CipherSuite {
         this.ec = ec;
     }
 
-    public int getSuite() {
-        return suite;
+    /**
+     * 根据加密套件的id获取加密套件
+     *
+     * @param id 加密套件id
+     * @return 加密套件
+     */
+    public static CipherSuite getById(int id) {
+        return ALL_SUPPORTS.get(id);
     }
 
-    public void setSuite(int suite) {
-        this.suite = suite;
+    /**
+     * 获取当前系统支持的所有加密套件
+     *
+     * @return 所有加密套件
+     */
+    public static List<CipherSuite> getAllSupports() {
+        return new ArrayList<>(ALL_SUPPORTS.values());
     }
 
-    public String getMacAlg() {
-        return macAlg;
-    }
-
-    public void setMacAlg(String macAlg) {
-        this.macAlg = macAlg;
-    }
-
-    public KeyExchange getKeyExchange() {
-        return keyExchange;
-    }
-
-    public void setKeyExchange(KeyExchange keyExchange) {
-        this.keyExchange = keyExchange;
-    }
-
-    public CipherDesc getCipher() {
-        return cipher;
-    }
-
-    public void setCipher(CipherDesc cipher) {
-        this.cipher = cipher;
-    }
-
-    public boolean isEc() {
-        return ec;
-    }
-
-    public void setEc(boolean ec) {
-        this.ec = ec;
+    @Override
+    public String toString() {
+        return name;
     }
 
     /**
@@ -294,27 +261,32 @@ public class CipherSuite {
         /**
          * 加密算法名
          */
-        private String cipherName;
+        @Getter
+        private final String cipherName;
 
         /**
          * 密钥大小，单位byte
          */
-        private int keySize;
+        @Getter
+        private final int keySize;
 
         /**
          * iv大小，单位byte
          */
-        private int ivLen;
+        @Getter
+        private final int ivLen;
 
         /**
          * GCM模式下会大于0，表示实际的ivLen，因为对于GCM模式来说iv等于fixedIv+nonce
          */
-        private int fixedIvLen;
+        @Getter
+        private final int fixedIvLen;
 
         /**
          * 加密类型
          */
-        private CipherType cipherType;
+        @Getter
+        private final CipherType cipherType;
 
         CipherDesc(String cipherName, CipherType cipherType, int keySize, int ivLen, int fixedIvLen) {
             this.cipherName = cipherName;
@@ -322,46 +294,6 @@ public class CipherSuite {
             this.keySize = keySize;
             this.ivLen = ivLen;
             this.fixedIvLen = fixedIvLen;
-        }
-
-        public String getCipherName() {
-            return cipherName;
-        }
-
-        public void setCipherName(String cipherName) {
-            this.cipherName = cipherName;
-        }
-
-        public int getKeySize() {
-            return keySize;
-        }
-
-        public void setKeySize(int keySize) {
-            this.keySize = keySize;
-        }
-
-        public int getIvLen() {
-            return ivLen;
-        }
-
-        public void setIvLen(int ivLen) {
-            this.ivLen = ivLen;
-        }
-
-        public int getFixedIvLen() {
-            return fixedIvLen;
-        }
-
-        public void setFixedIvLen(int fixedIvLen) {
-            this.fixedIvLen = fixedIvLen;
-        }
-
-        public CipherType getCipherType() {
-            return cipherType;
-        }
-
-        public void setCipherType(CipherType cipherType) {
-            this.cipherType = cipherType;
         }
     }
 

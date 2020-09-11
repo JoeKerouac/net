@@ -138,8 +138,8 @@ public class ClientHandshaker {
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
-//        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
+//        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
+        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
 
         ClientHello hello = new ClientHello("baidu.com");
         wrapedOutputStream.writeInt8(ContentType.HANDSHAKE.getCode());
@@ -149,8 +149,15 @@ public class ClientHandshaker {
         hello.write(wrapedOutputStream);
         wrapedOutputStream.flush();
 
-        System.out.println(Arrays.toString(outputStream.toByteArray()));
-        System.out.println(Arrays.toString(outputStream.toByteArray()).length());
+        byte[] helloData = outputStream.toByteArray();
+//        socket.getOutputStream().write(helloData);
+
+        System.out.println(hello);
+        System.out.println("\n\n");
+        System.out.println(Arrays.toString(helloData));
+        System.out.println("\n\n");
+        hello = new ClientHello(Arrays.copyOfRange(helloData, 5, helloData.length));
+        System.out.println(hello);
         Thread.sleep(1000);
         System.exit(1);
 

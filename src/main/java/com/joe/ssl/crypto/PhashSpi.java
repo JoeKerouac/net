@@ -12,7 +12,7 @@ package com.joe.ssl.crypto;
  * &#9;    compute:<br/><br/>
  *
  * &#9;&#9;         P_hash(secret, seed) = HMAC_hash(secret, A(1) + seed) +<br/>
- * &#9;&#9;                               HMAC_hash(secret, A(2) + seed) +<br/>
+ * &#9;&#9;                                HMAC_hash(secret, A(2) + seed) +<br/>
  * &#9;&#9;                                HMAC_hash(secret, A(3) + seed) + ...<br/>
  * &#9;     A() is defined as:<br/><br/>
  *

@@ -65,7 +65,8 @@ public class NamedCurve {
     private String name;
 
     private NamedCurve(int id, String name) {
-
+        this.id = id;
+        this.name = name;
     }
 
     /**

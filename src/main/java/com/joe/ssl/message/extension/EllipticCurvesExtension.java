@@ -33,6 +33,6 @@ public class EllipticCurvesExtension implements HelloExtension {
 
     @Override
     public int size() {
-        return curveIds.length * 2 + 6;
+        return curveIds.length * 2 + 2 + 4;
     }
 }

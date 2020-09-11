@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
+import com.joe.ssl.message.extension.SignatureAndHashAlgorithmExtension;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
@@ -132,7 +133,7 @@ public class ClientHandshaker {
     }
 
     public static void main(String[] args) throws Exception {
-
+        // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         Socket socket = new Socket("39.156.66.14", 443);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -140,7 +141,7 @@ public class ClientHandshaker {
         WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
 //        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
 
-        ClientHello hello = new ClientHello();
+        ClientHello hello = new ClientHello("baidu.com");
         wrapedOutputStream.writeInt8(ContentType.HANDSHAKE.getCode());
         wrapedOutputStream.writeInt8(TlsVersion.TLS1_2.getMajorVersion());
         wrapedOutputStream.writeInt8(TlsVersion.TLS1_2.getMinorVersion());
@@ -149,6 +150,8 @@ public class ClientHandshaker {
         wrapedOutputStream.flush();
 
         System.out.println(Arrays.toString(outputStream.toByteArray()));
+        System.out.println(Arrays.toString(outputStream.toByteArray()).length());
+        Thread.sleep(1000);
         System.exit(1);
 
         WrapedInputStream inputStream = new WrapedInputStream(socket.getInputStream());

@@ -21,7 +21,8 @@ public class SignatureAndHashAlgorithmExtension implements HelloExtension {
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {
         outputStream.writeInt16(getExtensionType().id);
-        outputStream.writeInt16(ALL_SUPPORTS.size() + 2);
+        outputStream.writeInt16(ALL_SUPPORTS.size() * 2 + 2);
+        outputStream.writeInt16(ALL_SUPPORTS.size() * 2);
         for (SignatureAndHashAlgorithm allSupport : ALL_SUPPORTS) {
             outputStream.writeInt16(allSupport.getId());
         }
@@ -29,7 +30,7 @@ public class SignatureAndHashAlgorithmExtension implements HelloExtension {
 
     @Override
     public int size() {
-        return ALL_SUPPORTS.size() + 6;
+        return ALL_SUPPORTS.size() * 2 + 2 + 4;
     }
 
     @Override

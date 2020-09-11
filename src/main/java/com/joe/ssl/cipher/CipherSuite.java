@@ -1,23 +1,13 @@
 package com.joe.ssl.cipher;
 
+import com.joe.ssl.crypto.exception.CryptoException;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.joe.ssl.crypto.exception.CryptoException;
-import com.joe.ssl.message.WrapedOutputStream;
-import com.joe.utils.collection.CollectionUtil;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * int类型的静态字段的字段名必须是加密套件名，值是对应的id
@@ -193,6 +183,8 @@ public class CipherSuite {
 
 
     static {
+        // 百度不支持AES256的，只能用AES128的
+        CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, "SHA256", KeyExchange.ECDH_RSA, CipherDesc.AES_128_GCM, true));
         CIPHER_SUITES.add(new CipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, "SHA384", KeyExchange.ECDH_RSA, CipherDesc.AES_256_GCM, true));
     }
 
@@ -284,7 +276,6 @@ public class CipherSuite {
     }
 
 
-
     /**
      * 加密算法
      */
@@ -373,7 +364,6 @@ public class CipherSuite {
             this.cipherType = cipherType;
         }
     }
-
 
 
 }

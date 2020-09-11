@@ -4,6 +4,13 @@ import com.joe.ssl.message.WrapedOutputStream;
 
 import java.io.IOException;
 
+/**
+ *
+ *
+ * @author JoeKerouac
+ * @version 1.0
+ * @date 2020-09-10 10:16
+ */
 public class EllipticPointFormatsExtension implements HelloExtension {
 
     final static int FMT_UNCOMPRESSED = 0;
@@ -21,7 +28,7 @@ public class EllipticPointFormatsExtension implements HelloExtension {
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {
         outputStream.writeInt16(getExtensionType().id);
-        outputStream.writeInt16(1 + format.length);
+        outputStream.writeInt16(format.length + 1);
         outputStream.writeInt8(format.length);
         for (byte b : format) {
             outputStream.writeInt8(b);
@@ -30,7 +37,7 @@ public class EllipticPointFormatsExtension implements HelloExtension {
 
     @Override
     public int size() {
-        return format.length + 5;
+        return format.length + 1 + 4;
     }
 
     @Override

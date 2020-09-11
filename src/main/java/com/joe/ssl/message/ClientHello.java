@@ -3,6 +3,7 @@ package com.joe.ssl.message;
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.extension.*;
 import com.joe.ssl.openjdk.ssl.ProtocolVersion;
+import com.joe.utils.protocol.DatagramUtil;
 import lombok.Data;
 
 import java.io.IOException;
@@ -33,14 +34,35 @@ public class ClientHello implements HandshakeMessage {
 
     private List<HelloExtension> extensions;
 
-    public ClientHello() {
+    private String serverName;
+
+    public ClientHello(String serverName) {
+        this.serverName = serverName;
         this.init();
     }
 
     public void init() {
-        new SecureRandom().nextBytes(clientRandom);
+        // 随机数，前4byte需要是当前时间
+        {
+            new SecureRandom().nextBytes(clientRandom);
+
+            long temp = System.currentTimeMillis() / 1000;
+            int gmt_unix_time;
+            if (temp < Integer.MAX_VALUE) {
+                gmt_unix_time = (int) temp;
+            } else {
+                gmt_unix_time = Integer.MAX_VALUE;          // Whoops!
+            }
+
+            clientRandom[0] = (byte)(gmt_unix_time >> 24);
+            clientRandom[1] = (byte)(gmt_unix_time >> 16);
+            clientRandom[2] = (byte)(gmt_unix_time >>  8);
+            clientRandom[3] = (byte)gmt_unix_time;
+        }
+
         this.tlsVersion = TlsVersion.TLS1_2;
         this.cipherSuites = new ArrayList<>(CipherSuite.CIPHER_SUITES);
+
         this.extensions = new ArrayList<>();
 
         // 初始化扩展
@@ -58,6 +80,12 @@ public class ClientHello implements HandshakeMessage {
 
             // master secret扩展
             extensions.add(new ExtendedMasterSecretExtension());
+
+            // server name扩展
+            extensions.add(new ServerNameExtension(serverName));
+
+            // 暂时不知道是做什么的
+            extensions.add(new RenegotiationInfoExtension());
         }
     }
 

@@ -7,8 +7,8 @@ import java.io.IOException;
 /**
  * extension格式如下：
  * <li>2byte的类型</li>
- * <li>2byte长度</li>
- * <li>实际内容，边长，长度与上边定义的相同</li>
+ * <li>2byte长度，单位byte</li>
+ * <li>实际内容，变长，长度与上边定义的相同</li>
  *
  * @author JoeKerouac
  * @version 2020年06月13日 16:44

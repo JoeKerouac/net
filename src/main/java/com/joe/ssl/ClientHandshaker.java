@@ -1,14 +1,8 @@
 package com.joe.ssl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.net.Socket;
-import java.security.SecureRandom;
-import java.util.Arrays;
-
-import com.joe.ssl.message.extension.SignatureAndHashAlgorithmExtension;
+import com.joe.ssl.message.*;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
+import com.joe.utils.common.Assert;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -19,18 +13,17 @@ import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import com.joe.http.IHttpClientUtil;
-import com.joe.ssl.message.*;
-import com.joe.ssl.util.SSLUtil;
-import com.joe.utils.codec.Hex;
-import com.joe.utils.collection.CollectionUtil;
-import com.joe.utils.common.Assert;
+import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
+import java.net.Socket;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 /**
  * JDK自带：sun.security.ssl.ClientHandshaker
- *
+ * <p>
  * JDK自带交换计算密钥：sun.security.ec.ECDHKeyAgreement#engineGenerateSecret(java.lang.String)
- * 
+ * <p>
  * bouncycastle：org.bouncycastle.crypto.tls.TlsProtocolHandler
  *
  * @author JoeKerouac
@@ -40,48 +33,31 @@ public class ClientHandshaker {
     /**
      * 服务端密钥交换公钥
      */
-    private ECPublicKeyParameters  ecAgreeServerPublicKey;
+    private ECPublicKeyParameters ecAgreeServerPublicKey;
 
     /**
      * 客户端密钥交换私钥
      */
     private ECPrivateKeyParameters ecAgreeClientPrivateKey;
 
-    private SecureRandom           secureRandom = new SecureRandom();
+    private SecureRandom secureRandom = new SecureRandom();
 
     /**
      * 客户端随机数
      */
-    private byte[]                 clientRandom;
+    private byte[] clientRandom;
 
     /**
      * 主密钥
      */
-    private byte[]                 masterSecret;
+    private byte[] masterSecret;
 
-    private ServerHello            serverHello;
+    private ServerHello serverHello;
 
     /**
      * 加密套件
      */
     private CipherSuiteList cipherSuiteList;
-
-    // 从org.bouncycastle.crypto.tls.NamedCurve中copy出来的
-    // RFC 4492中定义了该值
-    // NamedEllipticCurve这里定义的也有
-    private static final String[]  curveNames   = new String[] { "sect163k1", "sect163r1",
-                                                                 "sect163r2", "sect193r1",
-                                                                 "sect193r2", "sect233k1",
-                                                                 "sect233r1", "sect239k1",
-                                                                 "sect283k1", "sect283r1",
-                                                                 "sect409k1", "sect409r1",
-                                                                 "sect571k1", "sect571r1",
-                                                                 "secp160k1", "secp160r1",
-                                                                 "secp160r2", "secp192k1",
-                                                                 "secp192r1", "secp224k1",
-                                                                 "secp224r1", "secp256k1",
-                                                                 "secp256r1", "secp384r1",
-                                                                 "secp521r1", };
 
     /**
      * 处理握手数据
@@ -167,7 +143,7 @@ public class ClientHandshaker {
         while (true) {
             int contentType = inputStream.read();
             System.out
-                .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
+                    .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
             int version = inputStream.readInt16();
             System.out.println(String.format("version: %x", version));
             int len = inputStream.readInt16();
@@ -181,20 +157,22 @@ public class ClientHandshaker {
 
     /**
      * 生成非对称加密密钥
+     *
      * @param ecParams EC加密参数
      * @return 根据EC加密参数得到的非对称加密密钥
      */
     protected AsymmetricCipherKeyPair generateECKeyPair(ECDomainParameters ecParams) {
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenerationParameters = new ECKeyGenerationParameters(ecParams,
-            secureRandom);
+                secureRandom);
         keyPairGenerator.init(keyGenerationParameters);
         return keyPairGenerator.generateKeyPair();
     }
 
     /**
      * 根据自己的私钥和对方的公钥计算PremasterSecret，进而计算MasterSecret
-     * @param publicKey 公钥
+     *
+     * @param publicKey  公钥
      * @param privateKey 私钥
      * @return PremasterSecret
      */

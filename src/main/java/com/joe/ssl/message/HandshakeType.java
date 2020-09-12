@@ -38,6 +38,7 @@ public enum HandshakeType {
     }
 
     public static HandshakeType getByCode(int code) {
+        System.out.println("code 是：" + code);
         for (HandshakeType type : HandshakeType.values()) {
             if (code == type.code) {
                 return type;

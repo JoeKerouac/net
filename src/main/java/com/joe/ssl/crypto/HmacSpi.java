@@ -84,4 +84,8 @@ public interface HmacSpi extends AlgorithmSpi {
     default int type() {
         return AlgorithmSpi.HMAC;
     }
+
+    static HmacSpi getInstance(String algorithm) {
+        return AlgorithmRegistry.newInstance("alias.hmac." + algorithm);
+    }
 }

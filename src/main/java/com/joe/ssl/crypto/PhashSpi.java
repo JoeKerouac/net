@@ -49,4 +49,8 @@ public interface PhashSpi extends AlgorithmSpi {
     default int type() {
         return AlgorithmSpi.PHASH;
     }
+
+    static PhashSpi getInstance(String algorithm) {
+        return AlgorithmRegistry.newInstance("alias.phash." + algorithm);
+    }
 }

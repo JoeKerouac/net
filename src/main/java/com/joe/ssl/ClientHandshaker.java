@@ -1,5 +1,6 @@
 package com.joe.ssl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
@@ -75,23 +76,24 @@ public class ClientHandshaker {
      * @param handshakeData 握手数据
      */
     public void process(byte[] handshakeData) throws Exception {
-        HandshakeType type = HandshakeType.getByCode(handshakeData[0]);
-        byte[] realData = new byte[handshakeData.length - 4];
-        System.arraycopy(handshakeData, 4, realData, 0, realData.length);
+        WrapedInputStream inputStream = new WrapedInputStream(new ByteArrayInputStream(handshakeData));
+
+        HandshakeType type = HandshakeType.getByCode(inputStream.readInt8());
+        inputStream.skip(3);
         System.out.println("收到\"" + type + "\"类型的握手数据");
         switch (type) {
             case SERVER_HELLO:
-                this.serverHello = new ServerHello(handshakeData);
+                this.serverHello = new ServerHello(inputStream);
                 break;
             case CERTIFICATE:
                 // 这里先不管证书，采用ECC相关算法时证书只用来签名
                 break;
             case SERVER_KEY_EXCHANGE:
                 // 处理服务端的密钥交换
-                int curveType = realData[0];
+                int curveType = inputStream.readInt8();
                 // 这个必须等于3，其他不处理，目前应该也不会有其他的值
                 Assert.isTrue(curveType == 3);
-                int curveId = realData[1] << 8 | realData[2];
+                int curveId = inputStream.readInt16();
 
                 ECDomainParameters domainParameters = NamedCurve.getECParameters(curveId);
 
@@ -100,10 +102,8 @@ public class ClientHandshaker {
                     throw new RuntimeException(String.format("不支持的椭圆曲线id：%d", curveId));
                 }
 
-                int publicKeyLen = realData[3];
-                byte[] publicKeyData = new byte[publicKeyLen];
-
-                System.arraycopy(realData, 4, publicKeyData, 0, publicKeyLen);
+                int publicKeyLen = inputStream.readInt8();
+                byte[] publicKeyData = inputStream.read(publicKeyLen);
 
                 // 使用指定数据解析出ECPoint
                 ECPoint Q = domainParameters.getCurve().decodePoint(publicKeyData);
@@ -113,33 +113,33 @@ public class ClientHandshaker {
 
                 // 初始化本地公私钥，用于后续密钥交换
                 AsymmetricCipherKeyPair asymmetricCipherKeyPair = generateECKeyPair(
-                    domainParameters);
+                        domainParameters);
                 this.ecAgreeClientPrivateKey = (ECPrivateKeyParameters) asymmetricCipherKeyPair
-                    .getPrivate();
+                        .getPrivate();
                 this.ecAgreeClientPublicKey = (ECPublicKeyParameters) asymmetricCipherKeyPair
-                    .getPublic();
+                        .getPublic();
 
                 // 计算preMasterKey
                 this.preMasterKey = calculateECDHBasicAgreement(this.ecAgreeServerPublicKey,
-                    this.ecAgreeClientPrivateKey);
+                        this.ecAgreeClientPrivateKey);
 
                 // 这里就先不验签了
                 break;
             case SERVER_HELLO_DONE:
                 // 详见README中，有详细算法
-                PhashSpi phashSpi = AlgorithmRegistry
-                    .newInstance("Phash" + this.serverHello.getCipherSuite().getMacAlg());
+                PhashSpi phashSpi = PhashSpi
+                        .getInstance(this.serverHello.getCipherSuite().getMacAlg());
                 phashSpi.init(preMasterKey);
 
                 masterSecret = new byte[48];
                 byte[] label = "master secret".getBytes();
                 byte[] seed = new byte[label.length + clientRandom.length
-                                       + serverHello.getServerRandom().length];
+                        + serverHello.getServerRandom().length];
 
                 System.arraycopy(label, 0, seed, 0, label.length);
                 System.arraycopy(clientRandom, 0, seed, label.length, clientRandom.length);
                 System.arraycopy(serverHello.getServerRandom(), 0, seed,
-                    label.length + clientRandom.length, serverHello.getServerRandom().length);
+                        label.length + clientRandom.length, serverHello.getServerRandom().length);
                 // 计算master_key
                 phashSpi.phash(seed, masterSecret);
                 System.out.println("生成的masterSecret是：" + Arrays.toString(masterSecret));
@@ -152,7 +152,8 @@ public class ClientHandshaker {
         System.out.println(AlgorithmRegistry.getAllAlgorithm());
 
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
-        Socket socket = new Socket("39.156.66.14", 443);
+        Socket socket = new Socket("127.0.0.1", 12345);
+//        Socket socket = new Socket("39.156.66.14", 443);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -170,31 +171,50 @@ public class ClientHandshaker {
         byte[] helloData = outputStream.toByteArray();
         socket.getOutputStream().write(helloData);
 
-        //        System.out.println(hello);
-        //        System.out.println("\n\n");
-        //        System.out.println(Arrays.toString(helloData));
-        //        System.out.println("\n\n");
-        //        hello = new ClientHello(Arrays.copyOfRange(helloData, 5, helloData.length));
-        //        System.out.println(hello);
-
-        //        Thread.sleep(1000);
-        //        System.exit(1);
-
         WrapedInputStream inputStream = new WrapedInputStream(socket.getInputStream());
         ClientHandshaker handshaker = new ClientHandshaker();
         handshaker.clientRandom = hello.getClientRandom();
 
+        {
+            System.out.println("当前可用长度：" + inputStream.available());
+            Thread.sleep(1000);
+            System.out.println("当前可用长度：" + inputStream.available());
+            Thread.sleep(1000);
+            System.out.println("当前可用长度：" + inputStream.available());
+            Thread.sleep(1000);
+            System.out.println("当前可用长度：" + inputStream.available());
+
+            byte[] buffer = new byte[inputStream.available()];
+
+            inputStream.read(buffer);
+            System.out.println(Arrays.toString(buffer));
+            System.exit(1);
+
+
+            int readLen;
+            while ((readLen = inputStream.read(buffer)) > 0) {
+                System.out.println(readLen);
+                System.out.println(Arrays.toString(buffer));
+            }
+
+            System.out.println("退出了");
+            System.exit(1);
+        }
+
+
         while (true) {
             int contentType = inputStream.read();
             System.out
-                .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
+                    .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
             int version = inputStream.readInt16();
             System.out.println(String.format("version: %x", version));
             int len = inputStream.readInt16();
             System.out.println("len:" + len);
+            System.out.println("可用：" + inputStream.available());
             byte[] data = inputStream.read(len);
-
+            System.out.println("type:" + data[0]);
             handshaker.process(data);
+            System.out.println("\n\n");
         }
     }
 
@@ -207,7 +227,7 @@ public class ClientHandshaker {
     protected AsymmetricCipherKeyPair generateECKeyPair(ECDomainParameters ecParams) {
         ECKeyPairGenerator keyPairGenerator = new ECKeyPairGenerator();
         ECKeyGenerationParameters keyGenerationParameters = new ECKeyGenerationParameters(ecParams,
-            secureRandom);
+                secureRandom);
         keyPairGenerator.init(keyGenerationParameters);
         return keyPairGenerator.generateKeyPair();
     }

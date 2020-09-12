@@ -51,4 +51,8 @@ public interface DigestSpi extends AlgorithmSpi {
     default int type() {
         return AlgorithmSpi.DIGEST;
     }
+
+    static DigestSpi getInstance(String algorithm) {
+        return AlgorithmRegistry.newInstance("alias.digest." + algorithm);
+    }
 }

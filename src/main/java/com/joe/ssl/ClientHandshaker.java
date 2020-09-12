@@ -3,7 +3,7 @@ package com.joe.ssl;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.security.*;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -13,10 +13,11 @@ import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
+import com.joe.ssl.crypto.AlgorithmRegistry;
+import com.joe.ssl.crypto.PhashSpi;
 import com.joe.ssl.message.*;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import com.joe.utils.common.Assert;
@@ -53,6 +54,8 @@ public class ClientHandshaker {
      * 客户端随机数
      */
     private byte[]                 clientRandom;
+
+    private byte[]                 preMasterKey;
 
     /**
      * 主密钥
@@ -108,41 +111,53 @@ public class ClientHandshaker {
                 // EC密钥交换算法服务端公钥
                 ecAgreeServerPublicKey = new ECPublicKeyParameters(Q, domainParameters);
 
-                // preMasterKey
-                byte[] preMasterKey = calculateECDHBasicAgreement(ecAgreeServerPublicKey, ecAgreeClientPrivateKey);
+                // 初始化本地公私钥，用于后续密钥交换
+                AsymmetricCipherKeyPair asymmetricCipherKeyPair = generateECKeyPair(
+                    domainParameters);
+                this.ecAgreeClientPrivateKey = (ECPrivateKeyParameters) asymmetricCipherKeyPair
+                    .getPrivate();
+                this.ecAgreeClientPublicKey = (ECPublicKeyParameters) asymmetricCipherKeyPair
+                    .getPublic();
 
-                KeyPairGenerator generator = KeyPairGenerator.getInstance("DH", new BouncyCastleProvider());
-                KeyPair keyPair = generator.generateKeyPair();
-                AlgorithmParameterGenerator.getInstance("DH", new BouncyCastleProvider());
-
-
+                // 计算preMasterKey
+                this.preMasterKey = calculateECDHBasicAgreement(this.ecAgreeServerPublicKey,
+                    this.ecAgreeClientPrivateKey);
 
                 // 这里就先不验签了
                 break;
             case SERVER_HELLO_DONE:
                 // 详见README中，有详细算法
+                PhashSpi phashSpi = AlgorithmRegistry
+                    .newInstance("Phash" + this.serverHello.getCipherSuite().getMacAlg());
+                phashSpi.init(preMasterKey);
+
+                masterSecret = new byte[48];
+                byte[] label = "master secret".getBytes();
+                byte[] seed = new byte[label.length + clientRandom.length
+                                       + serverHello.getServerRandom().length];
+
+                System.arraycopy(label, 0, seed, 0, label.length);
+                System.arraycopy(clientRandom, 0, seed, label.length, clientRandom.length);
+                System.arraycopy(serverHello.getServerRandom(), 0, seed,
+                    label.length + clientRandom.length, serverHello.getServerRandom().length);
+                // 计算master_key
+                phashSpi.phash(seed, masterSecret);
+                System.out.println("生成的masterSecret是：" + Arrays.toString(masterSecret));
                 break;
         }
     }
 
     public static void main(String[] args) throws Exception {
-        System.out.println("123");
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("EC", new BouncyCastleProvider());
-        System.out.println("1234");
-        KeyPair keyPair = generator.genKeyPair();
-        System.out.println("12345");
-        System.out.println(keyPair.getPrivate());
-        System.out.println(keyPair.getPrivate().getFormat());
-        System.exit(1);
 
+        System.out.println(AlgorithmRegistry.getAllAlgorithm());
 
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         Socket socket = new Socket("39.156.66.14", 443);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        //        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
-        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
+        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(socket.getOutputStream());
+        //        WrapedOutputStream wrapedOutputStream = new WrapedOutputStream(outputStream);
 
         ClientHello hello = new ClientHello("baidu.com");
         wrapedOutputStream.writeInt8(ContentType.HANDSHAKE.getCode());
@@ -153,19 +168,21 @@ public class ClientHandshaker {
         wrapedOutputStream.flush();
 
         byte[] helloData = outputStream.toByteArray();
-        //        socket.getOutputStream().write(helloData);
+        socket.getOutputStream().write(helloData);
 
-        System.out.println(hello);
-        System.out.println("\n\n");
-        System.out.println(Arrays.toString(helloData));
-        System.out.println("\n\n");
-        hello = new ClientHello(Arrays.copyOfRange(helloData, 5, helloData.length));
-        System.out.println(hello);
-        Thread.sleep(1000);
-        System.exit(1);
+        //        System.out.println(hello);
+        //        System.out.println("\n\n");
+        //        System.out.println(Arrays.toString(helloData));
+        //        System.out.println("\n\n");
+        //        hello = new ClientHello(Arrays.copyOfRange(helloData, 5, helloData.length));
+        //        System.out.println(hello);
+
+        //        Thread.sleep(1000);
+        //        System.exit(1);
 
         WrapedInputStream inputStream = new WrapedInputStream(socket.getInputStream());
         ClientHandshaker handshaker = new ClientHandshaker();
+        handshaker.clientRandom = hello.getClientRandom();
 
         while (true) {
             int contentType = inputStream.read();

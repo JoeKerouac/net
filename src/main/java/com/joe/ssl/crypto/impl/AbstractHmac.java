@@ -133,14 +133,19 @@ public abstract class AbstractHmac implements HmacSpi {
     }
 
     @Override
+    public String name() {
+        return "Hmac" + hashAlgorithm();
+    }
+
+    @Override
     public String hashAlgorithm() {
         return digestSpi.name();
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
+    public Object copy() throws CloneNotSupportedException {
         AbstractHmac hmac = (AbstractHmac) super.clone();
-        hmac.digestSpi = (DigestSpi) this.digestSpi.clone();
+        hmac.digestSpi = (DigestSpi) this.digestSpi.copy();
         hmac.init = this.init;
         hmac.k_ipad = this.k_ipad.clone();
         hmac.k_opad = this.k_opad.clone();

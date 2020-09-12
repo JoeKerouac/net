@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 
+import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.extension.ExtensionType;
 import com.joe.ssl.message.extension.HelloExtension;
 import com.joe.utils.common.Assert;
@@ -44,23 +45,29 @@ public class ServerHello implements HandshakeMessage {
 
     private ClientHello                        clientHello;
 
+    @Getter
+    private CipherSuite                        cipherSuite;
+
     private Map<ExtensionType, HelloExtension> extensions;
 
     public ServerHello(byte[] data) {
         try {
             WrapedInputStream inputStream = new WrapedInputStream(new ByteArrayInputStream(data));
             Assert.isTrue(type().getCode() == inputStream.readInt8());
+            inputStream.skip(3);
             this.version = inputStream.readInt16();
             this.serverRandom = inputStream.read(32);
             int sessionIdLen = inputStream.readInt8();
             // 跳过session
-            //            Assert.isTrue(sessionIdLen == 0);
-            inputStream.read(sessionIdLen);
+            inputStream.skip(sessionIdLen);
             // 密码套件
-            int cipherSuite = inputStream.readInt16();
-            System.out.println(String.format("当前密码套件：%x", cipherSuite));
+            int cipherSuiteId = inputStream.readInt16();
+            this.cipherSuite = CipherSuite.getById(cipherSuiteId);
+            System.out.println("密码套件是：" + cipherSuiteId);
+            System.out.println("密码套件是：" + cipherSuite);
             // 其他的数据先不管
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

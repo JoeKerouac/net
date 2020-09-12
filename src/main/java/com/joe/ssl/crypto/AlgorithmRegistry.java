@@ -1,8 +1,6 @@
 package com.joe.ssl.crypto;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -16,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.joe.ssl.crypto.exception.CryptoException;
 import com.joe.ssl.crypto.exception.NoSuchAlgorithmException;
+import com.joe.ssl.crypto.impl.*;
 import com.joe.utils.common.Assert;
 import com.joe.utils.reflect.clazz.ClassUtils;
 
@@ -27,10 +26,60 @@ import com.joe.utils.reflect.clazz.ClassUtils;
  */
 public class AlgorithmRegistry {
 
-    private static final Logger                                                          LOGGER   = LoggerFactory
+    private static final Logger                              LOGGER   = LoggerFactory
         .getLogger(AlgorithmRegistry.class);
 
-    private static final ConcurrentMap<ClassLoader, ConcurrentMap<String, AlgorithmSpi>> REGISTRY = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, AlgorithmSpi> REGISTRY = new ConcurrentHashMap<>();
+
+    static {
+        {
+            REGISTRY.put("alias.digest.sha1", new DigestSHA1());
+            REGISTRY.put("alias.digest.SHA1", new DigestSHA1());
+            REGISTRY.put("alias.digest.SHA-1", new DigestSHA1());
+
+            REGISTRY.put("alias.digest.sha256", new DigestSHA256());
+            REGISTRY.put("alias.digest.SHA256", new DigestSHA256());
+            REGISTRY.put("alias.digest.SHA-256", new DigestSHA256());
+
+            REGISTRY.put("alias.digest.sha384", new DigestSHA384());
+            REGISTRY.put("alias.digest.SHA384", new DigestSHA384());
+            REGISTRY.put("alias.digest.SHA-384", new DigestSHA384());
+        }
+
+        {
+            REGISTRY.put("alias.hmac.hmacSHA1", new HmacSHA1());
+            REGISTRY.put("alias.hmac.HmacSHA1", new HmacSHA1());
+            REGISTRY.put("alias.hmac.hmac-sha1", new HmacSHA1());
+            REGISTRY.put("alias.hmac.Hmac-SHA1", new HmacSHA1());
+
+            REGISTRY.put("alias.hmac.hmacSHA256", new HmacSHA256());
+            REGISTRY.put("alias.hmac.HmacSHA256", new HmacSHA256());
+            REGISTRY.put("alias.hmac.hmac-sha256", new HmacSHA256());
+            REGISTRY.put("alias.hmac.Hmac-SHA256", new HmacSHA256());
+
+            REGISTRY.put("alias.hmac.hmacSHA384", new HmacSHA384());
+            REGISTRY.put("alias.hmac.HmacSHA384", new HmacSHA384());
+            REGISTRY.put("alias.hmac.hmac-sha384", new HmacSHA384());
+            REGISTRY.put("alias.hmac.Hmac-SHA384", new HmacSHA384());
+        }
+
+        {
+            REGISTRY.put("alias.phash.PhashSHA1", new PhashSHA1());
+            REGISTRY.put("alias.phash.phashSHA1", new PhashSHA1());
+            REGISTRY.put("alias.phash.Phash-SHA1", new PhashSHA1());
+            REGISTRY.put("alias.phash.phash-sha1", new PhashSHA1());
+
+            REGISTRY.put("alias.phash.PhashSHA256", new PhashSHA256());
+            REGISTRY.put("alias.phash.phashSHA256", new PhashSHA256());
+            REGISTRY.put("alias.phash.Phash-SHA256", new PhashSHA256());
+            REGISTRY.put("alias.phash.phash-sha256", new PhashSHA256());
+
+            REGISTRY.put("alias.phash.PhashSHA384", new PhashSHA384());
+            REGISTRY.put("alias.phash.phashSHA384", new PhashSHA384());
+            REGISTRY.put("alias.phash.Phash-SHA384", new PhashSHA384());
+            REGISTRY.put("alias.phash.phash-sha384", new PhashSHA384());
+        }
+    }
 
     /**
      * 查找指定算法
@@ -66,36 +115,6 @@ public class AlgorithmRegistry {
     }
 
     /**
-     * 加载指定ClassLoader下所有算法实现
-     *
-     * @param cl ClassLoader
-     */
-    private static void load(ClassLoader cl) {
-        REGISTRY.compute(cl, (loader, stringAlgorithmSpiMap) -> {
-            if (stringAlgorithmSpiMap == null) {
-                ServiceLoader<AlgorithmSpi> serviceLoader = ServiceLoader.load(AlgorithmSpi.class,
-                    loader);
-                ConcurrentHashMap<String, AlgorithmSpi> map = new ConcurrentHashMap<>();
-
-                for (AlgorithmSpi algorithm : serviceLoader) {
-                    if (map.containsKey(algorithm.name())) {
-                        LOGGER.warn("ClassLoader[{}]下算法名[{}]重复，当前系统实现[{}]，实现[{}]将被忽略", loader,
-                            algorithm.name(), map.get(algorithm.name()).getClass(),
-                            algorithm.getClass());
-                        continue;
-                    }
-
-                    map.put(algorithm.name(), algorithm);
-                }
-
-                return map;
-            } else {
-                return stringAlgorithmSpiMap;
-            }
-        });
-    }
-
-    /**
      * 查找指定算法
      *
      * @param loader        指定ClassLoader
@@ -111,15 +130,14 @@ public class AlgorithmRegistry {
         Assert.notBlank(algorithmName, "algorithmName不能为空");
 
         // 先加载
-        load(loader);
         try {
-            List<AlgorithmSpi> list = find(loader,
+            List<AlgorithmSpi> list = find(
                 algorithmSpi -> algorithmSpi.name().equals(algorithmName));
             if (list.isEmpty()) {
                 throw new NoSuchAlgorithmException(algorithmName);
             }
 
-            return (T) list.get(0).clone();
+            return (T) list.get(0).copy();
         } catch (CloneNotSupportedException e) {
             throw new CryptoException(e);
         }
@@ -134,10 +152,7 @@ public class AlgorithmRegistry {
     public static Set<String> getAllAlgorithm(@NotNull ClassLoader loader) {
         Assert.notNull(loader, "ClassLoader不能为null");
 
-        // 先加载
-        load(loader);
-
-        List<AlgorithmSpi> list = find(loader, algorithmSpi -> true);
+        List<AlgorithmSpi> list = find(algorithmSpi -> true);
         return list.stream().map(AlgorithmSpi::name).collect(Collectors.toSet());
     }
 
@@ -153,10 +168,7 @@ public class AlgorithmRegistry {
         Assert.notNull(loader, "ClassLoader不能为null");
         Assert.notNull(algorithmClass, "algorithmClass不能为null");
 
-        // 先加载
-        load(loader);
-
-        List<AlgorithmSpi> list = find(loader,
+        List<AlgorithmSpi> list = find(
             algorithmSpi -> algorithmClass.isAssignableFrom(algorithmSpi.getClass()));
         return list.stream().map(AlgorithmSpi::name).collect(Collectors.toSet());
     }
@@ -164,19 +176,11 @@ public class AlgorithmRegistry {
     /**
      * 查找指定算法
      *
-     * @param loader 指定ClassLoader
      * @param filter 过滤器，过滤器返回true
      * @return 对应的算法列表，会返回过滤器返回true的算法
      */
-    private static List<AlgorithmSpi> find(@NotNull ClassLoader loader,
-                                           @NotNull Predicate<AlgorithmSpi> filter) {
-        ConcurrentMap<String, AlgorithmSpi> map = REGISTRY.get(loader);
-
-        if (map == null || map.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        return map.values().stream().filter(filter).collect(Collectors.toList());
+    private static List<AlgorithmSpi> find(@NotNull Predicate<AlgorithmSpi> filter) {
+        return REGISTRY.values().stream().filter(filter).collect(Collectors.toList());
     }
 
 }

@@ -90,7 +90,15 @@ public abstract class AbstractPhash implements PhashSpi {
     }
 
     @Override
-    public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+    public String name() {
+        return "Phash" + hmacSpi.hashAlgorithm();
+    }
+
+    @Override
+    public Object copy() throws CloneNotSupportedException {
+        AbstractPhash phash = (AbstractPhash)super.clone();
+        phash.hmacSpi = (HmacSpi) hmacSpi.copy();
+        phash.init = this.init;
+        return phash;
     }
 }

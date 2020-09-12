@@ -47,8 +47,5 @@ public interface AlgorithmSpi extends Cloneable {
      *
      * @return 克隆结果
      */
-    default Object clone() throws CloneNotSupportedException {
-        throw new CloneNotSupportedException(
-            String.format("[%s]不支持clone操作", this.getClass().getName()));
-    }
+    Object copy() throws CloneNotSupportedException;
 }

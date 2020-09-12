@@ -149,7 +149,7 @@ public class CipherSuite {
      */
     public static final int                       TLS_EMPTY_RENEGOTIATION_INFO_SCSV       = 0x00FF;
 
-    public static final Map<Integer, CipherSuite> ALL_SUPPORTS                            = new HashMap<>();
+    private static final Map<Integer, CipherSuite> ALL_SUPPORTS                            = new HashMap<>();
 
     static {
         // 百度不支持AES256的，只能用AES128的

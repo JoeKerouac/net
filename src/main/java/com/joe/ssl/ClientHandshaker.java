@@ -3,7 +3,7 @@ package com.joe.ssl;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.security.SecureRandom;
+import java.security.*;
 import java.util.Arrays;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -13,6 +13,7 @@ import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
@@ -35,6 +36,11 @@ public class ClientHandshaker {
      * 服务端密钥交换公钥
      */
     private ECPublicKeyParameters  ecAgreeServerPublicKey;
+
+    /**
+     * 客户端密钥交换公钥
+     */
+    private ECPublicKeyParameters  ecAgreeClientPublicKey;
 
     /**
      * 客户端密钥交换私钥
@@ -80,7 +86,7 @@ public class ClientHandshaker {
             case SERVER_KEY_EXCHANGE:
                 // 处理服务端的密钥交换
                 int curveType = realData[0];
-                // 这个必须等于3，其他不处理
+                // 这个必须等于3，其他不处理，目前应该也不会有其他的值
                 Assert.isTrue(curveType == 3);
                 int curveId = realData[1] << 8 | realData[2];
 
@@ -101,6 +107,16 @@ public class ClientHandshaker {
 
                 // EC密钥交换算法服务端公钥
                 ecAgreeServerPublicKey = new ECPublicKeyParameters(Q, domainParameters);
+
+                // preMasterKey
+                byte[] preMasterKey = calculateECDHBasicAgreement(ecAgreeServerPublicKey, ecAgreeClientPrivateKey);
+
+                KeyPairGenerator generator = KeyPairGenerator.getInstance("DH", new BouncyCastleProvider());
+                KeyPair keyPair = generator.generateKeyPair();
+                AlgorithmParameterGenerator.getInstance("DH", new BouncyCastleProvider());
+
+
+
                 // 这里就先不验签了
                 break;
             case SERVER_HELLO_DONE:
@@ -110,6 +126,16 @@ public class ClientHandshaker {
     }
 
     public static void main(String[] args) throws Exception {
+        System.out.println("123");
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("EC", new BouncyCastleProvider());
+        System.out.println("1234");
+        KeyPair keyPair = generator.genKeyPair();
+        System.out.println("12345");
+        System.out.println(keyPair.getPrivate());
+        System.out.println(keyPair.getPrivate().getFormat());
+        System.exit(1);
+
+
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         Socket socket = new Socket("39.156.66.14", 443);
 

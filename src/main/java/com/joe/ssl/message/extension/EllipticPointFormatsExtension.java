@@ -1,6 +1,7 @@
 package com.joe.ssl.message.extension;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.joe.ssl.message.WrapedOutputStream;
 
@@ -42,5 +43,11 @@ public class EllipticPointFormatsExtension implements HelloExtension {
     @Override
     public ExtensionType getExtensionType() {
         return ExtensionType.EXT_EC_POINT_FORMATS;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s :\t[supports format : %s]", getExtensionType().name,
+                Arrays.toString(format));
     }
 }

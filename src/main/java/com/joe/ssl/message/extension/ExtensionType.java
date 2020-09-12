@@ -23,7 +23,12 @@ public class ExtensionType {
 
     static List<ExtensionType> knownExtensions = new ArrayList<ExtensionType>(14);
 
-    static ExtensionType get(int id) {
+    /**
+     * 根据扩展id获取类型
+     * @param id 扩展id
+     * @return 扩展类型
+     */
+    public static ExtensionType get(int id) {
         for (ExtensionType ext : knownExtensions) {
             if (ext.id == id) {
                 return ext;

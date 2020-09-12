@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import lombok.Getter;
+
 /**
  * 签名算法那
  *
@@ -20,14 +22,19 @@ public class SignatureAndHashAlgorithm {
      */
     private static final Map<Integer, SignatureAndHashAlgorithm> ALL_SUPPORTS = new HashMap<>();
 
+    @Getter
     private HashAlgorithm                                        hash;
 
+    @Getter
     private SignatureAlgorithm                                   sign;
 
+    @Getter
     private int                                                  id;
 
+    @Getter
     private String                                               algorithm;
 
+    @Getter
     private Signature                                            signature;
 
     private SignatureAndHashAlgorithm(HashAlgorithm hash, SignatureAlgorithm sign,
@@ -91,44 +98,9 @@ public class SignatureAndHashAlgorithm {
         return new HashMap<>(ALL_SUPPORTS);
     }
 
-    public HashAlgorithm getHash() {
-        return hash;
-    }
-
-    public void setHash(HashAlgorithm hash) {
-        this.hash = hash;
-    }
-
-    public SignatureAlgorithm getSign() {
-        return sign;
-    }
-
-    public void setSign(SignatureAlgorithm sign) {
-        this.sign = sign;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getAlgorithm() {
+    @Override
+    public String toString() {
         return algorithm;
-    }
-
-    public void setAlgorithm(String algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public Signature getSignature() {
-        return signature;
-    }
-
-    public void setSignature(Signature signature) {
-        this.signature = signature;
     }
 
     enum SignatureAlgorithm {

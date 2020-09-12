@@ -1,9 +1,10 @@
 package com.joe.ssl.message.extension;
 
 import java.io.IOException;
+import java.util.Arrays;
 
-import com.joe.ssl.NamedCurve;
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.utils.common.Assert;
 
 /**
  * ECC椭圆曲线扩展
@@ -14,15 +15,19 @@ import com.joe.ssl.message.WrapedOutputStream;
  */
 public class EllipticCurvesExtension implements HelloExtension {
 
-    private final int[] curveIds = NamedCurve.getAllSupportCurve().stream()
-        .mapToInt(NamedCurve::getId).toArray();
+    private int[] curve;
+
+    public EllipticCurvesExtension(int[] curve) {
+        Assert.notNull(curve, "curve不能为null");
+        this.curve = curve;
+    }
 
     @Override
     public void write(WrapedOutputStream outputStream) throws IOException {
         outputStream.writeInt16(getExtensionType().id);
-        outputStream.writeInt16(curveIds.length * 2 + 2);
-        outputStream.writeInt16(curveIds.length * 2);
-        for (int curveId : curveIds) {
+        outputStream.writeInt16(curve.length * 2 + 2);
+        outputStream.writeInt16(curve.length * 2);
+        for (int curveId : curve) {
             outputStream.writeInt16(curveId);
         }
     }
@@ -34,6 +39,12 @@ public class EllipticCurvesExtension implements HelloExtension {
 
     @Override
     public int size() {
-        return curveIds.length * 2 + 2 + 4;
+        return curve.length * 2 + 2 + 4;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s :\t[supports curve : %s]", getExtensionType().name,
+            Arrays.toString(curve));
     }
 }

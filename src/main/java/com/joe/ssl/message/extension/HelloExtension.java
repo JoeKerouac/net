@@ -25,7 +25,8 @@ public interface HelloExtension {
 
     /**
      * 该扩展的输出大小
-     * @return 扩展输出总大小
+     *
+     * @return 扩展输出总大小，应该包含2byte类型+2byte长度+实际内容
      */
     int size();
 

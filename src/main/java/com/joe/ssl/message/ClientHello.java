@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.joe.ssl.NamedCurve;
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.extension.*;
 import com.joe.utils.codec.Hex;
@@ -69,38 +70,43 @@ public class ClientHello implements HandshakeMessage {
         init(input);
     }
 
+    /**
+     * 从输入流中读取ClientHello，输入流的起始位置应该是Handshake的handshakeType字段而不是record的content type
+     *
+     * @param input 输入流
+     */
     public void init(WrapedInputStream input) {
         try {
             // 跳过1byte的类型数据
-            input.readInt8();
+            input.skip(1);
 
             // 跳过3byte的长度信息
-            input.readInt24();
+            input.skip(3);
 
             // Version信息
-            tlsVersion = TlsVersion.valueOf(input.readInt8(), input.readInt8());
+            this.tlsVersion = TlsVersion.valueOf(input.readInt8(), input.readInt8());
 
             // 读取客户端随机数
-            input.read(clientRandom);
+            input.read(this.clientRandom);
 
             // 读取session
             int sessionLen = input.readInt8();
             this.sessionId = new byte[sessionLen];
             if (sessionLen > 0) {
-                input.read(sessionId);
+                input.read(this.sessionId);
             }
 
             // 读取cipher
             int cipherLen = input.readInt16() / 2;
-            cipherSuites = new ArrayList<>();
+            this.cipherSuites = new ArrayList<>();
             for (int i = 0; i < cipherLen; i++) {
-                cipherSuites.add(CipherSuite.getById(input.readInt16()));
+                this.cipherSuites.add(CipherSuite.getById(input.readInt16()));
             }
 
             // 跳过compression_methods
-            int compressionMethodsLen = input.readInt8();
-            System.out.println(compressionMethodsLen);
-            input.read(new byte[compressionMethodsLen]);
+            input.skip(input.readInt8());
+
+            this.extensions = ExtensionReader.read(input);
 
             // 最后计算下toString
             calcToString();
@@ -119,7 +125,7 @@ public class ClientHello implements HandshakeMessage {
             if (temp < Integer.MAX_VALUE) {
                 gmt_unix_time = (int) temp;
             } else {
-                gmt_unix_time = Integer.MAX_VALUE; // Whoops!
+                gmt_unix_time = Integer.MAX_VALUE;
             }
 
             clientRandom[0] = (byte) (gmt_unix_time >> 24);
@@ -140,18 +146,20 @@ public class ClientHello implements HandshakeMessage {
             boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst()
                 .map(CipherSuite::isEc).orElse(Boolean.FALSE);
             if (containEc) {
-                extensions.add(new EllipticCurvesExtension());
+                extensions.add(new EllipticCurvesExtension(NamedCurve.getAllSupportCurve().stream()
+                    .mapToInt(NamedCurve::getId).toArray()));
                 extensions.add(EllipticPointFormatsExtension.DEFAULT);
             }
 
             // 大于等于TLS1.2需要写出本地支持的签名算法
-            extensions.add(new SignatureAndHashAlgorithmExtension());
+            extensions.add(new SignatureAndHashAlgorithmExtension(
+                new ArrayList<>(SignatureAndHashAlgorithm.getAllSupports().values())));
 
             // master secret扩展
             extensions.add(new ExtendedMasterSecretExtension());
 
-            // server name扩展
-            extensions.add(new ServerNameExtension(serverName));
+            // server name扩展，type暂时写死0
+            extensions.add(new ServerNameExtension((byte) 0, serverName.getBytes()));
 
             // 暂时不知道是做什么的
             extensions.add(new RenegotiationInfoExtension());
@@ -217,7 +225,15 @@ public class ClientHello implements HandshakeMessage {
             .format("Handshake Type : %s\n" + "Len : %d\n" + "version: %s\n" + "random : %s\n"
                     + "sessionId : %s\n" + "cipherSuites: %s\n" + "extension : %s",
                 type(), size() - 4, tlsVersion, new String(Hex.encodeHex(clientRandom, false)),
-                Arrays.toString(sessionId), cipherSuites, extensions);
+                Arrays.toString(sessionId), cipherSuites, arrayToString(extensions));
+    }
+
+    private String arrayToString(List<?> list) {
+        StringBuilder sb = new StringBuilder();
+        list.forEach(entry -> {
+            sb.append("\n\t").append(entry);
+        });
+        return sb.toString();
     }
 
     @Override

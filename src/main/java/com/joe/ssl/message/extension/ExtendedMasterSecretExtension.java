@@ -45,4 +45,9 @@ public class ExtendedMasterSecretExtension implements HelloExtension {
     public ExtensionType getExtensionType() {
         return ExtensionType.EXT_EXTENDED_MASTER_SECRET;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s", getExtensionType().name);
+    }
 }

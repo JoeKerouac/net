@@ -1,6 +1,7 @@
 package com.joe.ssl;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
@@ -17,7 +18,6 @@ import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import com.joe.ssl.crypto.AlgorithmRegistry;
 import com.joe.ssl.crypto.PhashSpi;
 import com.joe.ssl.message.*;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
@@ -77,7 +77,8 @@ public class ClientHandshaker {
      *
      * @param handshakeData 握手数据
      */
-    public void process(byte[] handshakeData) throws Exception {
+    public void process(byte[] handshakeData,
+                        WrapedOutputStream wrapedOutputStream) throws Exception {
         WrapedInputStream inputStream = new WrapedInputStream(
             new ByteArrayInputStream(handshakeData));
 
@@ -172,8 +173,32 @@ public class ClientHandshaker {
                 // 计算master_key
                 phashSpi.phash(seed, masterSecret);
                 System.out.println("生成的masterSecret是：" + Arrays.toString(masterSecret));
+
+                // 准备发送client key exchange消息
+                ECDHClientKeyExchange ecdhClientKeyExchange = new ECDHClientKeyExchange(
+                    ecAgreeClientPublicKey);
+                write(ecdhClientKeyExchange, wrapedOutputStream);
+                System.out.println("ECDHClientKeyExchange消息发送完毕");
+                sendChangeCipher(wrapedOutputStream);
+                System.out.println("changeCipherSpec消息发送完毕");
                 break;
         }
+    }
+
+    private static void write(HandshakeMessage message,
+                              WrapedOutputStream outputStream) throws IOException {
+        outputStream.writeInt8(ContentType.HANDSHAKE.getCode());
+        TlsVersion.TLS1_2.write(outputStream);
+        outputStream.writeInt16(message.size());
+        message.write(outputStream);
+        outputStream.flush();
+    }
+
+    private static void sendChangeCipher(WrapedOutputStream outputStream) throws IOException{
+        outputStream.writeInt8(ContentType.CHANGE_CIPHER_SPEC.getCode());
+        TlsVersion.TLS1_2.write(outputStream);
+        outputStream.writeInt16(1);
+        outputStream.writeInt8(1);
     }
 
     public static void main(String[] args) throws Exception {
@@ -183,14 +208,8 @@ public class ClientHandshaker {
 
         WrapedOutputStream outputStream = new WrapedOutputStream(socket.getOutputStream());
 
-        outputStream.writeInt8(ContentType.HANDSHAKE.getCode());
-        outputStream.writeInt8(TlsVersion.TLS1_2.getMajorVersion());
-        outputStream.writeInt8(TlsVersion.TLS1_2.getMinorVersion());
-
         ClientHello hello = new ClientHello("baidu.com");
-        outputStream.writeInt16(hello.size());
-        hello.write(outputStream);
-        outputStream.flush();
+        write(hello, outputStream);
 
         WrapedInputStream inputStream = new WrapedInputStream(socket.getInputStream());
         ClientHandshaker handshaker = new ClientHandshaker();
@@ -235,7 +254,7 @@ public class ClientHandshaker {
             System.out.println("可用：" + inputStream.available());
             byte[] data = inputStream.read(len);
             System.out.println("type:" + data[0]);
-            handshaker.process(data);
+            handshaker.process(data, outputStream);
             System.out.println("\n\n");
         }
     }

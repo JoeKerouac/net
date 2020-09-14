@@ -7,6 +7,9 @@ package com.joe.ssl.message;
 public enum ContentType implements EnumInterface {
                                                   HANDSHAKE(0x16, "HANDSHAKE", "握手类型"),
 
+                                                  CHANGE_CIPHER_SPEC(0x14, "CHANGE_CIPHER_SPEC",
+                                                                     "CHANGE_CIPHER_SPEC"),
+
     ;
 
     /**

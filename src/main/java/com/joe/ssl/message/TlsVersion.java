@@ -1,5 +1,7 @@
 package com.joe.ssl.message;
 
+import java.io.IOException;
+
 /**
  * TLS版本枚举
  * 
@@ -55,6 +57,16 @@ public enum TlsVersion implements EnumInterface {
         }
 
         return null;
+    }
+
+    /**
+     * 将版本号写出
+     * @param outputStream 输出流
+     * @throws IOException IO异常
+     */
+    public void write(WrapedOutputStream outputStream) throws IOException {
+        outputStream.writeInt8(getMajorVersion());
+        outputStream.writeInt8(getMinorVersion());
     }
 
     public int getMajorVersion() {

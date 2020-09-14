@@ -177,9 +177,6 @@ public class ClientHandshaker {
     }
 
     public static void main(String[] args) throws Exception {
-
-        System.out.println(AlgorithmRegistry.getAllAlgorithm());
-
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Socket socket = new Socket("39.156.66.14", 443);

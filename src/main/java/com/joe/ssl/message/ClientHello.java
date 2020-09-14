@@ -63,11 +63,11 @@ public class ClientHello implements HandshakeMessage {
     }
 
     public ClientHello(byte[] data) throws IOException {
-        this(new WrapedInputStream(new ByteArrayInputStream(data)));
+        this(data.length, new WrapedInputStream(new ByteArrayInputStream(data)));
     }
 
-    public ClientHello(WrapedInputStream input) {
-        init(input);
+    public ClientHello(int bodyLen, WrapedInputStream input) {
+        init(bodyLen, input);
     }
 
     /**
@@ -75,7 +75,8 @@ public class ClientHello implements HandshakeMessage {
      *
      * @param input 输入流
      */
-    public void init(WrapedInputStream input) {
+    @Override
+    public void init(int bodyLen, WrapedInputStream input) {
         try {
             // 跳过1byte的类型数据
             input.skip(1);

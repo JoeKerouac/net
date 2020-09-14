@@ -65,6 +65,8 @@ public class ClientHandshaker {
 
     private ServerHello            serverHello;
 
+    private CertificateMsg         certificateMsg;
+
     /**
      * 加密套件
      */
@@ -85,14 +87,17 @@ public class ClientHandshaker {
             throw new RuntimeException(String.format("不支持的握手类型：%d", typeId));
         }
 
-        inputStream.skip(3);
+        int bodyLen = inputStream.readInt24();
         System.out.println("收到\"" + type + "\"类型的握手数据");
         switch (type) {
             case SERVER_HELLO:
-                this.serverHello = new ServerHello(inputStream);
+                this.serverHello = new ServerHello();
+                this.serverHello.init(bodyLen, inputStream);
                 break;
             case CERTIFICATE:
                 // 这里先不管证书，采用ECC相关算法时证书只用来签名
+                this.certificateMsg = new CertificateMsg();
+                this.certificateMsg.init(bodyLen, inputStream);
                 break;
             case SERVER_KEY_EXCHANGE:
                 // 处理服务端的密钥交换
@@ -134,6 +139,19 @@ public class ClientHandshaker {
                     .newSignatureAndHash(inputStream.readInt16());
                 // 服务端的签名
                 byte[] serverSignData = inputStream.read(inputStream.readInt16());
+                signature.initVerify(this.certificateMsg.getPublicKey());
+                signature.update(clientRandom);
+                signature.update(serverHello.getServerRandom());
+                // CURVE_NAMED_CURVE
+                signature.update((byte) curveType);
+                signature.update((byte) (curveId >> 8));
+                signature.update((byte) curveId);
+                signature.update((byte) publicKeyLen);
+                signature.update(publicKeyData);
+
+                if (!signature.verify(serverSignData)) {
+                    throw new RuntimeException("签名验证失败");
+                }
 
                 break;
             case SERVER_HELLO_DONE:
@@ -211,7 +229,8 @@ public class ClientHandshaker {
         while (true) {
             int contentType = inputStream.read();
             System.out
-                .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class));
+                .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class)
+                         + " : " + contentType);
             int version = inputStream.readInt16();
             System.out.println(String.format("version: %x", version));
             int len = inputStream.readInt16();

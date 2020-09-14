@@ -50,11 +50,8 @@ public class ServerHello implements HandshakeMessage {
 
     private Map<ExtensionType, HelloExtension> extensions;
 
-    /**
-     * 从输入流构建ServerHello，输入流应该从Handshake（不是record）的version字段开始
-     * @param inputStream 输入流
-     */
-    public ServerHello(WrapedInputStream inputStream) {
+    @Override
+    public void init(int bodyLen, WrapedInputStream inputStream) {
         try {
             this.version = inputStream.readInt16();
             this.serverRandom = inputStream.read(32);

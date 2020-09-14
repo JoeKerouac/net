@@ -64,6 +64,11 @@ public class ECDHServerKeyExchange implements HandshakeMessage {
      */
     private int                                          namedCurve = 23;
 
+    @Override
+    public void init(int bodyLen, WrapedInputStream inputStream) {
+        throw new RuntimeException("未实现");
+    }
+
     public void initSign() throws InvalidKeyException, SignatureException {
         byte[] pointBytes = serverPublicKey.getQ().getEncoded();
         signature.initSign(serverPrivateKey);

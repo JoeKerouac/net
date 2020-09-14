@@ -1,9 +1,11 @@
 package com.joe.ssl.message;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.X509Certificate;
+import java.security.PublicKey;
+import java.security.cert.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,12 +31,42 @@ public class CertificateMsg implements HandshakeMessage {
     /**
      * 证书链{@link #chain}编码后的信息，顺序与{@link #chain}一致
      */
-    private List<byte[]>      encodedChain;
+    private List<byte[]>      encodedChain  = new ArrayList<>();
 
     /**
      * 消息长度，对应Certificates len
      */
     private int               messageLength = -1;
+
+    @Override
+    @SuppressWarnings("all")
+    public void init(int bodyLen, WrapedInputStream inputStream) throws IOException {
+        // 跳过类型和长度字段
+        int messageLength = inputStream.readInt24();
+        this.messageLength = messageLength;
+
+        CertificateFactory cf;
+        try {
+            cf = CertificateFactory.getInstance("X.509");
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        }
+
+        List<Certificate> chain = new ArrayList<>();
+        while (messageLength > 0) {
+            // 证书长度
+            int certificateLen = inputStream.readInt24();
+            byte[] data = inputStream.read(certificateLen);
+            this.encodedChain.add(data);
+            messageLength -= 3 + certificateLen;
+            try {
+                chain.add(cf.generateCertificate(new ByteArrayInputStream(data)));
+            } catch (CertificateException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        this.chain = chain.toArray(new X509Certificate[0]);
+    }
 
     /**
      * 将X509Certificate[]解析为传输的数据List<byte[]>
@@ -58,14 +90,23 @@ public class CertificateMsg implements HandshakeMessage {
         }
     }
 
+    /**
+     * 获取签名公钥
+     * @return 公钥
+     */
+    public PublicKey getPublicKey() {
+        return this.chain[0].getPublicKey();
+    }
+
     @Override
     public int size() {
-        throw new RuntimeException("未实现");
+        return 1 + 3 + 3 + messageLength;
     }
 
     @Override
     public void write(WrapedOutputStream stream) throws IOException {
-        stream.write(type().getCode());
+        stream.writeInt8(type().getCode());
+        stream.writeInt24(messageLength + 3);
         stream.writeInt24(messageLength);
         for (byte[] certData : encodedChain) {
             stream.writeInt24(certData.length);
@@ -76,5 +117,10 @@ public class CertificateMsg implements HandshakeMessage {
     @Override
     public HandshakeType type() {
         return HandshakeType.CERTIFICATE;
+    }
+
+    @Override
+    public String toString() {
+        return "CertificateMsg: " + Arrays.toString(this.chain);
     }
 }

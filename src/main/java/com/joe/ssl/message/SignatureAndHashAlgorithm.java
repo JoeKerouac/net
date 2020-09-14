@@ -34,16 +34,12 @@ public class SignatureAndHashAlgorithm {
     @Getter
     private String                                               algorithm;
 
-    @Getter
-    private Signature                                            signature;
-
     private SignatureAndHashAlgorithm(HashAlgorithm hash, SignatureAlgorithm sign,
-                                      String algorithm) throws NoSuchAlgorithmException {
+                                      String algorithm) {
         this.hash = hash;
         this.sign = sign;
         this.id = ((hash.value & 0xFF) << 8) | (sign.value & 0xFF);
         this.algorithm = algorithm;
-        this.signature = Signature.getInstance(algorithm, new BouncyCastleProvider());
     }
 
     static {
@@ -90,6 +86,24 @@ public class SignatureAndHashAlgorithm {
                 new SignatureAndHashAlgorithm(HashAlgorithm.SHA512, SignatureAlgorithm.DSA,
                     "SHA512WithDSA"));
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 根据签名算法ID生成签名器
+     * @param id 签名算法id
+     * @return 签名器
+     */
+    public static Signature newSignatureAndHash(int id) {
+        SignatureAndHashAlgorithm signatureAndHashAlgorithm = ALL_SUPPORTS.get(id);
+        if (signatureAndHashAlgorithm == null) {
+            throw new RuntimeException(String.format("不支持的签名算法:%d", id));
+        }
+        try {
+            return Signature.getInstance(signatureAndHashAlgorithm.algorithm,
+                new BouncyCastleProvider());
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }

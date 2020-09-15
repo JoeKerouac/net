@@ -19,6 +19,13 @@ public interface DigestSpi extends AlgorithmSpi<DigestSpi> {
     void update(byte[] data);
 
     /**
+     * 更新数据
+     *
+     * @param data 源数据
+     */
+    void update(byte data);
+
+    /**
      * 对所有源数据进行摘要
      * @return 摘要结果
      */

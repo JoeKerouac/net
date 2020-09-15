@@ -127,6 +127,7 @@ abstract class Handshaker {
     SSLSocketImpl conn = null;
     SSLEngineImpl engine = null;
 
+    // 握手启动前初始化，然后开始握手，input、output使用的是同一个
     HandshakeHash handshakeHash;
     HandshakeInStream input;
     HandshakeOutStream output;

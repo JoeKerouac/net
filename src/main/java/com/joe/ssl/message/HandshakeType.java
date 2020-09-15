@@ -20,6 +20,8 @@ public enum HandshakeType {
 
                            CLIENT_KEY_EXCHANGE(16),
 
+                           CLIENT_ENCRYPT(20),
+
     ;
 
     private byte code;

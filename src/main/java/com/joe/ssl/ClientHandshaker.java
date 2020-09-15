@@ -8,6 +8,7 @@ import java.security.SecureRandom;
 import java.security.Signature;
 import java.util.Arrays;
 
+import com.joe.ssl.crypto.DigestSpi;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -34,6 +35,7 @@ import com.joe.utils.common.Assert;
  * @version 2020年06月27日 17:05
  */
 public class ClientHandshaker {
+
     /**
      * 服务端密钥交换公钥
      */
@@ -72,13 +74,18 @@ public class ClientHandshaker {
      */
     private CipherSuiteList        cipherSuiteList;
 
+    private InputRecord            inputRecord;
+
+    private OutputRecord           outputRecord;
+
+    private DigestSpi              digestSpi;
+
     /**
      * 处理握手数据，握手数据应该从Handshake的type开始，也就是包含完整的Handshake数据（不是record）
      *
      * @param handshakeData 握手数据
      */
-    public void process(byte[] handshakeData,
-                        WrapedOutputStream wrapedOutputStream) throws Exception {
+    public void process(byte[] handshakeData) throws Exception {
         WrapedInputStream inputStream = new WrapedInputStream(
             new ByteArrayInputStream(handshakeData));
 
@@ -94,6 +101,11 @@ public class ClientHandshaker {
             case SERVER_HELLO:
                 this.serverHello = new ServerHello();
                 this.serverHello.init(bodyLen, inputStream);
+                // 初始化摘要器
+                String hashAlgorithm = this.serverHello.getCipherSuite().getMacAlg();
+                this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
+                inputRecord.setDigestSpi(digestSpi);
+                outputRecord.setDigestSpi(digestSpi);
                 break;
             case CERTIFICATE:
                 // 这里先不管证书，采用ECC相关算法时证书只用来签名
@@ -177,10 +189,15 @@ public class ClientHandshaker {
                 // 准备发送client key exchange消息
                 ECDHClientKeyExchange ecdhClientKeyExchange = new ECDHClientKeyExchange(
                     ecAgreeClientPublicKey);
-                write(ecdhClientKeyExchange, wrapedOutputStream);
+                write(ecdhClientKeyExchange, outputRecord);
                 System.out.println("ECDHClientKeyExchange消息发送完毕");
-                sendChangeCipher(wrapedOutputStream);
+                sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
+                // TODO 这里应该先更改outputRecord的加密器，然后在发送finish消息
+
+                new Finished(digestSpi, this.serverHello.getCipherSuite().getMacAlg(), masterSecret,
+                    true).write(outputRecord);
+                System.out.println("client finish消息发送完毕");
                 break;
         }
     }
@@ -194,7 +211,7 @@ public class ClientHandshaker {
         outputStream.flush();
     }
 
-    private static void sendChangeCipher(WrapedOutputStream outputStream) throws IOException{
+    private static void sendChangeCipher(WrapedOutputStream outputStream) throws IOException {
         outputStream.writeInt8(ContentType.CHANGE_CIPHER_SPEC.getCode());
         TlsVersion.TLS1_2.write(outputStream);
         outputStream.writeInt16(1);
@@ -206,13 +223,15 @@ public class ClientHandshaker {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Socket socket = new Socket("39.156.66.14", 443);
 
-        WrapedOutputStream outputStream = new WrapedOutputStream(socket.getOutputStream());
+        OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
 
         ClientHello hello = new ClientHello("baidu.com");
         write(hello, outputStream);
 
-        WrapedInputStream inputStream = new WrapedInputStream(socket.getInputStream());
+        InputRecord inputStream = new InputRecord(socket.getInputStream());
         ClientHandshaker handshaker = new ClientHandshaker();
+        handshaker.inputRecord = inputStream;
+        handshaker.outputRecord = outputStream;
         handshaker.clientRandom = hello.getClientRandom();
 
         //        {
@@ -248,13 +267,13 @@ public class ClientHandshaker {
                 .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class)
                          + " : " + contentType);
             int version = inputStream.readInt16();
-            System.out.println(String.format("version: %x", version));
+            System.out.printf("version: %x%n", version);
             int len = inputStream.readInt16();
             System.out.println("len:" + len);
             System.out.println("可用：" + inputStream.available());
             byte[] data = inputStream.read(len);
             System.out.println("type:" + data[0]);
-            handshaker.process(data, outputStream);
+            handshaker.process(data);
             System.out.println("\n\n");
         }
     }

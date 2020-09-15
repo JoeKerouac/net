@@ -46,21 +46,27 @@ public class AlgorithmRegistry {
             REGISTRY.put("alias.hmac.HmacMD5", new HmacMD5());
 
             REGISTRY.put("alias.hmac.sha1", new HmacSHA1());
+            REGISTRY.put("alias.hmac.sha-1", new HmacSHA1());
             REGISTRY.put("alias.hmac.SHA1", new HmacSHA1());
+            REGISTRY.put("alias.hmac.SHA-1", new HmacSHA1());
             REGISTRY.put("alias.hmac.hmacSHA1", new HmacSHA1());
             REGISTRY.put("alias.hmac.HmacSHA1", new HmacSHA1());
             REGISTRY.put("alias.hmac.hmac-sha1", new HmacSHA1());
             REGISTRY.put("alias.hmac.Hmac-SHA1", new HmacSHA1());
 
             REGISTRY.put("alias.hmac.sha256", new HmacSHA256());
+            REGISTRY.put("alias.hmac.sha-256", new HmacSHA256());
             REGISTRY.put("alias.hmac.SHA256", new HmacSHA256());
+            REGISTRY.put("alias.hmac.SHA-256", new HmacSHA256());
             REGISTRY.put("alias.hmac.hmacSHA256", new HmacSHA256());
             REGISTRY.put("alias.hmac.HmacSHA256", new HmacSHA256());
             REGISTRY.put("alias.hmac.hmac-sha256", new HmacSHA256());
             REGISTRY.put("alias.hmac.Hmac-SHA256", new HmacSHA256());
 
             REGISTRY.put("alias.hmac.sha384", new HmacSHA384());
+            REGISTRY.put("alias.hmac.sha-384", new HmacSHA384());
             REGISTRY.put("alias.hmac.SHA384", new HmacSHA384());
+            REGISTRY.put("alias.hmac.SHA-384", new HmacSHA384());
             REGISTRY.put("alias.hmac.hmacSHA384", new HmacSHA384());
             REGISTRY.put("alias.hmac.HmacSHA384", new HmacSHA384());
             REGISTRY.put("alias.hmac.hmac-sha384", new HmacSHA384());
@@ -69,21 +75,27 @@ public class AlgorithmRegistry {
 
         {
             REGISTRY.put("alias.phash.sha1", new PhashSHA1());
+            REGISTRY.put("alias.phash.sha-1", new PhashSHA1());
             REGISTRY.put("alias.phash.SHA1", new PhashSHA1());
+            REGISTRY.put("alias.phash.SHA-1", new PhashSHA1());
             REGISTRY.put("alias.phash.PhashSHA1", new PhashSHA1());
             REGISTRY.put("alias.phash.phashSHA1", new PhashSHA1());
             REGISTRY.put("alias.phash.Phash-SHA1", new PhashSHA1());
             REGISTRY.put("alias.phash.phash-sha1", new PhashSHA1());
 
             REGISTRY.put("alias.phash.sha256", new PhashSHA256());
+            REGISTRY.put("alias.phash.sha-256", new PhashSHA256());
             REGISTRY.put("alias.phash.SHA256", new PhashSHA256());
+            REGISTRY.put("alias.phash.SHA-256", new PhashSHA256());
             REGISTRY.put("alias.phash.PhashSHA256", new PhashSHA256());
             REGISTRY.put("alias.phash.phashSHA256", new PhashSHA256());
             REGISTRY.put("alias.phash.Phash-SHA256", new PhashSHA256());
             REGISTRY.put("alias.phash.phash-sha256", new PhashSHA256());
 
             REGISTRY.put("alias.phash.sha384", new PhashSHA384());
+            REGISTRY.put("alias.phash.sha-384", new PhashSHA384());
             REGISTRY.put("alias.phash.SHA384", new PhashSHA384());
+            REGISTRY.put("alias.phash.SHA-384", new PhashSHA384());
             REGISTRY.put("alias.phash.PhashSHA384", new PhashSHA384());
             REGISTRY.put("alias.phash.phashSHA384", new PhashSHA384());
             REGISTRY.put("alias.phash.Phash-SHA384", new PhashSHA384());

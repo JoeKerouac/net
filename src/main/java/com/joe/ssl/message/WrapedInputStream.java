@@ -24,7 +24,7 @@ public class WrapedInputStream extends InputStream {
      * @throws IOException IO异常
      */
     public int readInt8() throws IOException {
-        return stream.read();
+        return read();
     }
 
     /**
@@ -33,7 +33,7 @@ public class WrapedInputStream extends InputStream {
      * @throws IOException IO异常
      */
     public int readInt16() throws IOException {
-        return stream.read() << 8 | stream.read();
+        return read() << 8 | read();
     }
 
     /**
@@ -42,7 +42,7 @@ public class WrapedInputStream extends InputStream {
      * @throws IOException IO异常
      */
     public int readInt24() throws IOException {
-        return stream.read() << 16 | stream.read() << 8 | stream.read();
+        return read() << 16 | read() << 8 | read();
     }
 
     /**
@@ -51,7 +51,7 @@ public class WrapedInputStream extends InputStream {
      * @throws IOException IO异常
      */
     public int readInt32() throws IOException {
-        return stream.read() << 24 | stream.read() << 16 | stream.read() << 8 | stream.read();
+        return read() << 24 | read() << 16 | read() << 8 | read();
     }
 
     /**
@@ -66,7 +66,7 @@ public class WrapedInputStream extends InputStream {
         }
 
         byte[] data = new byte[len];
-        int readLen = stream.read(data);
+        int readLen = read(data);
         if (len != readLen) {
             throw new EOFException(
                 String.format("输入流[%s]要求读入长度：[%d]，实际读取长度：[%d]", stream.toString(), len, readLen));

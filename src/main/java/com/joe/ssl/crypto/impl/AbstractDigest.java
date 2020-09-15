@@ -37,6 +37,11 @@ public class AbstractDigest implements DigestSpi {
     }
 
     @Override
+    public void update(byte data) {
+        digest.update(data);
+    }
+
+    @Override
     public byte[] digest() {
         return digest.digest();
     }

@@ -1904,6 +1904,7 @@ static final class Finished extends HandshakeMessage {
      */
     Finished(ProtocolVersion protocolVersion, HandshakeHash handshakeHash,
             int sender, SecretKey master, CipherSuite cipherSuite) {
+        // client最终走这里发送finish消息，sender=HandshakeMessage.Finished.CLIENT=1
         this.protocolVersion = protocolVersion;
         this.cipherSuite = cipherSuite;
         verifyData = getFinished(handshakeHash, sender, master);

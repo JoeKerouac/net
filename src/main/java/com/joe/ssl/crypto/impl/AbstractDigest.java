@@ -58,7 +58,7 @@ public class AbstractDigest implements DigestSpi {
     }
 
     @Override
-    public Object copy() throws CloneNotSupportedException {
+    public AbstractDigest copy() throws CloneNotSupportedException {
         AbstractDigest digest = (AbstractDigest) super.clone();
         digest.digest = (MessageDigest) this.digest.clone();
         digest.algorithm = this.algorithm;

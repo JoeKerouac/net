@@ -6,7 +6,7 @@ package com.joe.ssl.crypto;
  * @author JoeKerouac
  * @version 2020年07月23日 16:00
  */
-public interface AlgorithmSpi extends Cloneable {
+public interface AlgorithmSpi<T extends AlgorithmSpi> extends Cloneable {
 
     /**
      * 摘要算法类型
@@ -44,8 +44,9 @@ public interface AlgorithmSpi extends Cloneable {
 
     /**
      * 克隆，默认不支持，请自行实现
-     *
+     * 
      * @return 克隆结果
+     * @throws CloneNotSupportedException 异常
      */
-    Object copy() throws CloneNotSupportedException;
+    T copy() throws CloneNotSupportedException;
 }

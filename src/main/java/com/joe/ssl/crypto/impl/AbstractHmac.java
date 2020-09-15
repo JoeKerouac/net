@@ -143,7 +143,7 @@ public abstract class AbstractHmac implements HmacSpi {
     }
 
     @Override
-    public Object copy() throws CloneNotSupportedException {
+    public AbstractHmac copy() throws CloneNotSupportedException {
         AbstractHmac hmac = (AbstractHmac) super.clone();
         hmac.digestSpi = (DigestSpi) this.digestSpi.copy();
         hmac.init = this.init;

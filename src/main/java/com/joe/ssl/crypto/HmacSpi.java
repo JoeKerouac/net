@@ -26,7 +26,7 @@ package com.joe.ssl.crypto;
  * @author JoeKerouac
  * @version 2020年07月23日 15:34
  */
-public interface HmacSpi extends AlgorithmSpi {
+public interface HmacSpi extends AlgorithmSpi<HmacSpi> {
 
     /**
      * 初始化

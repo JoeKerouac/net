@@ -23,7 +23,7 @@ package com.joe.ssl.crypto;
  * @author JoeKerouac
  * @version 2020年07月27日 15:07
  */
-public interface PhashSpi extends AlgorithmSpi {
+public interface PhashSpi extends AlgorithmSpi<PhashSpi> {
 
     /**
      * 初始化

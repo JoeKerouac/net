@@ -9,7 +9,7 @@ package com.joe.ssl.crypto;
  * @author JoeKerouac
  * @version 2020年07月23日 14:46
  */
-public interface DigestSpi extends AlgorithmSpi {
+public interface DigestSpi extends AlgorithmSpi<DigestSpi> {
 
     /**
      * 更新数据

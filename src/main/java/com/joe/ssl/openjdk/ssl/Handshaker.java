@@ -1133,6 +1133,7 @@ abstract class Handshaker {
         if (conn != null) {
             r = new OutputRecord(Record.ct_change_cipher_spec);
         } else {
+            // 应该是走的这里，上边那个是重连
             r = new EngineOutputRecord(Record.ct_change_cipher_spec, engine);
         }
 
@@ -1166,6 +1167,7 @@ abstract class Handshaker {
                 conn.writeLock.unlock();
             }
         } else {
+            // 第一次连接走这里
             synchronized (engine.writeLock) {
                 handshakeState.changeCipherSpec(false, isClient);
                 engine.writeRecord((EngineOutputRecord)r);

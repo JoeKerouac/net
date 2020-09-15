@@ -348,7 +348,9 @@ final class ClientHandshaker extends Handshaker {
             case HandshakeMessage.ht_server_hello_done:
                 HandshakeMessage.ServerHelloDone serverHelloDone = new HandshakeMessage.ServerHelloDone(
                     input);
+                // 这里没有什么实质的东西
                 handshakeState.update(serverHelloDone, resumingSession);
+                // 在这里发送的keyExchange、change spec和finish消息
                 this.serverHelloDone(serverHelloDone);
                 break;
 
@@ -766,6 +768,7 @@ final class ClientHandshaker extends Handshaker {
          * computed for the Finished and CertificateVerify messages
          * which we send (here).
          */
+        // 对输入进行摘要
         input.digestNow();
 
         /*
@@ -775,6 +778,7 @@ final class ClientHandshaker extends Handshaker {
          */
         PrivateKey signingKey = null;
 
+        // 这段逻辑可以忽略，双向认证才会走
         if (certRequest != null) {
             X509ExtendedKeyManager km = sslContext.getX509KeyManager();
 
@@ -1027,6 +1031,7 @@ final class ClientHandshaker extends Handshaker {
         }
         m2.write(output);
 
+        // 这里没有什么实质内容，就是一些状态机和打印
         handshakeState.update(m2, resumingSession);
 
         /*
@@ -1128,6 +1133,7 @@ final class ClientHandshaker extends Handshaker {
         /*
          * OK, that's that!
          */
+        // 发送结束消息，表示客户端握手流程完成
         sendChangeCipherAndFinish(false);
     }
 
@@ -1201,6 +1207,7 @@ final class ClientHandshaker extends Handshaker {
      * long one, we wait for it now.
      */
     private void sendChangeCipherAndFinish(boolean finishedTag) throws IOException {
+        // 重点是这里，finish的消息构建
         HandshakeMessage.Finished mesg = new HandshakeMessage.Finished(protocolVersion,
             handshakeHash, HandshakeMessage.Finished.CLIENT, session.getMasterSecret(),
             cipherSuite);
@@ -1216,6 +1223,7 @@ final class ClientHandshaker extends Handshaker {
         /*
          * save client verify data for secure renegotiation
          */
+        // 重新协商使用
         if (secureRenegotiation) {
             clientVerifyData = mesg.getVerifyData();
         }

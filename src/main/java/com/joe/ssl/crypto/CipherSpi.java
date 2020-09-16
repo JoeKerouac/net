@@ -6,7 +6,7 @@ package com.joe.ssl.crypto;
  * @author JoeKerouac
  * @version 2020年07月23日 17:23
  */
-public interface Cipher extends AlgorithmSpi {
+public interface CipherSpi extends AlgorithmSpi<CipherSpi> {
 
     /**
      * 加密模式

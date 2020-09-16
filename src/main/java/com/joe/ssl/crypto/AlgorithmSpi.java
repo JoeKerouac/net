@@ -48,5 +48,7 @@ public interface AlgorithmSpi<T extends AlgorithmSpi> extends Cloneable {
      * @return 克隆结果
      * @throws CloneNotSupportedException 异常
      */
-    T copy() throws CloneNotSupportedException;
+    default T copy() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException("不支持copy");
+    }
 }

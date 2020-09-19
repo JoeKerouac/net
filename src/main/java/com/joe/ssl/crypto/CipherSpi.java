@@ -27,7 +27,7 @@ public interface CipherSpi extends AlgorithmSpi<CipherSpi> {
      * @param key 加密密钥
      * @param mode 密码器模式，1表示加密模式，2表示解密模式
      */
-    void init(byte[] key, int mode);
+    void init(byte[] key, byte[] iv, int mode);
 
     /**
      * 追加更新加密内容
@@ -44,5 +44,9 @@ public interface CipherSpi extends AlgorithmSpi<CipherSpi> {
     @Override
     default int type() {
         return AlgorithmSpi.CIPHER;
+    }
+
+    static CipherSpi getInstance(String algorithm) {
+        return AlgorithmRegistry.newInstance("alias.cipher." + algorithm);
     }
 }

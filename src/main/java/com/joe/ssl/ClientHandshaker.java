@@ -1,6 +1,7 @@
 package com.joe.ssl;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
@@ -8,10 +9,6 @@ import java.security.SecureRandom;
 import java.security.Signature;
 import java.util.Arrays;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.CipherSpi;
-import com.joe.ssl.crypto.DigestSpi;
-import com.joe.utils.collection.CollectionUtil;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -22,9 +19,13 @@ import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
+import com.joe.ssl.cipher.CipherSuite;
+import com.joe.ssl.crypto.CipherSpi;
+import com.joe.ssl.crypto.DigestSpi;
 import com.joe.ssl.crypto.PhashSpi;
 import com.joe.ssl.message.*;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
+import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.common.Assert;
 
 /**
@@ -86,6 +87,14 @@ public class ClientHandshaker {
     private CipherSpi              readCipher;
 
     private CipherSpi              writeCipher;
+
+    private byte[]                 clientWriteCipherKey;
+    private byte[]                 clientWriteIv;
+    private byte[]                 clientWriteMac;
+
+    private byte[]                 clientReadCipherKey;
+    private byte[]                 clientReadIv;
+    private byte[]                 clientReadMac;
 
     /**
      * 处理握手数据，握手数据应该从Handshake的type开始，也就是包含完整的Handshake数据（不是record）
@@ -154,7 +163,7 @@ public class ClientHandshaker {
                 this.preMasterKey = calculateECDHBasicAgreement(this.ecAgreeServerPublicKey,
                     this.ecAgreeClientPrivateKey);
 
-                // 这里就先不验签了
+                // 验签
                 Signature signature = SignatureAndHashAlgorithm
                     .newSignatureAndHash(inputStream.readInt16());
                 // 服务端的签名
@@ -196,15 +205,32 @@ public class ClientHandshaker {
                 // 初始化cipher
                 CipherSuite.CipherDesc cipherDesc = this.serverHello.getCipherSuite().getCipher();
                 int macLen = this.serverHello.getCipherSuite().getMacDesc().getMacLen();
-                int cipherKeyLen = this.serverHello.getCipherSuite().getCipher().getKeySize();
-                int ivLen = this.serverHello.getCipherSuite().getCipher().getIvLen();
+                int cipherKeyLen = cipherDesc.getKeySize();
+                int ivLen = cipherDesc.getIvLen();
 
+                // 长度macLen的clientMacKey、serverMacKey，长度cipherKeyLen的clientCipherKey、serverCipherKey
+                // 长度ivLen的clientIv、serverIv
                 byte[] output = new byte[(macLen + cipherKeyLen + ivLen) * 2];
                 phashSpi.init(masterSecret);
+                // 通过PRF算法计算
                 phashSpi.phash(CollectionUtil.merge("key expansion".getBytes(),
                     CollectionUtil.merge(this.serverHello.getServerRandom(), this.clientRandom)),
                     output);
-                // TODO
+                this.clientWriteMac = new byte[macLen];
+                this.clientWriteCipherKey = new byte[cipherKeyLen];
+                this.clientWriteIv = new byte[ivLen];
+
+                System.arraycopy(output, 0, this.clientWriteMac, 0, macLen);
+                System.arraycopy(output, 2 * macLen, this.clientWriteCipherKey, 0, cipherKeyLen);
+                System.arraycopy(output, 2 * (macLen + cipherKeyLen), this.clientWriteIv, 0, ivLen);
+
+                // TODO 补全cipher初始化逻辑，对于AEAD模式需要晚些针对每次请求都重新初始化
+                this.writeCipher = CipherSpi.getInstance(cipherDesc.getCipherName());
+                // 如果不是AEAD模式，则直接初始化，否则稍后再初始化
+                if (cipherDesc.getCipherType() != CipherSuite.CipherType.AEAD) {
+                    this.writeCipher.init(this.clientWriteCipherKey, this.clientWriteIv,
+                        CipherSpi.ENCRYPT_MODE);
+                }
 
                 // 准备发送client key exchange消息
                 ECDHClientKeyExchange ecdhClientKeyExchange = new ECDHClientKeyExchange(
@@ -213,10 +239,16 @@ public class ClientHandshaker {
                 System.out.println("ECDHClientKeyExchange消息发送完毕");
                 sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
-                // TODO 这里应该先更改outputRecord的加密器，然后在发送finish消息
 
+                // TODO 这里应该先更改outputRecord的加密器，然后在发送finish消息
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 new Finished(digestSpi, this.serverHello.getCipherSuite().getMacDesc().getMacAlg(),
-                    masterSecret, true).write(outputRecord);
+                    masterSecret, true).write(new WrapedOutputStream(outputStream));
+                byte[] data = outputStream.toByteArray();
+                writeCipher.update(data);
+                data = writeCipher.doFinal();
+                outputRecord.write(data);1
+
                 System.out.println("client finish消息发送完毕");
                 break;
         }

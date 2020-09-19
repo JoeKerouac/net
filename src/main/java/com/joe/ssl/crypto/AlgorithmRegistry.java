@@ -18,7 +18,7 @@ import com.joe.utils.common.Assert;
  */
 public class AlgorithmRegistry {
 
-    private static final ConcurrentMap<String, AlgorithmSpi> REGISTRY = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, AlgorithmSpi<?>> REGISTRY = new ConcurrentHashMap<>();
 
     static {
         {
@@ -112,18 +112,18 @@ public class AlgorithmRegistry {
      * @throws NoSuchAlgorithmException 指定算法不存在时抛出异常
      */
     @SuppressWarnings("unchecked")
-    public static <T extends AlgorithmSpi> T newInstance(String algorithmName) throws NoSuchAlgorithmException {
+    public static <T extends AlgorithmSpi<T>> T newInstance(String algorithmName) throws NoSuchAlgorithmException {
         Assert.notBlank(algorithmName, "algorithmName不能为空");
 
         // 先加载
         try {
-            AlgorithmSpi algorithmSpi = REGISTRY.get(algorithmName);
+            T algorithmSpi = (T) REGISTRY.get(algorithmName);
 
             if (algorithmSpi == null) {
                 throw new NoSuchAlgorithmException(algorithmName);
             }
 
-            return (T) algorithmSpi.copy();
+            return algorithmSpi.copy();
         } catch (CloneNotSupportedException e) {
             throw new CryptoException(e);
         }

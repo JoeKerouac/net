@@ -247,7 +247,7 @@ public class ClientHandshaker {
                 byte[] data = outputStream.toByteArray();
                 writeCipher.update(data);
                 data = writeCipher.doFinal();
-                outputRecord.write(data);1
+                outputRecord.write(data);
 
                 System.out.println("client finish消息发送完毕");
                 break;

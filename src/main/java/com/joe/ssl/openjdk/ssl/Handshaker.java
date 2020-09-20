@@ -1247,7 +1247,7 @@ abstract class Handshaker {
         int prfHashLength = prf.getPRFHashLength();
         int prfBlockSize = prf.getPRFBlockSize();
 
-        TlsMasterSecretParameterSpec spec;
+        TlsMasterSecretParameterSpec spec = null;
         if (session.getUseExtendedMasterSecret()) {
             // reset to use the extended master secret algorithm
             masterAlg = "SunTlsExtendedMasterSecret";
@@ -1266,9 +1266,9 @@ abstract class Handshaker {
                 }
             }
 
-            spec = new TlsMasterSecretParameterSpec(
-                    preMasterSecret, protocolVersion.major, protocolVersion.minor,
-                    sessionHash, prfHashAlg, prfHashLength, prfBlockSize);
+//            spec = new TlsMasterSecretParameterSpec(
+//                    preMasterSecret, protocolVersion.major, protocolVersion.minor,
+//                    sessionHash, prfHashAlg, prfHashLength, prfBlockSize);
         } else {
             spec = new TlsMasterSecretParameterSpec(
                     preMasterSecret, protocolVersion.major, protocolVersion.minor,

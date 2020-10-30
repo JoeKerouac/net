@@ -1021,7 +1021,7 @@ final class CipherBox {
      */
     byte[] createExplicitNonce(Authenticator authenticator,
                                byte contentType, int fragmentLength) {
-        // 写出数据时调用，加密用
+        // 写出数据时调用，用于生成随机数
 
         byte[] nonce = new byte[0];
         switch (cipherType) {
@@ -1043,6 +1043,7 @@ final class CipherBox {
                 nonce = authenticator.sequenceNumber();
 
                 // initialize the AEAD cipher for the unique IV
+                // 初始化IV，fixedIv是握手过程中计算得到的iv，对于AEAD模式长度应该是12byte，然后后边加上4byte的sequenceNumber
                 byte[] iv = Arrays.copyOf(fixedIv,
                                             fixedIv.length + nonce.length);
                 System.arraycopy(nonce, 0, iv, fixedIv.length, nonce.length);
@@ -1057,8 +1058,10 @@ final class CipherBox {
                 }
 
                 // update the additional authentication data
+                // 注意这里，是要加上认证添加信息，不能漏掉
                 byte[] aad = authenticator.acquireAuthenticationBytes(
                                                 contentType, fragmentLength);
+                // 必须在在调用cipher的update和doFinal之前调用updateAAD
                 cipher.updateAAD(aad);
                 break;
         }

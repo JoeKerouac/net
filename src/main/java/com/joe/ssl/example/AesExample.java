@@ -195,10 +195,6 @@ public class AesExample {
             data = padding(data, cipher.getBlockSize());
         }
 
-        // 生成密钥
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(algorithm.getKeySize() * 8, new SecureRandom());
-
         // 加密模式
         cipher.init(mode, secretKey, algorithmParameterSpec, new SecureRandom());
         return cipher.doFinal(data);

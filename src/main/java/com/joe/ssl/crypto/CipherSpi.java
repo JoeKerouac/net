@@ -36,6 +36,12 @@ public interface CipherSpi extends AlgorithmSpi<CipherSpi> {
     void update(byte[] data);
 
     /**
+     * 更新认证信息
+     * @param data 认证信息，该方法必须在{@link #update(byte[])}方法和{@link #doFinal()}之前调用（再加密实际数据前）
+     */
+    void updateAAD(byte[] data);
+
+    /**
      * 最终加密处理
      * @return 加密结果
      */

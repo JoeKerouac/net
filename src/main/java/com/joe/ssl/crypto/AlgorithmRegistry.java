@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.crypto.exception.CryptoException;
 import com.joe.ssl.crypto.exception.NoSuchAlgorithmException;
 import com.joe.ssl.crypto.impl.*;
@@ -100,6 +101,13 @@ public class AlgorithmRegistry {
             REGISTRY.put("alias.phash.phashSHA384", new PhashSHA384());
             REGISTRY.put("alias.phash.Phash-SHA384", new PhashSHA384());
             REGISTRY.put("alias.phash.phash-sha384", new PhashSHA384());
+        }
+
+        {
+            for (CipherSuite.CipherDesc value : CipherSuite.CipherDesc.values()) {
+                REGISTRY.put(value.getCipherName(), new AesCipher(value));
+                REGISTRY.put("alias.cipher." + value.getCipherName(), new AesCipher(value));
+            }
         }
     }
 

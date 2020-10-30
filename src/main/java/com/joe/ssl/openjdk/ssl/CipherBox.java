@@ -258,7 +258,7 @@ final class CipherBox {
     static CipherBox newCipherBox(ProtocolVersion version, BulkCipher cipher,
             SecretKey key, IvParameterSpec iv, SecureRandom random,
             boolean encrypt) throws NoSuchAlgorithmException {
-        if (cipher.allowed == false) {
+        if (!cipher.allowed) {
             throw new NoSuchAlgorithmException("Unsupported cipher " + cipher);
         }
 

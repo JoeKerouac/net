@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
+import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
@@ -16,6 +17,7 @@ import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
@@ -241,17 +243,46 @@ public class ClientHandshaker {
                 System.out.println("changeCipherSpec消息发送完毕");
 
                 // TODO 这里应该先更改outputRecord的加密器，然后在发送finish消息
+                // 如果是AEAD模式，第一个cipher怎么初始化
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 new Finished(digestSpi, this.serverHello.getCipherSuite().getMacDesc().getMacAlg(),
                     masterSecret, true).write(new WrapedOutputStream(outputStream));
                 byte[] data = outputStream.toByteArray();
+
+                byte[] nonce = new byte[4]; {
+                // 初始化AEAD模式的cipher
+                if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
+                    byte[] iv = new byte[16];
+                    System.arraycopy(this.clientWriteIv, 0, iv, 0, this.clientWriteIv.length);
+                    // 对于AEAD模式，这个实际上是sequenceNumber，第一次是0，所以这里先写死不初始化
+                    System.arraycopy(nonce, 0, iv, this.clientWriteIv.length, nonce.length);
+
+                    this.writeCipher.init(this.clientWriteCipherKey, iv, CipherSpi.ENCRYPT_MODE);
+                    //                    sequence number + record type + + record length
+                    byte[] addData = new byte[8 + 1 + 2];
+                    this.writeCipher.updateAAD(addData);
+
+                }
+            }
+
                 writeCipher.update(data);
                 data = writeCipher.doFinal();
+
+                outputRecord.writeInt8(ContentType.HANDSHAKE.getCode());
+                TlsVersion.TLS1_2.write(outputRecord);
+
+                outputRecord.writeInt16(data.length + 4);
+                outputRecord.write(nonce);
                 outputRecord.write(data);
+                System.out.println("写出最终数据长度:" + (data.length + 4));
 
                 System.out.println("client finish消息发送完毕");
                 break;
         }
+    }
+
+    private void acquireAuthenticationBytes() {
+
     }
 
     private static void write(HandshakeMessage message,
@@ -273,6 +304,8 @@ public class ClientHandshaker {
     public static void main(String[] args) throws Exception {
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         //        Socket socket = new Socket("192.168.1.111", 12345);
+        Security.addProvider(new BouncyCastleProvider());
+
         Socket socket = new Socket("39.156.66.14", 443);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());

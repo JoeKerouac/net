@@ -1908,6 +1908,7 @@ static final class Finished extends HandshakeMessage {
         this.protocolVersion = protocolVersion;
         this.cipherSuite = cipherSuite;
         // 这里是关键逻辑
+        // 实际上这个是12byte的PRF,label是client finished，seed是摘要
         verifyData = getFinished(handshakeHash, sender, master);
     }
 
@@ -1991,6 +1992,7 @@ static final class Finished extends HandshakeMessage {
                     masterKey, tlsLabel, seed, 12,
                     prfHashAlg, prfHashLength, prfBlockSize);
 
+                // 这里用的是com.sun.crypto.provider.TlsPrfGenerator$V12
                 KeyGenerator kg = JsseJce.getKeyGenerator(prfAlg);
                 kg.init(spec);
                 SecretKey prfKey = kg.generateKey();

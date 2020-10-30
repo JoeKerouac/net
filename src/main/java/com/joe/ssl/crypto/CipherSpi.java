@@ -1,5 +1,7 @@
 package com.joe.ssl.crypto;
 
+import com.joe.ssl.cipher.CipherSuite;
+
 /**
  * 加密接口
  *
@@ -43,6 +45,13 @@ public interface CipherSpi extends AlgorithmSpi<CipherSpi> {
 
     /**
      * 最终加密处理
+     * @param data 待加密数据
+     * @return 加密结果
+     */
+    byte[] doFinal(byte[] data);
+
+    /**
+     * 最终加密处理
      * @return 加密结果
      */
     byte[] doFinal();
@@ -52,7 +61,7 @@ public interface CipherSpi extends AlgorithmSpi<CipherSpi> {
         return AlgorithmSpi.CIPHER;
     }
 
-    static CipherSpi getInstance(String algorithm) {
-        return AlgorithmRegistry.newInstance("alias.cipher." + algorithm);
+    static CipherSpi getInstance(CipherSuite.CipherDesc algorithm) {
+        return AlgorithmRegistry.newInstance("alias.cipher." + algorithm.name());
     }
 }

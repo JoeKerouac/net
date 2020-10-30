@@ -141,6 +141,7 @@ class Authenticator {
      * @return the byte array of the current message authentication information
      */
     final byte[] acquireAuthenticationBytes(byte type, int length) {
+        // 这里长度是原始数据长度，不是加密后的，不带IV
         // 读取record和写出record的时候各会调用两次，分别是加密/解密的时候生成/读取nonce的时候会调用一次，然后在mac计算的时候
         byte[] copy = block.clone();
 

@@ -208,7 +208,8 @@ public class ClientHandshaker {
                 CipherSuite.CipherDesc cipherDesc = this.serverHello.getCipherSuite().getCipher();
                 int macLen = this.serverHello.getCipherSuite().getMacDesc().getMacLen();
                 int cipherKeyLen = cipherDesc.getKeySize();
-                int ivLen = cipherDesc.getIvLen();
+                // 对于AEAD模式实际上是这个
+                int ivLen = cipherDesc.getFixedIvLen();
 
                 // 长度macLen的clientMacKey、serverMacKey，长度cipherKeyLen的clientCipherKey、serverCipherKey
                 // 长度ivLen的clientIv、serverIv
@@ -227,7 +228,7 @@ public class ClientHandshaker {
                 System.arraycopy(output, 2 * (macLen + cipherKeyLen), this.clientWriteIv, 0, ivLen);
 
                 // TODO 补全cipher初始化逻辑，对于AEAD模式需要晚些针对每次请求都重新初始化
-                this.writeCipher = CipherSpi.getInstance(cipherDesc.getCipherName());
+                this.writeCipher = CipherSpi.getInstance(cipherDesc);
                 // 如果不是AEAD模式，则直接初始化，否则稍后再初始化
                 if (cipherDesc.getCipherType() != CipherSuite.CipherType.AEAD) {
                     this.writeCipher.init(this.clientWriteCipherKey, this.clientWriteIv,
@@ -242,39 +243,49 @@ public class ClientHandshaker {
                 sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
 
-                // TODO 这里应该先更改outputRecord的加密器，然后在发送finish消息
-                // 如果是AEAD模式，第一个cipher怎么初始化
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+                // TODO 现在应该就差数据可能是错误的了
                 new Finished(digestSpi, this.serverHello.getCipherSuite().getMacDesc().getMacAlg(),
                     masterSecret, true).write(new WrapedOutputStream(outputStream));
                 byte[] data = outputStream.toByteArray();
 
-                byte[] nonce = new byte[4]; {
+                // 实际上AEAD模式下就是sequenceNumber，第一个sequence就是0，这里先不管，因为目前只发送一个消息
+                // sequence是固定的8byte
+                byte[] nonce = new byte[8];
+
                 // 初始化AEAD模式的cipher
                 if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
-                    byte[] iv = new byte[16];
+                    // iv总长度12
+                    byte[] iv = new byte[12];
                     System.arraycopy(this.clientWriteIv, 0, iv, 0, this.clientWriteIv.length);
                     // 对于AEAD模式，这个实际上是sequenceNumber，第一次是0，所以这里先写死不初始化
                     System.arraycopy(nonce, 0, iv, this.clientWriteIv.length, nonce.length);
 
                     this.writeCipher.init(this.clientWriteCipherKey, iv, CipherSpi.ENCRYPT_MODE);
                     //                    sequence number + record type + + record length
-                    byte[] addData = new byte[8 + 1 + 2];
-                    this.writeCipher.updateAAD(addData);
+                    byte[] aadData = new byte[8 + 1 + 2];
+                    // 认证添加数据，前8个byte是sequenceNumber，目前是第一个消息，就是0不用管
+                    // type
+                    aadData[8] = (byte) ContentType.HANDSHAKE.getCode();
+                    // 长度
+                    aadData[9] = (byte) (data.length >> 8);
+                    aadData[10] = (byte) data.length;
+
+                    this.writeCipher.updateAAD(aadData);
 
                 }
-            }
 
-                writeCipher.update(data);
-                data = writeCipher.doFinal();
+                data = writeCipher.doFinal(data);
 
                 outputRecord.writeInt8(ContentType.HANDSHAKE.getCode());
                 TlsVersion.TLS1_2.write(outputRecord);
+                outputRecord.writeInt16(data.length + 8);
 
-                outputRecord.writeInt16(data.length + 4);
                 outputRecord.write(nonce);
                 outputRecord.write(data);
-                System.out.println("写出最终数据长度:" + (data.length + 4));
+                outputRecord.flush();
+                System.out.println("写出最终数据长度:" + (data.length + 8));
 
                 System.out.println("client finish消息发送完毕");
                 break;

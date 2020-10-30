@@ -10,13 +10,12 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.crypto.CipherSpi;
+import com.sun.crypto.provider.SunJCE;
 
 /**
  * AES加密器
@@ -27,7 +26,7 @@ import com.joe.ssl.crypto.CipherSpi;
  */
 public class AesCipher implements CipherSpi {
 
-    private Cipher                 cipher;
+    public Cipher                 cipher;
 
     private CipherSuite.CipherDesc cipherDesc;
 
@@ -35,8 +34,8 @@ public class AesCipher implements CipherSpi {
         this.cipherDesc = Objects.requireNonNull(cipherAlgorithm);
 
         try {
-            this.cipher = Cipher.getInstance(cipherDesc.getCipherName(),
-                new BouncyCastleProvider());
+            // 这里使用默认的provider（JCE）
+            this.cipher = Cipher.getInstance(cipherDesc.getCipherName(), new SunJCE());
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             throw new RuntimeException(e);
         }
@@ -44,10 +43,11 @@ public class AesCipher implements CipherSpi {
 
     @Override
     public void init(byte[] key, byte[] iv, int mode) {
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+        // 这里是固定的
+        GCMParameterSpec parameterSpec = new GCMParameterSpec(16 * 8, iv);
         SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         try {
-            cipher.init(mode, secretKeySpec, ivParameterSpec, new SecureRandom());
+            cipher.init(mode, secretKeySpec, parameterSpec, new SecureRandom());
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
             throw new RuntimeException(e);
         }
@@ -61,6 +61,15 @@ public class AesCipher implements CipherSpi {
     @Override
     public void updateAAD(byte[] data) {
         cipher.updateAAD(data);
+    }
+
+    @Override
+    public byte[] doFinal(byte[] data) {
+        try {
+            return cipher.doFinal(data);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

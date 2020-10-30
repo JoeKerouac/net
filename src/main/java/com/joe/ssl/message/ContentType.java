@@ -10,6 +10,9 @@ public enum ContentType implements EnumInterface {
                                                   CHANGE_CIPHER_SPEC(0x14, "CHANGE_CIPHER_SPEC",
                                                                      "CHANGE_CIPHER_SPEC"),
 
+                                                  APPLICATION_DATA(0x17, "APPLICATION_DATA",
+                                                                   "APPLICATION_DATA"),
+
     ;
 
     /**

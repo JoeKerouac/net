@@ -105,8 +105,8 @@ public class AlgorithmRegistry {
 
         {
             for (CipherSuite.CipherDesc value : CipherSuite.CipherDesc.values()) {
-                REGISTRY.put(value.getCipherName(), new AesCipher(value));
-                REGISTRY.put("alias.cipher." + value.getCipherName(), new AesCipher(value));
+                REGISTRY.put(value.name(), new AesCipher(value));
+                REGISTRY.put("alias.cipher." + value.name(), new AesCipher(value));
             }
         }
     }

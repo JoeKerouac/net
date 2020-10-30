@@ -63,6 +63,7 @@ class OutputRecord extends ByteArrayOutputStream implements Record {
     private int                 lastHashed;
     private boolean             firstMessage;
     final private byte          contentType;
+    // header的起始位置
     private int                 headerOffset;
 
     // current protocol version, sent as record version
@@ -256,8 +257,11 @@ class OutputRecord extends ByteArrayOutputStream implements Record {
                                     (box.isCBCMode() || box.isAEADMode())) {
                 byte[] nonce = box.createExplicitNonce(authenticator,
                                     contentType, count - headerPlusMaxIVSize);
+                // iv的起始位置
                 int offset = headerPlusMaxIVSize - nonce.length;
+                // 设置nonce
                 System.arraycopy(nonce, 0, buf, offset, nonce.length);
+                // header的起始位置计算
                 headerOffset = offset - headerSize;
             } else {
                 headerOffset = headerPlusMaxIVSize - headerSize;
@@ -270,6 +274,8 @@ class OutputRecord extends ByteArrayOutputStream implements Record {
                 offset = headerOffset + headerSize;
             }   // Otherwise, DON'T encrypt the nonce_explicit for AEAD mode
 
+            // 如果是AEAD模式，那么这个count将会改变，如果是BLOCK模式，这个count不会变
+            // 这里加密不加密header和iv，只加密content
             count = offset + box.encrypt(buf, offset, count - offset);
         }
     }
@@ -329,6 +335,7 @@ class OutputRecord extends ByteArrayOutputStream implements Record {
             return;
         }
 
+        // IV + content的长度
         int length = count - headerOffset - headerSize;
         // "should" really never write more than about 14 Kb...
         if (length < 0) {

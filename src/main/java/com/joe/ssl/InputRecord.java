@@ -23,18 +23,23 @@ public class InputRecord extends WrapedInputStream {
 
     @Override
     public int read() throws IOException {
-        int data = super.read();
-        if (digestSpi == null) {
-            stream.write(data);
-        } else if (stream == null) {
-            digestSpi.update((byte) data);
-        } else {
-            digestSpi.update(stream.toByteArray());
-            digestSpi.update((byte) data);
-            stream = null;
-        }
-        return data;
+        return super.read();
     }
+
+//    @Override
+//    public int read() throws IOException {
+//        int data = super.read();
+//        if (digestSpi == null) {
+//            stream.write(data);
+//        } else if (stream == null) {
+//            digestSpi.update((byte) data);
+//        } else {
+//            digestSpi.update(stream.toByteArray());
+//            digestSpi.update((byte) data);
+//            stream = null;
+//        }
+//        return data;
+//    }
 
     /**
      * 获取当前的摘要，可重复调用

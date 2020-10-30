@@ -84,6 +84,7 @@ public class ClientHandshaker {
 
     private OutputRecord           outputRecord;
 
+    // 摘要不对header摘要（最外层）
     private DigestSpi              digestSpi;
 
     private CipherSpi              readCipher;
@@ -107,6 +108,10 @@ public class ClientHandshaker {
         WrapedInputStream inputStream = new WrapedInputStream(
             new ByteArrayInputStream(handshakeData));
 
+        if (digestSpi != null) {
+            digestSpi.update(handshakeData);
+        }
+
         int typeId = inputStream.readInt8();
         HandshakeType type = HandshakeType.getByCode(typeId);
         if (type == null) {
@@ -122,6 +127,9 @@ public class ClientHandshaker {
                 // 初始化摘要器
                 String hashAlgorithm = this.serverHello.getCipherSuite().getMacDesc().getMacAlg();
                 this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
+                // 补上client_hello的摘要
+                this.digestSpi.update(outputRecord.getStream().toByteArray());
+                outputRecord.setStream(null);
                 inputRecord.setDigestSpi(digestSpi);
                 outputRecord.setDigestSpi(digestSpi);
                 break;
@@ -182,6 +190,8 @@ public class ClientHandshaker {
 
                 if (!signature.verify(serverSignData)) {
                     throw new RuntimeException("签名验证失败");
+                }else{
+                    System.out.println("签名验证成功");
                 }
 
                 break;
@@ -240,6 +250,7 @@ public class ClientHandshaker {
                     ecAgreeClientPublicKey);
                 write(ecdhClientKeyExchange, outputRecord);
                 System.out.println("ECDHClientKeyExchange消息发送完毕");
+                // 这个消息不应该被摘要
                 sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
 
@@ -297,12 +308,13 @@ public class ClientHandshaker {
     }
 
     private static void write(HandshakeMessage message,
-                              WrapedOutputStream outputStream) throws IOException {
-        outputStream.writeInt8(ContentType.HANDSHAKE.getCode());
-        TlsVersion.TLS1_2.write(outputStream);
-        outputStream.writeInt16(message.size());
-        message.write(outputStream);
-        outputStream.flush();
+                              OutputRecord outputStream) throws IOException {
+        outputStream.write(message);
+//        outputStream.writeInt8(ContentType.HANDSHAKE.getCode());
+//        TlsVersion.TLS1_2.write(outputStream);
+//        outputStream.writeInt16(message.size());
+//        message.write(outputStream);
+//        outputStream.flush();
     }
 
     private static void sendChangeCipher(WrapedOutputStream outputStream) throws IOException {

@@ -38,7 +38,7 @@ public class OutputRecord extends WrapedOutputStream {
         write(outputStream.toByteArray());
         // client_hello发送的时候还没有digestSpi
         if (digestSpi != null) {
-            digestSpi.digest(outputStream.toByteArray());
+            digestSpi.update(outputStream.toByteArray());
         } else {
             stream.write(outputStream.toByteArray());
         }

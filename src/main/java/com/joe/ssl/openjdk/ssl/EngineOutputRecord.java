@@ -156,6 +156,7 @@ final class EngineOutputRecord extends OutputRecord {
          */
         if (!isEmpty()) {
             // compress();              // eventually
+            // 加密计算
             encrypt(authenticator, writeCipher);
 
             // send down for processing

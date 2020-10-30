@@ -241,6 +241,7 @@ class OutputRecord extends ByteArrayOutputStream implements Record {
 
         // Requires message authentication code for stream and block
         // cipher suites.
+        // AEAD模式不走这里
         if (authenticator instanceof MAC) {
             MAC signer = (MAC)authenticator;
             if (signer.MAClen() != 0) {

@@ -63,6 +63,7 @@ final class ClientHandshaker extends Handshaker {
 
     // the server's ephemeral public key from the server key exchange message
     // for ECDHE/ECDH_anon and RSA_EXPORT.
+    // 这个是服务端key exchange发送过来的public key
     private PublicKey                           ephemeralServerKey;
 
     // server's ephemeral public value for DHE/DH_anon key exchanges
@@ -970,7 +971,7 @@ final class ClientHandshaker extends Handshaker {
                 if (serverKey == null) {
                     throw new SSLProtocolException("Server did not send certificate message");
                 }
-                if (serverKey instanceof ECPublicKey == false) {
+                if (!(serverKey instanceof ECPublicKey)) {
                     throw new SSLProtocolException("Server certificate does not include an EC key");
                 }
                 ECParameterSpec params = ((ECPublicKey) serverKey).getParams();
@@ -1083,6 +1084,7 @@ final class ClientHandshaker extends Handshaker {
                 throw new IOException("Internal error: unknown key exchange " + keyExchange);
         }
 
+        // 计算链接用的密钥
         calculateKeys(preMasterSecret, null);
 
         /*

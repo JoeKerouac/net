@@ -128,7 +128,11 @@ public class ClientHandshaker {
                 String hashAlgorithm = this.serverHello.getCipherSuite().getMacDesc().getMacAlg();
                 this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
                 // 补上client_hello的摘要
+                System.out.println("补充上client_hello的数据");
                 this.digestSpi.update(outputRecord.getStream().toByteArray());
+                System.out.println("补充上server_hello的摘要");
+                // 补上本次server_hello的摘要
+                digestSpi.update(handshakeData);
                 outputRecord.setStream(null);
                 inputRecord.setDigestSpi(digestSpi);
                 outputRecord.setDigestSpi(digestSpi);
@@ -190,7 +194,7 @@ public class ClientHandshaker {
 
                 if (!signature.verify(serverSignData)) {
                     throw new RuntimeException("签名验证失败");
-                }else{
+                } else {
                     System.out.println("签名验证成功");
                 }
 
@@ -274,14 +278,15 @@ public class ClientHandshaker {
                     System.arraycopy(nonce, 0, iv, this.clientWriteIv.length, nonce.length);
 
                     this.writeCipher.init(this.clientWriteCipherKey, iv, CipherSpi.ENCRYPT_MODE);
-                    //                    sequence number + record type + + record length
-                    byte[] aadData = new byte[8 + 1 + 2];
-                    // 认证添加数据，前8个byte是sequenceNumber，目前是第一个消息，就是0不用管
+                    // 认证添加数据,目前是第一个消息，就是0不用管sequenceNumber，sequence number + record type + protocol version + record length
+                    byte[] aadData = new byte[8 + 1 + 2 + 2];
                     // type
                     aadData[8] = (byte) ContentType.HANDSHAKE.getCode();
+                    aadData[9] = (byte) TlsVersion.TLS1_2.getMajorVersion();
+                    aadData[10] = (byte) TlsVersion.TLS1_2.getMinorVersion();
                     // 长度
-                    aadData[9] = (byte) (data.length >> 8);
-                    aadData[10] = (byte) data.length;
+                    aadData[11] = (byte) (data.length >> 8);
+                    aadData[12] = (byte) data.length;
 
                     this.writeCipher.updateAAD(aadData);
 
@@ -310,11 +315,12 @@ public class ClientHandshaker {
     private static void write(HandshakeMessage message,
                               OutputRecord outputStream) throws IOException {
         outputStream.write(message);
-//        outputStream.writeInt8(ContentType.HANDSHAKE.getCode());
-//        TlsVersion.TLS1_2.write(outputStream);
-//        outputStream.writeInt16(message.size());
-//        message.write(outputStream);
-//        outputStream.flush();
+        outputStream.flush();
+        //        outputStream.writeInt8(ContentType.HANDSHAKE.getCode());
+        //        TlsVersion.TLS1_2.write(outputStream);
+        //        outputStream.writeInt16(message.size());
+        //        message.write(outputStream);
+        //        outputStream.flush();
     }
 
     private static void sendChangeCipher(WrapedOutputStream outputStream) throws IOException {
@@ -330,6 +336,7 @@ public class ClientHandshaker {
         Security.addProvider(new BouncyCastleProvider());
 
         Socket socket = new Socket("39.156.66.14", 443);
+//                Socket socket = new Socket("192.168.3.33", 12345);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
 
@@ -371,9 +378,11 @@ public class ClientHandshaker {
 
         while (true) {
             int contentType = inputStream.read();
-            System.out
-                .println("contentType:" + EnumInterface.getByCode(contentType, ContentType.class)
-                         + " : " + contentType);
+            ContentType type = EnumInterface.getByCode(contentType, ContentType.class);
+            System.out.println("contentType:" + type + " : " + contentType);
+            if (type == null) {
+                throw new RuntimeException("不支持的content type:" + type);
+            }
             int version = inputStream.readInt16();
             System.out.printf("version: %x%n", version);
             int len = inputStream.readInt16();

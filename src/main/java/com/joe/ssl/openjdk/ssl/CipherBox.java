@@ -1021,7 +1021,7 @@ final class CipherBox {
      */
     byte[] createExplicitNonce(Authenticator authenticator,
                                byte contentType, int fragmentLength) {
-        // 写出数据时调用，用于生成随机数
+        // 写出数据时调用，用于生成随机数，对于TLS1.2来说，就是sequenceNumber
 
         byte[] nonce = new byte[0];
         switch (cipherType) {

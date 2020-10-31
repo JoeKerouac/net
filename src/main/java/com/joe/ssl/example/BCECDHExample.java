@@ -52,7 +52,7 @@ public class BCECDHExample {
         JCEECPrivateKey privateKey = (JCEECPrivateKey) keyPair.getPrivate();
         JCEECPublicKey publicKey = (JCEECPublicKey)keyPair.getPublic();
         ECParameterSpec ecParameterSpec = publicKey.getParameters();
-        ecParameterSpec.getCurve();
+
 
 
         return null;

@@ -23,39 +23,25 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-import java.io.*;
-import java.util.*;
+import static com.joe.ssl.openjdk.ssl.CipherSuite.CipherType.AEAD_CIPHER;
+import static com.joe.ssl.openjdk.ssl.CipherSuite.CipherType.BLOCK_CIPHER;
+import static com.joe.ssl.openjdk.ssl.CipherSuite.PRF.P_NONE;
+
+import java.io.IOException;
 import java.security.*;
+import java.util.*;
 
-import javax.crypto.*;
-import javax.crypto.spec.*;
-
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.net.ssl.*;
+
 import sun.misc.HexDumpEncoder;
-
-import sun.security.internal.spec.*;
-import sun.security.internal.interfaces.TlsMasterSecret;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import static com.joe.ssl.openjdk.ssl.CipherSuite.PRF.*;
-import static com.joe.ssl.openjdk.ssl.CipherSuite.CipherType.*;
+import sun.security.internal.spec.TlsKeyMaterialParameterSpec;
+import sun.security.internal.spec.TlsKeyMaterialSpec;
+import sun.security.internal.spec.TlsMasterSecretParameterSpec;
 
 /**
  * Handshaker ... processes handshake records from an SSL V3.0
@@ -69,36 +55,36 @@ import static com.joe.ssl.openjdk.ssl.CipherSuite.CipherType.*;
 abstract class Handshaker {
 
     // protocol version being established using this Handshaker
-    ProtocolVersion protocolVersion;
+    ProtocolVersion                               protocolVersion;
 
     // the currently active protocol version during a renegotiation
-    ProtocolVersion activeProtocolVersion;
+    ProtocolVersion                               activeProtocolVersion;
 
     // security parameters for secure renegotiation.
-    boolean secureRenegotiation;
-    byte[] clientVerifyData;
-    byte[] serverVerifyData;
+    boolean                                       secureRenegotiation;
+    byte[]                                        clientVerifyData;
+    byte[]                                        serverVerifyData;
 
     // Is it an initial negotiation  or a renegotiation?
-    boolean isInitialHandshake;
+    boolean                                       isInitialHandshake;
 
     // List of enabled protocols
-    private ProtocolList enabledProtocols;
+    private ProtocolList                          enabledProtocols;
 
     // List of enabled CipherSuites
-    private CipherSuiteList enabledCipherSuites;
+    private CipherSuiteList                       enabledCipherSuites;
 
     // The endpoint identification protocol
-    String identificationProtocol;
+    String                                        identificationProtocol;
 
     // The cryptographic algorithm constraints
-    AlgorithmConstraints algorithmConstraints = null;
+    AlgorithmConstraints                          algorithmConstraints        = null;
 
     // Local supported signature and algorithms
     private Collection<SignatureAndHashAlgorithm> localSupportedSignAlgs;
 
     // Peer supported signature and algorithms
-    Collection<SignatureAndHashAlgorithm> peerSupportedSignAlgs;
+    Collection<SignatureAndHashAlgorithm>         peerSupportedSignAlgs;
 
     /*
      * List of active protocols
@@ -107,7 +93,7 @@ abstract class Handshaker {
      * contain only those protocols that have vaild cipher suites
      * enabled.
      */
-    private ProtocolList activeProtocols;
+    private ProtocolList                          activeProtocols;
 
     /*
      * List of active cipher suites
@@ -115,42 +101,44 @@ abstract class Handshaker {
      * Active cipher suites is a subset of enabled cipher suites, and will
      * contain only those cipher suites available for the active protocols.
      */
-    private CipherSuiteList activeCipherSuites;
+    private CipherSuiteList                       activeCipherSuites;
 
     // The server name indication and matchers
-    List<SNIServerName> serverNames = Collections.<SNIServerName>emptyList();
-    Collection<SNIMatcher> sniMatchers = Collections.<SNIMatcher>emptyList();
+    List<SNIServerName>                           serverNames                 = Collections
+        .<SNIServerName> emptyList();
+    Collection<SNIMatcher>                        sniMatchers                 = Collections
+        .<SNIMatcher> emptyList();
 
-    private boolean isClient;
-    private boolean needCertVerify;
+    private boolean                               isClient;
+    private boolean                               needCertVerify;
 
-    SSLSocketImpl conn = null;
-    SSLEngineImpl engine = null;
+    SSLSocketImpl                                 conn                        = null;
+    SSLEngineImpl                                 engine                      = null;
 
     // 握手启动前初始化，然后开始握手，input、output使用的是同一个
-    HandshakeHash handshakeHash;
-    HandshakeInStream input;
-    HandshakeOutStream output;
-    SSLContextImpl sslContext;
-    RandomCookie clnt_random, svr_random;
-    SSLSessionImpl session;
-    HandshakeStateManager handshakeState;
-    boolean clientHelloDelivered;
-    boolean serverHelloRequested;
-    boolean handshakeActivated;
-    boolean handshakeFinished;
+    HandshakeHash                                 handshakeHash;
+    HandshakeInStream                             input;
+    HandshakeOutStream                            output;
+    SSLContextImpl                                sslContext;
+    RandomCookie                                  clnt_random, svr_random;
+    SSLSessionImpl                                session;
+    HandshakeStateManager                         handshakeState;
+    boolean                                       clientHelloDelivered;
+    boolean                                       serverHelloRequested;
+    boolean                                       handshakeActivated;
+    boolean                                       handshakeFinished;
 
     // current CipherSuite. Never null, initially SSL_NULL_WITH_NULL_NULL
-    CipherSuite cipherSuite;
+    CipherSuite                                   cipherSuite;
 
     // current key exchange. Never null, initially K_NULL
-    CipherSuite.KeyExchange keyExchange;
+    CipherSuite.KeyExchange                       keyExchange;
 
     // True if this session is being resumed (fast handshake)
-    boolean resumingSession;
+    boolean                                       resumingSession;
 
     // True if it's OK to start a new SSL session
-    boolean enableNewSession;
+    boolean                                       enableNewSession;
 
     // Whether local cipher suites preference should be honored during
     // handshaking?
@@ -158,14 +146,14 @@ abstract class Handshaker {
     // Note that in this provider, this option only applies to server side.
     // Local cipher suites preference is always honored in client side in
     // this provider.
-    boolean preferLocalCipherSuites = false;
+    boolean                                       preferLocalCipherSuites     = false;
 
     // Temporary storage for the individual keys. Set by
     // calculateConnectionKeys() and cleared once the ciphers are
     // activated.
-    private SecretKey clntWriteKey, svrWriteKey;
-    private IvParameterSpec clntWriteIV, svrWriteIV;
-    private SecretKey clntMacSecret, svrMacSecret;
+    private SecretKey                             clntWriteKey, svrWriteKey;
+    private IvParameterSpec                       clntWriteIV, svrWriteIV;
+    private SecretKey                             clntMacSecret, svrMacSecret;
 
     /*
      * Delegated task subsystem data structures.
@@ -175,20 +163,21 @@ abstract class Handshaker {
      *
      * Data is protected by the SSLEngine.this lock.
      */
-    private volatile boolean taskDelegated = false;
-    private volatile DelegatedTask<?> delegatedTask = null;
-    private volatile Exception thrown = null;
+    private volatile boolean                      taskDelegated               = false;
+    private volatile DelegatedTask<?>             delegatedTask               = null;
+    private volatile Exception                    thrown                      = null;
 
     // Could probably use a java.util.concurrent.atomic.AtomicReference
     // here instead of using this lock.  Consider changing.
-    private Object thrownLock = new Object();
+    private Object                                thrownLock                  = new Object();
 
     // Class and subclass dynamic debugging support
-    static final Debug debug = Debug.getInstance("ssl");
+    static final Debug                            debug                       = Debug
+        .getInstance("ssl");
 
     // By default, disable the unsafe legacy session renegotiation
-    static final boolean allowUnsafeRenegotiation = Debug.getBooleanProperty(
-                    "allowUnsafeRenegotiation", false);
+    static final boolean                          allowUnsafeRenegotiation    = Debug
+        .getBooleanProperty("allowUnsafeRenegotiation", false);
 
     // For maximum interoperability and backward compatibility, RFC 5746
     // allows server (or client) to accept ClientHello (or ServerHello)
@@ -198,8 +187,8 @@ abstract class Handshaker {
     // reject such message with a fatal "handshake_failure" alert.
     //
     // By default, allow such legacy hello messages.
-    static final boolean allowLegacyHelloMessages = Debug.getBooleanProperty(
-                    "allowLegacyHelloMessages", true);
+    static final boolean                          allowLegacyHelloMessages    = Debug
+        .getBooleanProperty("allowLegacyHelloMessages", true);
 
     // To prevent the TLS renegotiation issues, by setting system property
     // "jdk.tls.rejectClientInitiatedRenegotiation" to true, applications in
@@ -207,79 +196,71 @@ abstract class Handshaker {
     // regardless of the support of TLS protocols.
     //
     // By default, allow client initiated renegotiations.
-    static final boolean rejectClientInitiatedRenego =
-            Debug.getBooleanProperty(
-                "jdk.tls.rejectClientInitiatedRenegotiation", false);
+    static final boolean                          rejectClientInitiatedRenego = Debug
+        .getBooleanProperty("jdk.tls.rejectClientInitiatedRenegotiation", false);
 
     // To switch off the extended_master_secret extension.
-    static final boolean useExtendedMasterSecret;
+    static final boolean                          useExtendedMasterSecret;
 
     // Allow session resumption without Extended Master Secret extension.
-    static final boolean allowLegacyResumption =
-            Debug.getBooleanProperty("jdk.tls.allowLegacyResumption", true);
+    static final boolean                          allowLegacyResumption       = Debug
+        .getBooleanProperty("jdk.tls.allowLegacyResumption", true);
 
     // Allow full handshake without Extended Master Secret extension.
-    static final boolean allowLegacyMasterSecret =
-            Debug.getBooleanProperty("jdk.tls.allowLegacyMasterSecret", true);
+    static final boolean                          allowLegacyMasterSecret     = Debug
+        .getBooleanProperty("jdk.tls.allowLegacyMasterSecret", true);
 
     // Is it requested to use extended master secret extension?
-    boolean requestedToUseEMS = false;
+    boolean                                       requestedToUseEMS           = false;
 
     // need to dispose the object when it is invalidated
-    boolean invalidated;
+    boolean                                       invalidated;
 
     // Is the extended_master_secret extension supported?
     static {
         boolean supportExtendedMasterSecret = true;
         try {
-            KeyGenerator kg =
-                JsseJce.getKeyGenerator("SunTlsExtendedMasterSecret");
+            KeyGenerator kg = JsseJce.getKeyGenerator("SunTlsExtendedMasterSecret");
         } catch (NoSuchAlgorithmException nae) {
             supportExtendedMasterSecret = false;
         }
 
         if (supportExtendedMasterSecret) {
-            useExtendedMasterSecret = Debug.getBooleanProperty(
-                    "jdk.tls.useExtendedMasterSecret", true);
+            useExtendedMasterSecret = Debug.getBooleanProperty("jdk.tls.useExtendedMasterSecret",
+                true);
         } else {
             useExtendedMasterSecret = false;
         }
     }
 
-    Handshaker(SSLSocketImpl c, SSLContextImpl context,
-            ProtocolList enabledProtocols, boolean needCertVerify,
-            boolean isClient, ProtocolVersion activeProtocolVersion,
-            boolean isInitialHandshake, boolean secureRenegotiation,
-            byte[] clientVerifyData, byte[] serverVerifyData) {
+    Handshaker(SSLSocketImpl c, SSLContextImpl context, ProtocolList enabledProtocols,
+               boolean needCertVerify, boolean isClient, ProtocolVersion activeProtocolVersion,
+               boolean isInitialHandshake, boolean secureRenegotiation, byte[] clientVerifyData,
+               byte[] serverVerifyData) {
         this.conn = c;
-        init(context, enabledProtocols, needCertVerify, isClient,
-            activeProtocolVersion, isInitialHandshake, secureRenegotiation,
-            clientVerifyData, serverVerifyData);
-   }
-
-    Handshaker(SSLEngineImpl engine, SSLContextImpl context,
-            ProtocolList enabledProtocols, boolean needCertVerify,
-            boolean isClient, ProtocolVersion activeProtocolVersion,
-            boolean isInitialHandshake, boolean secureRenegotiation,
-            byte[] clientVerifyData, byte[] serverVerifyData) {
-        this.engine = engine;
-        init(context, enabledProtocols, needCertVerify, isClient,
-            activeProtocolVersion, isInitialHandshake, secureRenegotiation,
-            clientVerifyData, serverVerifyData);
+        init(context, enabledProtocols, needCertVerify, isClient, activeProtocolVersion,
+            isInitialHandshake, secureRenegotiation, clientVerifyData, serverVerifyData);
     }
 
-    private void init(SSLContextImpl context, ProtocolList enabledProtocols,
-            boolean needCertVerify, boolean isClient,
-            ProtocolVersion activeProtocolVersion,
-            boolean isInitialHandshake, boolean secureRenegotiation,
-            byte[] clientVerifyData, byte[] serverVerifyData) {
+    Handshaker(SSLEngineImpl engine, SSLContextImpl context, ProtocolList enabledProtocols,
+               boolean needCertVerify, boolean isClient, ProtocolVersion activeProtocolVersion,
+               boolean isInitialHandshake, boolean secureRenegotiation, byte[] clientVerifyData,
+               byte[] serverVerifyData) {
+        this.engine = engine;
+        init(context, enabledProtocols, needCertVerify, isClient, activeProtocolVersion,
+            isInitialHandshake, secureRenegotiation, clientVerifyData, serverVerifyData);
+    }
+
+    private void init(SSLContextImpl context, ProtocolList enabledProtocols, boolean needCertVerify,
+                      boolean isClient, ProtocolVersion activeProtocolVersion,
+                      boolean isInitialHandshake, boolean secureRenegotiation,
+                      byte[] clientVerifyData, byte[] serverVerifyData) {
 
         if (debug != null && Debug.isOn("handshake")) {
-            System.out.println(
-                "Allow unsafe renegotiation: " + allowUnsafeRenegotiation +
-                "\nAllow legacy hello messages: " + allowLegacyHelloMessages +
-                "\nIs initial handshake: " + isInitialHandshake +
-                "\nIs secure renegotiation: " + secureRenegotiation);
+            System.out.println("Allow unsafe renegotiation: " + allowUnsafeRenegotiation
+                               + "\nAllow legacy hello messages: " + allowLegacyHelloMessages
+                               + "\nIs initial handshake: " + isInitialHandshake
+                               + "\nIs secure renegotiation: " + secureRenegotiation);
         }
 
         this.sslContext = context;
@@ -303,7 +284,7 @@ abstract class Handshaker {
 
         if (conn != null) {
             algorithmConstraints = new SSLAlgorithmConstraints(conn, true);
-        } else {        // engine != null
+        } else { // engine != null
             algorithmConstraints = new SSLAlgorithmConstraints(engine, true);
         }
     }
@@ -323,8 +304,7 @@ abstract class Handshaker {
         fatalSE(b, null, cause);
     }
 
-    void fatalSE(byte b, String diagnostic, Throwable cause)
-            throws IOException {
+    void fatalSE(byte b, String diagnostic, Throwable cause) throws IOException {
         if (conn != null) {
             conn.fatal(b, diagnostic, cause);
         } else {
@@ -450,31 +430,26 @@ abstract class Handshaker {
         activeCipherSuites = null;
         activeProtocols = null;
 
-        this.algorithmConstraints =
-            new SSLAlgorithmConstraints(algorithmConstraints);
+        this.algorithmConstraints = new SSLAlgorithmConstraints(algorithmConstraints);
         this.localSupportedSignAlgs = null;
     }
 
     Collection<SignatureAndHashAlgorithm> getLocalSupportedSignAlgs() {
         if (localSupportedSignAlgs == null) {
-            localSupportedSignAlgs =
-                SignatureAndHashAlgorithm.getSupportedAlgorithms(
-                                                    algorithmConstraints);
+            localSupportedSignAlgs = SignatureAndHashAlgorithm
+                .getSupportedAlgorithms(algorithmConstraints);
         }
 
         return localSupportedSignAlgs;
     }
 
-    void setPeerSupportedSignAlgs(
-            Collection<SignatureAndHashAlgorithm> algorithms) {
-        peerSupportedSignAlgs =
-            new ArrayList<SignatureAndHashAlgorithm>(algorithms);
+    void setPeerSupportedSignAlgs(Collection<SignatureAndHashAlgorithm> algorithms) {
+        peerSupportedSignAlgs = new ArrayList<SignatureAndHashAlgorithm>(algorithms);
     }
 
     Collection<SignatureAndHashAlgorithm> getPeerSupportedSignAlgs() {
         return peerSupportedSignAlgs;
     }
-
 
     /**
      * Set the identification protocol. Called from the constructor or
@@ -517,11 +492,10 @@ abstract class Handshaker {
             activeProtocols = getActiveProtocols();
         }
 
-        if (activeProtocols.collection().isEmpty() ||
-                activeProtocols.max.v == ProtocolVersion.NONE.v) {
-            throw new SSLHandshakeException(
-                    "No appropriate protocol (protocol is disabled or " +
-                    "cipher suites are inappropriate)");
+        if (activeProtocols.collection().isEmpty()
+            || activeProtocols.max.v == ProtocolVersion.NONE.v) {
+            throw new SSLHandshakeException("No appropriate protocol (protocol is disabled or "
+                                            + "cipher suites are inappropriate)");
         }
 
         if (activeCipherSuites == null) {
@@ -553,14 +527,12 @@ abstract class Handshaker {
         // Generate handshake input/output stream.
         input = new HandshakeInStream(handshakeHash);
         if (conn != null) {
-            output = new HandshakeOutStream(protocolVersion, helloVersion,
-                                        handshakeHash, conn);
+            output = new HandshakeOutStream(protocolVersion, helloVersion, handshakeHash, conn);
             conn.getAppInputStream().r.setHandshakeHash(handshakeHash);
             conn.getAppInputStream().r.setHelloVersion(helloVersion);
             conn.getAppOutputStream().r.setHelloVersion(helloVersion);
         } else {
-            output = new HandshakeOutStream(protocolVersion, helloVersion,
-                                        handshakeHash, engine);
+            output = new HandshakeOutStream(protocolVersion, helloVersion, handshakeHash, engine);
             engine.inputRecord.setHandshakeHash(handshakeHash);
             engine.inputRecord.setHelloVersion(helloVersion);
             engine.outputRecord.setHelloVersion(helloVersion);
@@ -652,16 +624,15 @@ abstract class Handshaker {
             }
 
             ArrayList<CipherSuite> suites = new ArrayList<>();
-            if (!(activeProtocols.collection().isEmpty()) &&
-                    activeProtocols.min.v != ProtocolVersion.NONE.v) {
+            if (!(activeProtocols.collection().isEmpty())
+                && activeProtocols.min.v != ProtocolVersion.NONE.v) {
                 boolean checkedCurves = false;
                 boolean hasCurves = false;
                 for (CipherSuite suite : enabledCipherSuites.collection()) {
-                    if (suite.obsoleted > activeProtocols.min.v &&
-                            suite.supported <= activeProtocols.max.v) {
-                        if (algorithmConstraints.permits(
-                                EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
-                                suite.name, null)) {
+                    if (suite.obsoleted > activeProtocols.min.v
+                        && suite.supported <= activeProtocols.max.v) {
+                        if (algorithmConstraints.permits(EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
+                            suite.name, null)) {
                             boolean available = true;
                             if (suite.keyExchange.isEC) {
                                 if (!checkedCurves) {
@@ -669,20 +640,16 @@ abstract class Handshaker {
                                         .hasActiveCurves(algorithmConstraints);
                                     checkedCurves = true;
 
-                                    if (!hasCurves && debug != null &&
-                                                Debug.isOn("verbose")) {
-                                        System.out.println(
-                                           "No available elliptic curves");
+                                    if (!hasCurves && debug != null && Debug.isOn("verbose")) {
+                                        System.out.println("No available elliptic curves");
                                     }
                                 }
 
                                 available = hasCurves;
 
-                               if (!available && debug != null &&
-                                        Debug.isOn("verbose")) {
-                                    System.out.println(
-                                        "No active elliptic curves, ignore " +
-                                       suite);
+                                if (!available && debug != null && Debug.isOn("verbose")) {
+                                    System.out
+                                        .println("No active elliptic curves, ignore " + suite);
                                 }
                             }
 
@@ -692,11 +659,9 @@ abstract class Handshaker {
                         }
                     } else if (debug != null && Debug.isOn("verbose")) {
                         if (suite.obsoleted <= activeProtocols.min.v) {
-                            System.out.println(
-                                "Ignoring obsoleted cipher suite: " + suite);
+                            System.out.println("Ignoring obsoleted cipher suite: " + suite);
                         } else {
-                            System.out.println(
-                                "Ignoring unsupported cipher suite: " + suite);
+                            System.out.println("Ignoring unsupported cipher suite: " + suite);
                         }
                     }
                 }
@@ -735,23 +700,20 @@ abstract class Handshaker {
                     continue;
                 }
 
-                if (!algorithmConstraints.permits(
-                        EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
-                        protocol.name, null)) {
+                if (!algorithmConstraints.permits(EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
+                    protocol.name, null)) {
                     if (debug != null && Debug.isOn("verbose")) {
-                        System.out.println(
-                            "Ignoring disabled protocol: " + protocol);
+                        System.out.println("Ignoring disabled protocol: " + protocol);
                     }
 
                     continue;
                 }
                 boolean found = false;
                 for (CipherSuite suite : enabledCipherSuites.collection()) {
-                    if (suite.isAvailable() && suite.obsoleted > protocol.v &&
-                                               suite.supported <= protocol.v) {
-                        if (algorithmConstraints.permits(
-                                EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
-                                suite.name, null)) {
+                    if (suite.isAvailable() && suite.obsoleted > protocol.v
+                        && suite.supported <= protocol.v) {
+                        if (algorithmConstraints.permits(EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
+                            suite.name, null)) {
 
                             boolean available = true;
                             if (suite.keyExchange.isEC) {
@@ -760,20 +722,16 @@ abstract class Handshaker {
                                         .hasActiveCurves(algorithmConstraints);
                                     checkedCurves = true;
 
-                                    if (!hasCurves && debug != null &&
-                                                Debug.isOn("verbose")) {
-                                        System.out.println(
-                                            "No activated elliptic curves");
+                                    if (!hasCurves && debug != null && Debug.isOn("verbose")) {
+                                        System.out.println("No activated elliptic curves");
                                     }
                                 }
 
                                 available = hasCurves;
 
-                                if (!available && debug != null &&
-                                        Debug.isOn("verbose")) {
-                                    System.out.println(
-                                        "No active elliptic curves, ignore " +
-                                        suite + " for " + protocol);
+                                if (!available && debug != null && Debug.isOn("verbose")) {
+                                    System.out.println("No active elliptic curves, ignore " + suite
+                                                       + " for " + protocol);
                                 }
                             }
 
@@ -784,18 +742,15 @@ abstract class Handshaker {
                             }
                         } else if (debug != null && Debug.isOn("verbose")) {
                             System.out.println(
-                                "Ignoring disabled cipher suite: " + suite +
-                                 " for " + protocol);
+                                "Ignoring disabled cipher suite: " + suite + " for " + protocol);
                         }
                     } else if (debug != null && Debug.isOn("verbose")) {
                         System.out.println(
-                            "Ignoring unsupported cipher suite: " + suite +
-                                 " for " + protocol);
+                            "Ignoring unsupported cipher suite: " + suite + " for " + protocol);
                     }
                 }
                 if (!found && (debug != null) && Debug.isOn("handshake")) {
-                    System.out.println(
-                        "No available cipher suite for " + protocol);
+                    System.out.println("No available cipher suite for " + protocol);
                 }
             }
 
@@ -828,12 +783,12 @@ abstract class Handshaker {
         CipherBox box;
         if (isClient) {
             box = cipher.newCipher(protocolVersion, svrWriteKey, svrWriteIV,
-                                   sslContext.getSecureRandom(), false);
+                sslContext.getSecureRandom(), false);
             svrWriteKey = null;
             svrWriteIV = null;
         } else {
             box = cipher.newCipher(protocolVersion, clntWriteKey, clntWriteIV,
-                                   sslContext.getSecureRandom(), false);
+                sslContext.getSecureRandom(), false);
             clntWriteKey = null;
             clntWriteIV = null;
         }
@@ -848,12 +803,12 @@ abstract class Handshaker {
         CipherBox box;
         if (isClient) {
             box = cipher.newCipher(protocolVersion, clntWriteKey, clntWriteIV,
-                                   sslContext.getSecureRandom(), true);
+                sslContext.getSecureRandom(), true);
             clntWriteKey = null;
             clntWriteIV = null;
         } else {
             box = cipher.newCipher(protocolVersion, svrWriteKey, svrWriteIV,
-                                   sslContext.getSecureRandom(), true);
+                sslContext.getSecureRandom(), true);
             svrWriteKey = null;
             svrWriteIV = null;
         }
@@ -863,8 +818,7 @@ abstract class Handshaker {
     /**
      * Create a new read MAC and return it to caller.
      */
-    Authenticator newReadAuthenticator()
-            throws NoSuchAlgorithmException, InvalidKeyException {
+    Authenticator newReadAuthenticator() throws NoSuchAlgorithmException, InvalidKeyException {
 
         Authenticator authenticator = null;
         if (cipherSuite.cipher.cipherType == AEAD_CIPHER) {
@@ -886,8 +840,7 @@ abstract class Handshaker {
     /**
      * Create a new write MAC and return it to caller.
      */
-    Authenticator newWriteAuthenticator()
-            throws NoSuchAlgorithmException, InvalidKeyException {
+    Authenticator newWriteAuthenticator() throws NoSuchAlgorithmException, InvalidKeyException {
 
         Authenticator authenticator = null;
         if (cipherSuite.cipher.cipherType == AEAD_CIPHER) {
@@ -959,8 +912,7 @@ abstract class Handshaker {
      * This routine is fed SSL handshake records when they become available,
      * and processes messages found therein.
      */
-    void process_record(InputRecord r, boolean expectingFinished)
-            throws IOException {
+    void process_record(InputRecord r, boolean expectingFinished) throws IOException {
 
         checkThrown();
 
@@ -1011,7 +963,7 @@ abstract class Handshaker {
              */
             input.mark(4);
 
-            messageType = (byte)input.getInt8();
+            messageType = (byte) input.getInt8();
             messageLen = input.getInt24();
 
             if (input.available() < messageLen) {
@@ -1053,7 +1005,6 @@ abstract class Handshaker {
         }
     }
 
-
     /**
      * Returns true iff the handshaker has been activated.
      *
@@ -1070,15 +1021,13 @@ abstract class Handshaker {
         return (serverHelloRequested || clientHelloDelivered);
     }
 
-
     /*
      * Used to kickstart the negotiation ... either writing a
      * ClientHello or a HelloRequest as appropriate, whichever
      * the subclass returns.  NOP if handshaking's already started.
      */
     void kickstart() throws IOException {
-        if ((isClient && clientHelloDelivered) ||
-                (!isClient && serverHelloRequested)) {
+        if ((isClient && clientHelloDelivered) || (!isClient && serverHelloRequested)) {
             return;
         }
 
@@ -1095,7 +1044,7 @@ abstract class Handshaker {
         int handshakeType = m.messageType();
         if (handshakeType == HandshakeMessage.ht_hello_request) {
             serverHelloRequested = true;
-        } else {        // HandshakeMessage.ht_client_hello
+        } else { // HandshakeMessage.ht_client_hello
             clientHelloDelivered = true;
         }
 
@@ -1112,8 +1061,7 @@ abstract class Handshaker {
      * call, which processes a single message and drives the appropriate
      * side of the protocol state machine (depending on the subclass).
      */
-    abstract void processMessage(byte messageType, int messageLen)
-        throws IOException;
+    abstract void processMessage(byte messageType, int messageLen) throws IOException;
 
     /*
      * Most alerts in the protocol relate to handshaking problems.
@@ -1125,8 +1073,8 @@ abstract class Handshaker {
      * Sends a change cipher spec message and updates the write side
      * cipher state so that future messages use the just-negotiated spec.
      */
-    void sendChangeCipherSpec(HandshakeMessage.Finished mesg, boolean lastMessage)
-            throws IOException {
+    void sendChangeCipherSpec(HandshakeMessage.Finished mesg,
+                              boolean lastMessage) throws IOException {
 
         output.flush(); // i.e. handshake data
 
@@ -1139,7 +1087,7 @@ abstract class Handshaker {
         }
 
         r.setVersion(protocolVersion);
-        r.write(1);     // single byte of data
+        r.write(1); // single byte of data
 
         /*
          * The write cipher state is protected by the connection write lock
@@ -1171,7 +1119,7 @@ abstract class Handshaker {
             // 第一次连接走这里
             synchronized (engine.writeLock) {
                 handshakeState.changeCipherSpec(false, isClient);
-                engine.writeRecord((EngineOutputRecord)r);
+                engine.writeRecord((EngineOutputRecord) r);
                 engine.changeWriteCiphers();
                 if (debug != null && Debug.isOn("handshake")) {
                     mesg.print(System.out);
@@ -1202,9 +1150,9 @@ abstract class Handshaker {
     void calculateKeys(SecretKey preMasterSecret, ProtocolVersion version) {
         SecretKey master = calculateMasterSecret(preMasterSecret, version);
         session.setMasterSecret(master);
+        System.out.println("计算出master:" + Arrays.toString(master.getEncoded()));
         calculateConnectionKeys(master);
     }
-
 
     /*
      * Calculate the master secret from its various components.  This is
@@ -1217,10 +1165,10 @@ abstract class Handshaker {
      */
     @SuppressWarnings("deprecation")
     private SecretKey calculateMasterSecret(SecretKey preMasterSecret,
-            ProtocolVersion requestedVersion) {
+                                            ProtocolVersion requestedVersion) {
 
         if (debug != null && Debug.isOn("keygen")) {
-            HexDumpEncoder      dump = new HexDumpEncoder();
+            HexDumpEncoder dump = new HexDumpEncoder();
 
             System.out.println("SESSION KEYGEN:");
 
@@ -1266,22 +1214,19 @@ abstract class Handshaker {
                 }
             }
 
-//            spec = new TlsMasterSecretParameterSpec(
-//                    preMasterSecret, protocolVersion.major, protocolVersion.minor,
-//                    sessionHash, prfHashAlg, prfHashLength, prfBlockSize);
+            spec = new TlsMasterSecretParameterSpec(preMasterSecret, protocolVersion.major,
+                protocolVersion.minor, sessionHash, prfHashAlg, prfHashLength, prfBlockSize);
         } else {
-            spec = new TlsMasterSecretParameterSpec(
-                    preMasterSecret, protocolVersion.major, protocolVersion.minor,
-                    clnt_random.random_bytes, svr_random.random_bytes,
-                    prfHashAlg, prfHashLength, prfBlockSize);
+            spec = new TlsMasterSecretParameterSpec(preMasterSecret, protocolVersion.major,
+                protocolVersion.minor, clnt_random.random_bytes, svr_random.random_bytes,
+                prfHashAlg, prfHashLength, prfBlockSize);
         }
 
         try {
             KeyGenerator kg = JsseJce.getKeyGenerator(masterAlg);
             kg.init(spec);
             return kg.generateKey();
-        } catch (InvalidAlgorithmParameterException |
-                NoSuchAlgorithmException iae) {
+        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException iae) {
             // unlikely to happen, otherwise, must be a provider exception
             //
             // For RSA premaster secrets, do not signal a protocol error
@@ -1341,23 +1286,21 @@ abstract class Handshaker {
         int ivSize = cipher.ivSize;
         if (cipher.cipherType == AEAD_CIPHER) {
             ivSize = cipher.fixedIvSize;
-        } else if (protocolVersion.v >= ProtocolVersion.TLS11.v &&
-                cipher.cipherType == BLOCK_CIPHER) {
+        } else if (protocolVersion.v >= ProtocolVersion.TLS11.v
+                   && cipher.cipherType == BLOCK_CIPHER) {
             ivSize = 0;
         }
 
-        TlsKeyMaterialParameterSpec spec = new TlsKeyMaterialParameterSpec(
-            masterKey, protocolVersion.major, protocolVersion.minor,
-            clnt_random.random_bytes, svr_random.random_bytes,
-            cipher.algorithm, cipher.keySize, expandedKeySize,
-            ivSize, hashSize,
-            prfHashAlg, prfHashLength, prfBlockSize);
+        TlsKeyMaterialParameterSpec spec = new TlsKeyMaterialParameterSpec(masterKey,
+            protocolVersion.major, protocolVersion.minor, clnt_random.random_bytes,
+            svr_random.random_bytes, cipher.algorithm, cipher.keySize, expandedKeySize, ivSize,
+            hashSize, prfHashAlg, prfHashLength, prfBlockSize);
 
         try {
             KeyGenerator kg = JsseJce.getKeyGenerator(keyMaterialAlg);
             kg.init(spec);
             // 实现使用TlsKeyMaterialGenerator
-            TlsKeyMaterialSpec keySpec = (TlsKeyMaterialSpec)kg.generateKey();
+            TlsKeyMaterialSpec keySpec = (TlsKeyMaterialSpec) kg.generateKey();
 
             // Return null if cipher keys are not supposed to be generated.
             clntWriteKey = keySpec.getClientCipherKey();
@@ -1379,7 +1322,7 @@ abstract class Handshaker {
         //
         if (debug != null && Debug.isOn("keygen")) {
             synchronized (System.out) {
-                HexDumpEncoder  dump = new HexDumpEncoder();
+                HexDumpEncoder dump = new HexDumpEncoder();
 
                 System.out.println("CONNECTION KEYGEN:");
 
@@ -1417,8 +1360,7 @@ abstract class Handshaker {
                     printHex(dump, svrWriteIV.getIV());
                 } else {
                     if (protocolVersion.v >= ProtocolVersion.TLS11.v) {
-                        System.out.println(
-                                "... no IV derived for this protocol");
+                        System.out.println("... no IV derived for this protocol");
                     } else {
                         System.out.println("... no IV used for this cipher");
                     }
@@ -1445,13 +1387,11 @@ abstract class Handshaker {
      * Shorthand until a new SSLException constructor is added.
      * This method never returns.
      */
-    static void throwSSLException(String msg, Throwable cause)
-            throws SSLException {
+    static void throwSSLException(String msg, Throwable cause) throws SSLException {
         SSLException e = new SSLException(msg);
         e.initCause(cause);
         throw e;
     }
-
 
     /*
      * Implement a simple task delegator.
@@ -1534,17 +1474,14 @@ abstract class Handshaker {
                 if (e instanceof RuntimeException) {
                     throw new RuntimeException(msg, e);
                 } else if (e instanceof SSLHandshakeException) {
-                    throw (SSLHandshakeException)
-                        new SSLHandshakeException(msg).initCause(e);
+                    throw (SSLHandshakeException) new SSLHandshakeException(msg).initCause(e);
                 } else if (e instanceof SSLKeyException) {
-                    throw (SSLKeyException)
-                        new SSLKeyException(msg).initCause(e);
+                    throw (SSLKeyException) new SSLKeyException(msg).initCause(e);
                 } else if (e instanceof SSLPeerUnverifiedException) {
-                    throw (SSLPeerUnverifiedException)
-                        new SSLPeerUnverifiedException(msg).initCause(e);
+                    throw (SSLPeerUnverifiedException) new SSLPeerUnverifiedException(msg)
+                        .initCause(e);
                 } else if (e instanceof SSLProtocolException) {
-                    throw (SSLProtocolException)
-                        new SSLProtocolException(msg).initCause(e);
+                    throw (SSLProtocolException) new SSLProtocolException(msg).initCause(e);
                 } else {
                     /*
                      * If it's SSLException or any other Exception,

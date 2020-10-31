@@ -678,6 +678,7 @@ final public class SSLSocketImpl extends BaseSSLSocketImpl {
      * Called by connect, the layered constructor, and SSLServerSocket.
      */
     void doneConnect() throws IOException {
+        System.out.println("开始握手了");
         /*
          * Save the input and output streams.  May be done only after
          * java.net actually connects using the socket "self", else

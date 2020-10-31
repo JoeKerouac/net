@@ -970,6 +970,14 @@ class DH_ServerKeyExchange extends ServerKeyExchange
             Debug.println(s, "DH Base", dh_g);
             Debug.println(s, "Server DH Public Key", dh_Ys);
 
+            System.out.println("\n\n\n\n\n\n\n\n");
+            System.out.println("*************************---***" + this.getClass());
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            new RuntimeException().printStackTrace(new PrintStream(outputStream));
+            System.out.println(new String(outputStream.toByteArray()));
+            System.out.println("异常栈打印完毕");
+            System.out.println("\n\n\n\n\n\n\n\n");
+
             if (signature == null) {
                 s.println("Anonymous");
             } else {

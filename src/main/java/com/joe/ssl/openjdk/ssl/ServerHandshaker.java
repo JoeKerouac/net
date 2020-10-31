@@ -233,6 +233,7 @@ final class ServerHandshaker extends Handshaker {
 
         // check the handshake state
         handshakeState.check(type);
+        System.out.println("收到客户端消息：" + type);
 
         switch (type) {
             case HandshakeMessage.ht_client_hello:
@@ -308,6 +309,7 @@ final class ServerHandshaker extends Handshaker {
                         new ECDHClientKeyExchange(input);
                     handshakeState.update(ecdhcke, resumingSession);
                     preMasterSecret = this.clientKeyExchange(ecdhcke);
+                    System.out.println("计算出来pre:" + Arrays.toString(preMasterSecret.getEncoded()));
                     break;
                 default:
                     throw new SSLProtocolException
@@ -1111,6 +1113,8 @@ final class ServerHandshaker extends Handshaker {
             proposed = getActiveCipherSuites();
         }
 
+        System.out.println(preferLocalCipherSuites + "：套件列表：" + prefered.collection());
+        System.out.println(preferLocalCipherSuites + "：当前激活套件列表：" + proposed.collection());
         List<CipherSuite> legacySuites = new ArrayList<>();
         for (CipherSuite suite : prefered.collection()) {
             if (isNegotiable(proposed, suite) == false) {

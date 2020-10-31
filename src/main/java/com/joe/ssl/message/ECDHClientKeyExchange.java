@@ -1,15 +1,13 @@
 package com.joe.ssl.message;
 
-import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-
 import java.io.IOException;
 
 public class ECDHClientKeyExchange implements HandshakeMessage {
 
     private byte[] publicKey;
 
-    public ECDHClientKeyExchange(ECPublicKeyParameters ecPublicKeyParameters) {
-        this.publicKey = ecPublicKeyParameters.getQ().getEncoded();
+    public ECDHClientKeyExchange(byte[] publicKey) {
+        this.publicKey = publicKey;
     }
 
     @Override

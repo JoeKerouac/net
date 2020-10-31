@@ -1202,6 +1202,7 @@ abstract class Handshaker {
 
             byte[] sessionHash = null;
             if (protocolVersion.v >= ProtocolVersion.TLS12.v) {
+                // 这里就是最终finished消息中的hash
                 sessionHash = handshakeHash.getFinishedHash();
             } else {
                 // TLS 1.0/1.1
@@ -1223,6 +1224,7 @@ abstract class Handshaker {
         }
 
         try {
+            // TLS12下实际上走的是TlsMasterSecretGenerator
             KeyGenerator kg = JsseJce.getKeyGenerator(masterAlg);
             kg.init(spec);
             return kg.generateKey();
@@ -1313,6 +1315,9 @@ abstract class Handshaker {
             // Return null if MAC keys are not supposed to be generated.
             clntMacSecret = keySpec.getClientMacKey();
             svrMacSecret = keySpec.getServerMacKey();
+
+            System.out.println("计算出clientWriteIv:" + Arrays.toString(clntWriteIV.getIV()));
+            System.out.println("计算出clientWriteCipherKey:" + Arrays.toString(clntWriteKey.getEncoded()));
         } catch (GeneralSecurityException e) {
             throw new ProviderException(e);
         }

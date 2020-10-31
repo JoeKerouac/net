@@ -10,7 +10,6 @@ import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
-import com.joe.ssl.crypto.NamedCurve;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -19,13 +18,12 @@ import org.bouncycastle.crypto.params.ECKeyGenerationParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.CipherSpi;
-import com.joe.ssl.crypto.DigestSpi;
-import com.joe.ssl.crypto.PhashSpi;
+import com.joe.ssl.crypto.*;
+import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
+import com.joe.ssl.example.ECDHKeyPair;
 import com.joe.ssl.message.*;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import com.joe.utils.collection.CollectionUtil;
@@ -48,59 +46,59 @@ public class ClientHandshaker {
     /**
      * 服务端密钥交换公钥
      */
-    private ECPublicKeyParameters  ecAgreeServerPublicKey;
+    private byte[]             serverAgreePublicKey;
 
     /**
-     * 客户端密钥交换公钥
+     * 客户端密钥交换公私钥对
      */
-    private ECPublicKeyParameters  ecAgreeClientPublicKey;
+    private ECDHKeyPair        ecdhKeyPair;
 
-    /**
-     * 客户端密钥交换私钥
-     */
-    private ECPrivateKeyParameters ecAgreeClientPrivateKey;
-
-    private SecureRandom           secureRandom = new SecureRandom();
+    private SecureRandom       secureRandom   = new SecureRandom();
 
     /**
      * 客户端随机数
      */
-    private byte[]                 clientRandom;
+    private byte[]             clientRandom;
 
-    private byte[]                 preMasterKey;
+    private byte[]             preMasterKey;
 
     /**
      * 主密钥
      */
-    private byte[]                 masterSecret;
+    private byte[]             masterSecret;
 
-    private ServerHello            serverHello;
+    private ServerHello        serverHello;
 
-    private CertificateMsg         certificateMsg;
+    private CertificateMsg     certificateMsg;
 
     /**
      * 加密套件
      */
-    private CipherSuiteList        cipherSuiteList;
+    private CipherSuiteList    cipherSuiteList;
 
-    private InputRecord            inputRecord;
+    private InputRecord        inputRecord;
 
-    private OutputRecord           outputRecord;
+    private OutputRecord       outputRecord;
 
     // 摘要不对header摘要（最外层）
-    private DigestSpi              digestSpi;
+    private DigestSpi          digestSpi;
 
-    private CipherSpi              readCipher;
+    private CipherSpi          readCipher;
 
-    private CipherSpi              writeCipher;
+    private CipherSpi          writeCipher;
 
-    private byte[]                 clientWriteCipherKey;
-    private byte[]                 clientWriteIv;
-    private byte[]                 clientWriteMac;
+    private byte[]             clientWriteCipherKey;
+    private byte[]             clientWriteIv;
+    private byte[]             clientWriteMac;
 
-    private byte[]                 clientReadCipherKey;
-    private byte[]                 clientReadIv;
-    private byte[]                 clientReadMac;
+    private byte[]             clientReadCipherKey;
+    private byte[]             clientReadIv;
+    private byte[]             clientReadMac;
+
+    /**
+     * ECDH密钥交换算法
+     */
+    private ECDHKeyExchangeSpi keyExchangeSpi = new BCECDHKeyExchangeSpi();
 
     /**
      * 处理握手数据，握手数据应该从Handshake的type开始，也就是包含完整的Handshake数据（不是record）
@@ -160,27 +158,19 @@ public class ClientHandshaker {
                 }
 
                 int publicKeyLen = inputStream.readInt8();
-                byte[] publicKeyData = inputStream.read(publicKeyLen);
-                System.out.println("服务端公钥为：" + Arrays.toString(publicKeyData));
+                this.serverAgreePublicKey = inputStream.read(publicKeyLen);
+                System.out.println("服务端公钥为：" + Arrays.toString(serverAgreePublicKey));
                 System.out.println("curveId为:" + curveId);
-
-                // 使用指定数据解析出ECPoint
-                ECPoint Q = domainParameters.getCurve().decodePoint(publicKeyData);
-
-                // EC密钥交换算法服务端公钥
-                ecAgreeServerPublicKey = new ECPublicKeyParameters(Q, domainParameters);
 
                 // 初始化本地公私钥，用于后续密钥交换
                 AsymmetricCipherKeyPair asymmetricCipherKeyPair = generateECKeyPair(
                     domainParameters);
-                this.ecAgreeClientPrivateKey = (ECPrivateKeyParameters) asymmetricCipherKeyPair
-                    .getPrivate();
-                this.ecAgreeClientPublicKey = (ECPublicKeyParameters) asymmetricCipherKeyPair
-                    .getPublic();
+
+                this.ecdhKeyPair = keyExchangeSpi.generate(curveId);
 
                 // 计算preMasterKey
-                this.preMasterKey = calculateECDHBasicAgreement(this.ecAgreeServerPublicKey,
-                    this.ecAgreeClientPrivateKey);
+                this.preMasterKey = keyExchangeSpi.keyExchange(serverAgreePublicKey,
+                    ecdhKeyPair.getPrivateKey(), curveId);
                 System.out.println("计算出pre:" + Arrays.toString(preMasterKey));
 
                 // 验签
@@ -196,7 +186,7 @@ public class ClientHandshaker {
                 signature.update((byte) (curveId >> 8));
                 signature.update((byte) curveId);
                 signature.update((byte) publicKeyLen);
-                signature.update(publicKeyData);
+                signature.update(serverAgreePublicKey);
 
                 if (!signature.verify(serverSignData)) {
                     throw new RuntimeException("签名验证失败");
@@ -206,20 +196,31 @@ public class ClientHandshaker {
 
                 break;
             case SERVER_HELLO_DONE:
+
+                // 准备发送client key exchange消息
+                ECDHClientKeyExchange ecdhClientKeyExchange = new ECDHClientKeyExchange(
+                    ecdhKeyPair.getPublicKey());
+                write(ecdhClientKeyExchange, outputRecord);
+                System.out.println("ECDHClientKeyExchange消息发送完毕");
+                // 这个消息不应该被摘要
+                sendChangeCipher(outputRecord);
+                System.out.println("changeCipherSpec消息发送完毕");
+
+
+
+                //---------------------------------------------
                 // 详见README中，有详细算法
                 PhashSpi phashSpi = PhashSpi
-                    .getInstance(this.serverHello.getCipherSuite().getMacDesc().getMacAlg());
+                        .getInstance(this.serverHello.getCipherSuite().getMacDesc().getMacAlg());
                 phashSpi.init(preMasterKey);
 
                 masterSecret = new byte[48];
-                byte[] label = "master secret".getBytes();
-                byte[] seed = new byte[label.length + clientRandom.length
-                                       + serverHello.getServerRandom().length];
+                byte[] label = "extended master secret".getBytes();
+                byte[] finishedHash = digestSpi.copy().digest();
+                byte[] seed = new byte[label.length + finishedHash.length];
 
                 System.arraycopy(label, 0, seed, 0, label.length);
-                System.arraycopy(clientRandom, 0, seed, label.length, clientRandom.length);
-                System.arraycopy(serverHello.getServerRandom(), 0, seed,
-                    label.length + clientRandom.length, serverHello.getServerRandom().length);
+                System.arraycopy(finishedHash, 0, seed, label.length, finishedHash.length);
                 // 计算master_key
                 phashSpi.phash(seed, masterSecret);
                 System.out.println("生成的masterSecret是：" + Arrays.toString(masterSecret));
@@ -237,8 +238,8 @@ public class ClientHandshaker {
                 phashSpi.init(masterSecret);
                 // 通过PRF算法计算
                 phashSpi.phash(CollectionUtil.merge("key expansion".getBytes(),
-                    CollectionUtil.merge(this.serverHello.getServerRandom(), this.clientRandom)),
-                    output);
+                        CollectionUtil.merge(this.serverHello.getServerRandom(), this.clientRandom)),
+                        output);
                 this.clientWriteMac = new byte[macLen];
                 this.clientWriteCipherKey = new byte[cipherKeyLen];
                 this.clientWriteIv = new byte[ivLen];
@@ -252,17 +253,15 @@ public class ClientHandshaker {
                 // 如果不是AEAD模式，则直接初始化，否则稍后再初始化
                 if (cipherDesc.getCipherType() != CipherSuite.CipherType.AEAD) {
                     this.writeCipher.init(this.clientWriteCipherKey, this.clientWriteIv,
-                        CipherSpi.ENCRYPT_MODE);
+                            CipherSpi.ENCRYPT_MODE);
                 }
 
-                // 准备发送client key exchange消息
-                ECDHClientKeyExchange ecdhClientKeyExchange = new ECDHClientKeyExchange(
-                    ecAgreeClientPublicKey);
-                write(ecdhClientKeyExchange, outputRecord);
-                System.out.println("ECDHClientKeyExchange消息发送完毕");
-                // 这个消息不应该被摘要
-                sendChangeCipher(outputRecord);
-                System.out.println("changeCipherSpec消息发送完毕");
+                //---------------------------------------------
+
+
+
+
+
 
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -275,6 +274,8 @@ public class ClientHandshaker {
                 // sequence是固定的8byte
                 byte[] nonce = new byte[8];
 
+                System.out.println("计算出clientWriteIv:" + Arrays.toString(clientWriteIv));
+                System.out.println("计算出clientWriteCipherKey:" + Arrays.toString(clientWriteCipherKey));
                 // 初始化AEAD模式的cipher
                 if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
                     // iv总长度12

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.joe.ssl.NamedCurve;
+import com.joe.ssl.crypto.NamedCurve;
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.extension.*;
 import com.joe.utils.codec.Hex;

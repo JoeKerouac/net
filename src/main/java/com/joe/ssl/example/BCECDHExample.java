@@ -1,10 +1,20 @@
 package com.joe.ssl.example;
 
 import java.math.BigInteger;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
+import java.security.spec.ECPrivateKeySpec;
+import java.security.spec.ECPublicKeySpec;
+import java.util.Arrays;
 
+import javax.crypto.KeyAgreement;
+
+import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
+import com.joe.ssl.crypto.impl.SunecECDHKeyExchangeSpi;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -19,7 +29,12 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import com.joe.ssl.NamedCurve;
+import com.joe.ssl.crypto.NamedCurve;
+import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
+import com.joe.ssl.openjdk.ssl.EllipticCurvesExtension;
+
+import sun.security.ec.SunEC;
+import sun.security.util.ECUtil;
 
 /**
  * @author JoeKerouac
@@ -29,10 +44,69 @@ import com.joe.ssl.NamedCurve;
 public class BCECDHExample {
 
     public static void main(String[] args) throws Exception {
-        testServer(1, null);
+        int curveId = 9;
+
+        ECDHKeyExchangeSpi exchangeSpi = new SunecECDHKeyExchangeSpi();
+//        ECDHKeyExchangeSpi exchangeSpi = new BCECDHKeyExchangeSpi();
+
+//        73 91(自带的，失败了)   584
+
+
+        ECDHKeyPair keyPair = exchangeSpi.generate(curveId);
+
+        System.out.println(
+            Arrays.toString(keyExchange(curveId, keyPair.getPublicKey(), keyPair.getPrivateKey())));
+        System.out.println(
+            Arrays.toString(keyExchangeByBC(curveId, keyPair.getPublicKey(), keyPair.getPrivateKey())));
+        System.out.println(Arrays
+            .toString(exchangeSpi.keyExchange(keyPair.getPublicKey(), keyPair.getPrivateKey(), curveId)));
+        //        testServer();
     }
 
-    public static byte[] testServer(int curveId, byte[] publicKeyData) throws Exception {
+    public static byte[] keyExchange(int curveId, byte[] serverPublicKey,
+                                     byte[] clientPrivateKey) throws Exception {
+        System.out.println(Arrays.toString(serverPublicKey));
+        System.out.println(serverPublicKey.length);
+        System.out.println("\n\n\n\n");
+        String curveOid = EllipticCurvesExtension.getCurveOid(curveId);
+        java.security.spec.ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
+                curveOid);
+        java.security.spec.ECPoint point = ECUtil.decodePoint(serverPublicKey,
+            parameters.getCurve());
+
+        KeyFactory factory = KeyFactory.getInstance("EC");
+        ECPublicKey publicKey = (ECPublicKey) factory
+            .generatePublic(new ECPublicKeySpec(point, parameters));
+
+        ECPrivateKey privateKey = (ECPrivateKey) factory
+            .generatePrivate(new ECPrivateKeySpec(new BigInteger(clientPrivateKey), parameters));
+        KeyAgreement ka = KeyAgreement.getInstance("ECDH");
+        ka.init(privateKey);
+        ka.doPhase(publicKey, true);
+        return ka.generateSecret("TlsPremasterSecret").getEncoded();
+    }
+
+    public static byte[] keyExchangeByBC(int curveId, byte[] serverPublicKey,
+                                         byte[] clientPrivateKey) {
+        ECDomainParameters domainParameters = NamedCurve.getECParameters(curveId);
+
+        // 使用指定数据解析出ECPoint
+        ECPoint Q = domainParameters.getCurve().decodePoint(serverPublicKey);
+
+        // EC密钥交换算法服务端公钥
+        ECPublicKeyParameters ecAgreeServerPublicKey = new ECPublicKeyParameters(Q,
+            domainParameters);
+
+        AsymmetricCipherKeyPair asymmetricCipherKeyPair = generateECKeyPair(domainParameters);
+
+        ECPrivateKeyParameters privateKeyParameters = new ECPrivateKeyParameters(
+            new BigInteger(clientPrivateKey), domainParameters);
+
+        // 计算preMasterKey
+        return calculateECDHBasicAgreement(ecAgreeServerPublicKey, privateKeyParameters);
+    }
+
+    public static byte[] testServer() throws Exception {
         // 添加bouncycastle实现
 
         // 服务端使用的namedCurve
@@ -50,10 +124,11 @@ public class BCECDHExample {
         // 生成服务端的密钥
         KeyPair keyPair = keyPairGenerator.generateKeyPair();
         JCEECPrivateKey privateKey = (JCEECPrivateKey) keyPair.getPrivate();
-        JCEECPublicKey publicKey = (JCEECPublicKey)keyPair.getPublic();
+        JCEECPublicKey publicKey = (JCEECPublicKey) keyPair.getPublic();
         ECParameterSpec ecParameterSpec = publicKey.getParameters();
 
-
+        byte[] privateKeyData = privateKey.getEncoded();
+        byte[] publicKeyData = publicKey.getEncoded();
 
         return null;
     }

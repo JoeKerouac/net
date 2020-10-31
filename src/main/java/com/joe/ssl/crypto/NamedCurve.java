@@ -1,22 +1,16 @@
-package com.joe.ssl;
-
-import org.bouncycastle.asn1.sec.SECNamedCurves;
-import org.bouncycastle.asn1.x9.X9ECParameters;
-import org.bouncycastle.crypto.params.ECDomainParameters;
+package com.joe.ssl.crypto;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bouncycastle.asn1.sec.SECNamedCurves;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.crypto.params.ECDomainParameters;
+
 /**
- * RFC 4492 5.1.1
- * <p>
- * The named curves defined here are those specified in SEC 2 [13]. Note that many of
- * these curves are also recommended in ANSI X9.62 [7] and FIPS 186-2 [11]. Values 0xFE00
- * through 0xFEFF are reserved for private use. Values 0xFF01 and 0xFF02 indicate that the
- * client supports arbitrary prime and characteristic-2 curves, respectively (the curve
- * parameters must be encoded explicitly in ECParameters).
+ * 此处定义的命名曲线是SEC 2 [13]中指定的曲线；详情参照：RFC 4492 5.1.1
  *
  * @author JoeKerouac
  * @version 2020年06月27日 17:20
@@ -67,6 +61,15 @@ public class NamedCurve {
     private NamedCurve(int id, String name) {
         this.id = id;
         this.name = name;
+    }
+
+    public static String getCurveName(int curveId) {
+        NamedCurve namedCurveObj = ALL.get(curveId);
+        if (namedCurveObj == null) {
+            return null;
+        }
+
+        return namedCurveObj.getName();
     }
 
     /**

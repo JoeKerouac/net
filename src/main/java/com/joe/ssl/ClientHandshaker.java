@@ -10,6 +10,7 @@ import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
+import com.joe.ssl.crypto.NamedCurve;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;

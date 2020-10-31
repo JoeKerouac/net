@@ -43,7 +43,7 @@ import sun.security.action.GetPropertyAction;
 
 
 
-final class EllipticCurvesExtension extends HelloExtension {
+public final class EllipticCurvesExtension extends HelloExtension {
 
     /* Class and subclass dynamic debugging support */
     private static final Debug debug = Debug.getInstance("ssl");
@@ -372,11 +372,11 @@ final class EllipticCurvesExtension extends HelloExtension {
         return (n == null) ? -1 : n;
     }
 
-    static String getCurveOid(int index) {
+    public static String getCurveOid(int index) {
         return idToOidMap.get(index);
     }
 
-    static ECGenParameterSpec getECGenParamSpec(int index) {
+    public static ECGenParameterSpec getECGenParamSpec(int index) {
         AlgorithmParameters params = idToParams.get(index);
         try {
             return params.getParameterSpec(ECGenParameterSpec.class);

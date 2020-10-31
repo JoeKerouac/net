@@ -10,7 +10,6 @@ import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
-import com.joe.utils.concurrent.ThreadUtil;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -30,6 +29,7 @@ import com.joe.ssl.message.*;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.common.Assert;
+import com.joe.utils.concurrent.ThreadUtil;
 import com.joe.utils.protocol.DatagramUtil;
 
 /**
@@ -160,6 +160,8 @@ public class ClientHandshaker {
 
                 int publicKeyLen = inputStream.readInt8();
                 byte[] publicKeyData = inputStream.read(publicKeyLen);
+                System.out.println("服务端公钥为：" + Arrays.toString(publicKeyData));
+                System.out.println("curveId为:" + curveId);
 
                 // 使用指定数据解析出ECPoint
                 ECPoint Q = domainParameters.getCurve().decodePoint(publicKeyData);
@@ -352,7 +354,6 @@ public class ClientHandshaker {
         handshaker.outputRecord = outputStream;
         handshaker.clientRandom = hello.getClientRandom();
 
-
         while (true) {
             ThreadUtil.sleep(1);
             int contentType = inputStream.read();
@@ -376,27 +377,27 @@ public class ClientHandshaker {
             // 有可能一次性多条数据
             boolean first = true;
             while (contentOffset < data.length) {
-//                if (first) {
-//                    first =false;
-//                }else{
-//                    // 去除5byteheader
-//                    System.out.println("contentType:" + EnumInterface.getByCode(data[contentOffset++], ContentType.class));
-//                    version = data[contentOffset++] << 8 | data[contentOffset++];
-//                    len = data[contentOffset++] << 8 | data[contentOffset++];
-//                    System.out.printf("version: %x%n", version);
-//                    System.out.println("len:" + len);
-//                    contentOffset += 5;
-//                }
-
+                //                if (first) {
+                //                    first =false;
+                //                }else{
+                //                    // 去除5byteheader
+                //                    System.out.println("contentType:" + EnumInterface.getByCode(data[contentOffset++], ContentType.class));
+                //                    version = data[contentOffset++] << 8 | data[contentOffset++];
+                //                    len = data[contentOffset++] << 8 | data[contentOffset++];
+                //                    System.out.printf("version: %x%n", version);
+                //                    System.out.println("len:" + len);
+                //                    contentOffset += 5;
+                //                }
 
                 System.out.println("type:" + data[contentOffset]);
                 byte[] contentLenData = new byte[4];
                 contentLenData[1] = data[contentOffset + 1];
                 contentLenData[2] = data[contentOffset + 2];
                 contentLenData[3] = data[contentOffset + 3];
-                int contentLen = DatagramUtil.mergeToInt(contentLenData,0);
-//                System.out.println("本次读取报文：" + Arrays.toString(Arrays.copyOfRange(data, contentOffset, contentLen + 4)));
-                handshaker.process(Arrays.copyOfRange(data, contentOffset, contentOffset + contentLen + 4));
+                int contentLen = DatagramUtil.mergeToInt(contentLenData, 0);
+                //                System.out.println("本次读取报文：" + Arrays.toString(Arrays.copyOfRange(data, contentOffset, contentLen + 4)));
+                handshaker.process(
+                    Arrays.copyOfRange(data, contentOffset, contentOffset + contentLen + 4));
                 contentOffset = contentOffset + contentLen + 4;
 
                 System.out.println("\n\n");

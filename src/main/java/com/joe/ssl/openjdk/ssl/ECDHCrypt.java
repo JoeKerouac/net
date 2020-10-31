@@ -44,7 +44,7 @@ import javax.net.ssl.SSLHandshakeException;
  * @since   1.6
  * @author  Andreas Sterbenz
  */
-final class ECDHCrypt {
+public final class ECDHCrypt {
 
     // our private key
     private PrivateKey privateKey;
@@ -74,7 +74,7 @@ final class ECDHCrypt {
     }
 
     // Called by ClientHandshaker with params it received from the server
-    ECDHCrypt(ECParameterSpec params, SecureRandom random) {
+    public ECDHCrypt(ECParameterSpec params, SecureRandom random) {
         try {
             KeyPairGenerator kpg = JsseJce.getKeyPairGenerator("EC");
             kpg.initialize(params, random);
@@ -95,7 +95,7 @@ final class ECDHCrypt {
 
     // called by ClientHandshaker with either the server's static or
     // ephemeral public key
-    SecretKey getAgreedSecret(
+    public SecretKey getAgreedSecret(
             PublicKey peerPublicKey) throws SSLHandshakeException {
 
         try {

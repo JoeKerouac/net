@@ -2,17 +2,11 @@ package com.joe.ssl.crypto.impl;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.*;
-import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.ECPublicKey;
+import java.security.Provider;
 import java.security.spec.*;
-
-import javax.crypto.KeyAgreement;
-import javax.crypto.SecretKey;
 
 import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
 import com.joe.ssl.crypto.NamedCurve;
-import com.joe.ssl.example.ECDHKeyPair;
 
 import sun.security.ec.SunEC;
 import sun.security.util.ECUtil;
@@ -24,53 +18,48 @@ import sun.security.util.ECUtil;
  * @version 1.0
  * @date 2020-10-31 14:56
  */
-public class SunecECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
+public class SunecECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi
+                                     implements ECDHKeyExchangeSpi {
+
+    private static final Provider SUNEC_PROVIDER = new SunEC();
 
     @Override
-    public byte[] keyExchange(byte[] publicKey, byte[] privateKey, int curveId) {
-        ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
-            NamedCurve.getCurveName(curveId));
-
-        try {
-            ECPoint point = ECUtil.decodePoint(publicKey, parameters.getCurve());
-
-            KeyFactory factory = KeyFactory.getInstance("EC", new SunEC());
-            ECPublicKey ecAgreePublicKey = (ECPublicKey) factory
-                .generatePublic(new ECPublicKeySpec(point, parameters));
-
-            ECPrivateKey ecAgreePrivateKey = (ECPrivateKey) factory
-                .generatePrivate(new ECPrivateKeySpec(new BigInteger(privateKey), parameters));
-
-            KeyAgreement ka = KeyAgreement.getInstance("ECDH", new SunEC());
-            ka.init(ecAgreePrivateKey);
-            ka.doPhase(ecAgreePublicKey, true);
-            SecretKey secretKey = ka.generateSecret("TlsPremasterSecret");
-            return secretKey.getEncoded();
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException
-                | InvalidKeyException e) {
-            throw new RuntimeException("密钥交换失败", e);
-        }
+    protected Provider provider() {
+        return SUNEC_PROVIDER;
     }
 
     @Override
-    public ECDHKeyPair generate(int curveId) {
+    protected KeySpec convertToPublicKeySpec(int curveId, byte[] publicKeyData) {
+        ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
+            NamedCurve.getCurveName(curveId));
+        ECPoint point;
+        try {
+            point = ECUtil.decodePoint(publicKeyData, parameters.getCurve());
+        } catch (IOException e) {
+            // 这里不会发生
+            throw new RuntimeException(e);
+        }
+        return new ECPublicKeySpec(point, parameters);
+    }
+
+    @Override
+    protected KeySpec convertToPrivateKeySpec(int curveId, byte[] privateKeyData) {
         ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
             NamedCurve.getCurveName(curveId));
 
-        try {
-            KeyPairGenerator factory = KeyPairGenerator.getInstance("EC", new SunEC());
-            // 这一步初始化不能省略
-            factory.initialize(parameters);
-            KeyPair keyPair = factory.genKeyPair();
-            ECDHKeyPair ecdhKeyPair = new ECDHKeyPair();
-            ECPrivateKey ecPrivateKey = (ECPrivateKey) keyPair.getPrivate();
-            ECPublicKey ecPublicKey = (ECPublicKey) keyPair.getPublic();
+        return new ECPrivateKeySpec(new BigInteger(privateKeyData), parameters);
+    }
 
-            ecdhKeyPair.setPublicKey(ECUtil.encodePoint(ecPublicKey.getW(), parameters.getCurve()));
-            ecdhKeyPair.setPrivateKey(ecPrivateKey.getS().toByteArray());
-            return ecdhKeyPair;
-        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+    @Override
+    protected AlgorithmParameterSpec getECParameterSpec(int curveId) {
+        return ECUtil.getECParameterSpec(new SunEC(), NamedCurve.getCurveName(curveId));
+    }
+
+    @Override
+    protected int fieldSize(AlgorithmParameterSpec ecParamter) {
+        if (!(ecParamter instanceof ECParameterSpec)) {
+            throw new RuntimeException("不支持的参数：" + ecParamter);
         }
+        return ((ECParameterSpec) ecParamter).getCurve().getField().getFieldSize();
     }
 }

@@ -126,7 +126,7 @@ public class ClientHandshaker {
                 this.serverHello = new ServerHello();
                 this.serverHello.init(bodyLen, inputStream);
                 // 初始化摘要器
-                String hashAlgorithm = this.serverHello.getCipherSuite().getMacDesc().getMacAlg();
+                String hashAlgorithm = this.serverHello.getCipherSuite().getPrfDesc().getHashAlg();
                 this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
                 // 补上client_hello的摘要
                 System.out.println("补充上client_hello的数据");
@@ -206,12 +206,10 @@ public class ClientHandshaker {
                 sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
 
-
-
                 //---------------------------------------------
                 // 详见README中，有详细算法
                 PhashSpi phashSpi = PhashSpi
-                        .getInstance(this.serverHello.getCipherSuite().getMacDesc().getMacAlg());
+                    .getInstance(this.serverHello.getCipherSuite().getPrfDesc().getHashAlg());
                 phashSpi.init(preMasterKey);
 
                 masterSecret = new byte[48];
@@ -238,8 +236,9 @@ public class ClientHandshaker {
                 phashSpi.init(masterSecret);
                 // 通过PRF算法计算
                 phashSpi.phash(CollectionUtil.merge("key expansion".getBytes(),
-                        CollectionUtil.merge(this.serverHello.getServerRandom(), this.clientRandom)),
-                        output);
+                    CollectionUtil.merge(this.serverHello.getServerRandom(), this.clientRandom)),
+                    output);
+                System.out.println("连接参数：" + Arrays.toString(output));
                 this.clientWriteMac = new byte[macLen];
                 this.clientWriteCipherKey = new byte[cipherKeyLen];
                 this.clientWriteIv = new byte[ivLen];
@@ -253,20 +252,15 @@ public class ClientHandshaker {
                 // 如果不是AEAD模式，则直接初始化，否则稍后再初始化
                 if (cipherDesc.getCipherType() != CipherSuite.CipherType.AEAD) {
                     this.writeCipher.init(this.clientWriteCipherKey, this.clientWriteIv,
-                            CipherSpi.ENCRYPT_MODE);
+                        CipherSpi.ENCRYPT_MODE);
                 }
 
                 //---------------------------------------------
 
-
-
-
-
-
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
                 // TODO 现在应该就差数据可能是错误的了
-                new Finished(digestSpi, this.serverHello.getCipherSuite().getMacDesc().getMacAlg(),
+                new Finished(digestSpi, this.serverHello.getCipherSuite().getPrfDesc().getHashAlg(),
                     masterSecret, true).write(new WrapedOutputStream(outputStream));
                 byte[] data = outputStream.toByteArray();
 
@@ -275,7 +269,8 @@ public class ClientHandshaker {
                 byte[] nonce = new byte[8];
 
                 System.out.println("计算出clientWriteIv:" + Arrays.toString(clientWriteIv));
-                System.out.println("计算出clientWriteCipherKey:" + Arrays.toString(clientWriteCipherKey));
+                System.out
+                    .println("计算出clientWriteCipherKey:" + Arrays.toString(clientWriteCipherKey));
                 // 初始化AEAD模式的cipher
                 if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
                     // iv总长度12
@@ -342,7 +337,7 @@ public class ClientHandshaker {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Security.addProvider(new BouncyCastleProvider());
 
-        //        Socket socket = new Socket("39.156.66.14", 443);
+//                Socket socket = new Socket("39.156.66.14", 443);
         Socket socket = new Socket("127.0.0.1", 12345);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
@@ -361,7 +356,7 @@ public class ClientHandshaker {
             int contentType = inputStream.read();
             ContentType type = EnumInterface.getByCode(contentType, ContentType.class);
             System.out.println("contentType:" + type + " : " + contentType);
-            if (type == null) {
+            if (type != ContentType.HANDSHAKE && type != ContentType.CHANGE_CIPHER_SPEC) {
                 throw new RuntimeException("不支持的content type:" + type);
             }
             int version = inputStream.readInt16();
@@ -376,21 +371,8 @@ public class ClientHandshaker {
             // 实际数据的起始位置
             int contentOffset = 0;
 
-            // 有可能一次性多条数据
-            boolean first = true;
+            // 有可能一次性多条数据，多条数据共用一个record头，直接从content开始
             while (contentOffset < data.length) {
-                //                if (first) {
-                //                    first =false;
-                //                }else{
-                //                    // 去除5byteheader
-                //                    System.out.println("contentType:" + EnumInterface.getByCode(data[contentOffset++], ContentType.class));
-                //                    version = data[contentOffset++] << 8 | data[contentOffset++];
-                //                    len = data[contentOffset++] << 8 | data[contentOffset++];
-                //                    System.out.printf("version: %x%n", version);
-                //                    System.out.println("len:" + len);
-                //                    contentOffset += 5;
-                //                }
-
                 System.out.println("type:" + data[contentOffset]);
                 byte[] contentLenData = new byte[4];
                 contentLenData[1] = data[contentOffset + 1];
@@ -398,6 +380,7 @@ public class ClientHandshaker {
                 contentLenData[3] = data[contentOffset + 3];
                 int contentLen = DatagramUtil.mergeToInt(contentLenData, 0);
                 //                System.out.println("本次读取报文：" + Arrays.toString(Arrays.copyOfRange(data, contentOffset, contentLen + 4)));
+
                 handshaker.process(
                     Arrays.copyOfRange(data, contentOffset, contentOffset + contentLen + 4));
                 contentOffset = contentOffset + contentLen + 4;

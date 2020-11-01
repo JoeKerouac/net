@@ -1316,8 +1316,17 @@ abstract class Handshaker {
             clntMacSecret = keySpec.getClientMacKey();
             svrMacSecret = keySpec.getServerMacKey();
 
+            System.out
+                .println("计算出clientWriteCipherKey:" + Arrays.toString(clntWriteKey.getEncoded()));
+            System.out
+                .println("计算出ServerWriteCipherKey:" + Arrays.toString(svrWriteKey.getEncoded()));
             System.out.println("计算出clientWriteIv:" + Arrays.toString(clntWriteIV.getIV()));
-            System.out.println("计算出clientWriteCipherKey:" + Arrays.toString(clntWriteKey.getEncoded()));
+            System.out.println("计算出serverWriteIv:" + Arrays.toString(svrWriteIV.getIV()));
+            System.out.println("计算出clientMac:" + Arrays
+                .toString(clntMacSecret == null ? new byte[0] : clntMacSecret.getEncoded()));
+            System.out.println("计算出serverMac:" + Arrays
+                .toString(svrMacSecret == null ? new byte[0] : svrMacSecret.getEncoded()));
+
         } catch (GeneralSecurityException e) {
             throw new ProviderException(e);
         }

@@ -155,12 +155,12 @@ public class CipherSuite {
         // 百度不支持AES256的，只能用AES128的
         ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
             new CipherSuite("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-                TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, MacDesc.SHA256, KeyExchange.ECDH_RSA,
-                CipherDesc.AES_128_GCM, true));
-        ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-            new CipherSuite("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-                TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, MacDesc.SHA384, KeyExchange.ECDH_RSA,
-                CipherDesc.AES_256_GCM, true));
+                TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
+                CipherDesc.AES_128_GCM, PRFDesc.SHA256, true));
+//        ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+//            new CipherSuite("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+//                TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
+//                CipherDesc.AES_256_GCM, PRFDesc.SHA384, true));
     }
 
     /**
@@ -193,6 +193,8 @@ public class CipherSuite {
     @Getter
     private final CipherDesc  cipher;
 
+    @Getter
+    private final PRFDesc     prfDesc;
     /**
      * 是否是包含ECC算法
      */
@@ -200,12 +202,13 @@ public class CipherSuite {
     private final boolean     ec;
 
     public CipherSuite(String name, int suite, MacDesc macDesc, KeyExchange keyExchange,
-                       CipherDesc cipher, boolean ec) {
+                       CipherDesc cipher, PRFDesc prfDesc, boolean ec) {
         this.name = name;
         this.suite = suite;
         this.macDesc = macDesc;
         this.keyExchange = keyExchange;
         this.cipher = cipher;
+        this.prfDesc = prfDesc;
         this.ec = ec;
     }
 
@@ -247,7 +250,22 @@ public class CipherSuite {
                             BLOCK, AEAD;
     }
 
+    public enum PRFDesc {
+                         SHA256("SHA256"),
+
+                         SHA384("SHA384"),;
+
+        @Getter
+        private final String hashAlg;
+
+        PRFDesc(String hashAlg) {
+            this.hashAlg = hashAlg;
+        }
+    }
+
     public enum MacDesc {
+
+                         NULL_MAC("null", 0),
 
                          SHA256("SHA256", 32),
 
@@ -263,6 +281,7 @@ public class CipherSuite {
             this.macAlg = macAlg;
             this.macLen = macLen;
         }
+
     }
 
     /**

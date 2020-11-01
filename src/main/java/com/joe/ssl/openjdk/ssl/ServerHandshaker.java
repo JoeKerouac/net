@@ -341,6 +341,7 @@ final class ServerHandshaker extends Handshaker {
                     new HandshakeMessage.Finished(protocolVersion, input, cipherSuite);
                 handshakeState.update(cfm, resumingSession);
                 this.clientFinished(cfm);
+                System.out.println("握手成功了");
                 break;
 
             default:

@@ -247,7 +247,7 @@ seed是serverRandom+clientRandom
 其中macLen、cipherKeyLen、ivLen都是根据具体算法定的；
 ivLen来源com.joe.ssl.openjdk.ssl.CipherSuite.BulkCipher#ivSize，另外如果是AEAD_CIPHER类型那么则会使用fixIvSize
 
-PRF结果包含以下内容：
+PRF结果包含以下内容（AEAD模式没有mac）：
 | 长度macLen的clientMacKey | 长度macLen的serverMacKey | 长度cipherKeyLen的clientCipherKey | 长度cipherKeyLen的serverCipherKey | 长度ivLen的clientIv | 长度ivLen的serverIv |
 
 

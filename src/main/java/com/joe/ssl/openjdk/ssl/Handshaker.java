@@ -1167,18 +1167,6 @@ abstract class Handshaker {
     private SecretKey calculateMasterSecret(SecretKey preMasterSecret,
                                             ProtocolVersion requestedVersion) {
 
-        if (debug != null && Debug.isOn("keygen")) {
-            HexDumpEncoder dump = new HexDumpEncoder();
-
-            System.out.println("SESSION KEYGEN:");
-
-            System.out.println("PreMaster Secret:");
-            printHex(dump, preMasterSecret.getEncoded());
-
-            // Nonces are dumped with connection keygen, no
-            // benefit to doing it twice
-        }
-
         // What algs/params do we need to use?
         String masterAlg;
         CipherSuite.PRF prf;
@@ -1215,6 +1203,7 @@ abstract class Handshaker {
                 }
             }
 
+            System.out.println("premaster计算使用sessionHash:" + Arrays.toString(sessionHash));
             spec = new TlsMasterSecretParameterSpec(preMasterSecret, protocolVersion.major,
                 protocolVersion.minor, sessionHash, prfHashAlg, prfHashLength, prfBlockSize);
         } else {

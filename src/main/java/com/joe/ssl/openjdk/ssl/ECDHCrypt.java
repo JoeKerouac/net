@@ -25,13 +25,11 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
 import java.security.*;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.*;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import javax.crypto.SecretKey;
 import javax.crypto.KeyAgreement;
@@ -47,7 +45,7 @@ import javax.net.ssl.SSLHandshakeException;
 public final class ECDHCrypt {
 
     // our private key
-    private PrivateKey privateKey;
+    private PrivateKey  privateKey;
 
     // our public key
     private ECPublicKey publicKey;
@@ -55,19 +53,18 @@ public final class ECDHCrypt {
     // Called by ServerHandshaker for static ECDH
     ECDHCrypt(PrivateKey privateKey, PublicKey publicKey) {
         this.privateKey = privateKey;
-        this.publicKey = (ECPublicKey)publicKey;
+        this.publicKey = (ECPublicKey) publicKey;
     }
 
     // Called by ServerHandshaker for ephemeral ECDH
     ECDHCrypt(int curveId, SecureRandom random) {
         try {
             KeyPairGenerator kpg = JsseJce.getKeyPairGenerator("EC");
-            ECGenParameterSpec params =
-                    EllipticCurvesExtension.getECGenParamSpec(curveId);
+            ECGenParameterSpec params = EllipticCurvesExtension.getECGenParamSpec(curveId);
             kpg.initialize(params, random);
             KeyPair kp = kpg.generateKeyPair();
             privateKey = kp.getPrivate();
-            publicKey = (ECPublicKey)kp.getPublic();
+            publicKey = (ECPublicKey) kp.getPublic();
         } catch (GeneralSecurityException e) {
             throw new RuntimeException("Could not generate DH keypair", e);
         }
@@ -80,7 +77,7 @@ public final class ECDHCrypt {
             kpg.initialize(params, random);
             KeyPair kp = kpg.generateKeyPair();
             privateKey = kp.getPrivate();
-            publicKey = (ECPublicKey)kp.getPublic();
+            publicKey = (ECPublicKey) kp.getPublic();
         } catch (GeneralSecurityException e) {
             throw new RuntimeException("Could not generate DH keypair", e);
         }
@@ -95,61 +92,58 @@ public final class ECDHCrypt {
 
     // called by ClientHandshaker with either the server's static or
     // ephemeral public key
-    public SecretKey getAgreedSecret(
-            PublicKey peerPublicKey) throws SSLHandshakeException {
+    public SecretKey getAgreedSecret(PublicKey peerPublicKey) throws SSLHandshakeException {
 
         try {
+            System.out.println("premaster计算参数，公钥；" + Arrays.toString(peerPublicKey.getEncoded())
+                               + "\npremaster计算参数，私钥：" + Arrays.toString(privateKey.getEncoded()));
             KeyAgreement ka = JsseJce.getKeyAgreement("ECDH");
             ka.init(privateKey);
             ka.doPhase(peerPublicKey, true);
             return ka.generateSecret("TlsPremasterSecret");
         } catch (GeneralSecurityException e) {
-            throw (SSLHandshakeException) new SSLHandshakeException(
-                "Could not generate secret").initCause(e);
+            throw (SSLHandshakeException) new SSLHandshakeException("Could not generate secret")
+                .initCause(e);
         }
     }
 
     // called by ServerHandshaker
-    SecretKey getAgreedSecret(
-            byte[] encodedPoint) throws SSLHandshakeException {
+    SecretKey getAgreedSecret(byte[] encodedPoint) throws SSLHandshakeException {
 
         try {
             ECParameterSpec params = publicKey.getParams();
-            ECPoint point =
-                    JsseJce.decodePoint(encodedPoint, params.getCurve());
+            ECPoint point = JsseJce.decodePoint(encodedPoint, params.getCurve());
             KeyFactory kf = JsseJce.getKeyFactory("EC");
             ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
             PublicKey peerPublicKey = kf.generatePublic(spec);
             return getAgreedSecret(peerPublicKey);
         } catch (GeneralSecurityException | java.io.IOException e) {
-            throw (SSLHandshakeException) new SSLHandshakeException(
-                "Could not generate secret").initCause(e);
+            throw (SSLHandshakeException) new SSLHandshakeException("Could not generate secret")
+                .initCause(e);
         }
     }
 
     // Check constraints of the specified EC public key.
     void checkConstraints(AlgorithmConstraints constraints,
-            byte[] encodedPoint) throws SSLHandshakeException {
+                          byte[] encodedPoint) throws SSLHandshakeException {
 
         try {
 
             ECParameterSpec params = publicKey.getParams();
-            ECPoint point =
-                    JsseJce.decodePoint(encodedPoint, params.getCurve());
+            ECPoint point = JsseJce.decodePoint(encodedPoint, params.getCurve());
             ECPublicKeySpec spec = new ECPublicKeySpec(point, params);
 
             KeyFactory kf = JsseJce.getKeyFactory("EC");
-            ECPublicKey publicKey = (ECPublicKey)kf.generatePublic(spec);
+            ECPublicKey publicKey = (ECPublicKey) kf.generatePublic(spec);
 
             // check constraints of ECPublicKey
-            if (!constraints.permits(
-                    EnumSet.of(CryptoPrimitive.KEY_AGREEMENT), publicKey)) {
+            if (!constraints.permits(EnumSet.of(CryptoPrimitive.KEY_AGREEMENT), publicKey)) {
                 throw new SSLHandshakeException(
                     "ECPublicKey does not comply to algorithm constraints");
             }
         } catch (GeneralSecurityException | java.io.IOException e) {
             throw (SSLHandshakeException) new SSLHandshakeException(
-                    "Could not generate ECPublicKey").initCause(e);
+                "Could not generate ECPublicKey").initCause(e);
         }
     }
 

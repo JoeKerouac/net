@@ -1085,6 +1085,7 @@ final class ClientHandshaker extends Handshaker {
         }
 
         // 计算链接用的密钥
+        System.out.println("计算出preMaster:" + Arrays.toString(preMasterSecret.getEncoded()));
         calculateKeys(preMasterSecret, null);
 
         /*

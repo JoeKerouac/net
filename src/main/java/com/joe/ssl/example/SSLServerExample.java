@@ -1,10 +1,19 @@
 package com.joe.ssl.example;
 
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
+import java.security.KeyManagementException;
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import com.joe.ssl.OutputRecord;
+import com.joe.ssl.openjdk.ssl.SSLContextImpl;
 import com.joe.ssl.openjdk.ssl.SSLServerSocketFactoryImpl;
+import com.joe.ssl.openjdk.ssl.SSLSocketFactoryImpl;
 
 /**
  * @author JoeKerouac
@@ -14,6 +23,27 @@ import com.joe.ssl.openjdk.ssl.SSLServerSocketFactoryImpl;
 public class SSLServerExample {
 
     public static void main(String[] args) throws Exception {
+        client();
+    }
+
+    public static void client() throws Exception {
+        SSLContextImpl sslContext = new SSLContextImpl.DefaultSSLContext(){
+            @Override
+            public X509TrustManager chooseTrustManager(TrustManager[] tm) throws KeyManagementException {
+                return super.chooseTrustManager(tm);
+            }
+        };
+
+
+        SSLSocketFactoryImpl socketFactory = new SSLSocketFactoryImpl();
+        Socket socket = socketFactory.createSocket("39.156.66.14", 443);
+        OutputStream out = socket.getOutputStream();
+        out.write("GET".getBytes());
+        out.flush();
+        System.out.println(socket);
+    }
+
+    public static void server() throws Exception {
         // 运行需要的参数
         //        -Djava.security.debug=all -Djavax.net.debug=all -Djavax.net.ssl.keyStore=D:\temp\ssl\sslserverkeys -Djavax.net.ssl.keyStorePassword=123456 -Djavax.net.ssl.trustStore=D:\temp\ssl\sslservertrust -Djavax.net.ssl.trustStorePassword=123456
         // 对应的证书生成，注意，证书算法必须指定RSA，不然默认是DSA
@@ -29,7 +59,6 @@ public class SSLServerExample {
         //        SSLServerSocketFactory serverSocketFactory = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
 
         SSLServerSocketFactoryImpl serverSocketFactory = new SSLServerSocketFactoryImpl();
-        System.out.println(Arrays.toString(serverSocketFactory.getDefaultCipherSuites()));
         ServerSocket serverSocket = serverSocketFactory.createServerSocket(12345);
 
         Socket socket = serverSocket.accept();

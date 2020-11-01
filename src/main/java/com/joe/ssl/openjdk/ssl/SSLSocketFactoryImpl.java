@@ -60,7 +60,7 @@ final public class SSLSocketFactoryImpl extends SSLSocketFactory {
     /**
      * Constructs an SSL socket factory.
      */
-    SSLSocketFactoryImpl(SSLContextImpl context) {
+    public SSLSocketFactoryImpl(SSLContextImpl context) {
         this.context = context;
     }
 

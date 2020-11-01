@@ -213,6 +213,8 @@ public class ClientHandshaker {
                 phashSpi.init(preMasterKey);
 
                 masterSecret = new byte[48];
+                // 当有ExtendedMasterSecretExtension扩展的时候需要用extended master secret作为label，同时算法也略微有所不同
+                // 详情参见rfc7627
                 byte[] label = "extended master secret".getBytes();
                 byte[] finishedHash = digestSpi.copy().digest();
                 byte[] seed = new byte[label.length + finishedHash.length];
@@ -337,8 +339,8 @@ public class ClientHandshaker {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Security.addProvider(new BouncyCastleProvider());
 
-//                Socket socket = new Socket("39.156.66.14", 443);
-        Socket socket = new Socket("127.0.0.1", 12345);
+                Socket socket = new Socket("39.156.66.14", 443);
+//        Socket socket = new Socket("127.0.0.1", 12345);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
 

@@ -25,6 +25,7 @@ import com.joe.ssl.crypto.*;
 import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
 import com.joe.ssl.example.ECDHKeyPair;
 import com.joe.ssl.message.*;
+import com.joe.ssl.message.extension.ExtensionType;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.common.Assert;
@@ -163,9 +164,6 @@ public class ClientHandshaker {
                 System.out.println("curveId为:" + curveId);
 
                 // 初始化本地公私钥，用于后续密钥交换
-                AsymmetricCipherKeyPair asymmetricCipherKeyPair = generateECKeyPair(
-                    domainParameters);
-
                 this.ecdhKeyPair = keyExchangeSpi.generate(curveId);
 
                 // 计算preMasterKey
@@ -206,23 +204,17 @@ public class ClientHandshaker {
                 sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
 
-                //---------------------------------------------
-                // 详见README中，有详细算法
                 PhashSpi phashSpi = PhashSpi
                     .getInstance(this.serverHello.getCipherSuite().getPrfDesc().getHashAlg());
-                phashSpi.init(preMasterKey);
 
-                masterSecret = new byte[48];
-                // 当有ExtendedMasterSecretExtension扩展的时候需要用extended master secret作为label，同时算法也略微有所不同
-                // 详情参见rfc7627
-                byte[] label = "extended master secret".getBytes();
-                byte[] finishedHash = digestSpi.copy().digest();
-                byte[] seed = new byte[label.length + finishedHash.length];
+                // 判断serverHello中有没有包含extended_master_secret扩展，因为master_secret的具体算法跟这个相关
+                byte[] sessionHash = null;
+                if (serverHello.getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null) {
+                    sessionHash = digestSpi.copy().digest();
+                }
 
-                System.arraycopy(label, 0, seed, 0, label.length);
-                System.arraycopy(finishedHash, 0, seed, label.length, finishedHash.length);
-                // 计算master_key
-                phashSpi.phash(seed, masterSecret);
+                masterSecret = calcMaster(phashSpi, preMasterKey, sessionHash, clientRandom,
+                    serverHello.getServerRandom());
                 System.out.println("生成的masterSecret是：" + Arrays.toString(masterSecret));
 
                 // 初始化cipher
@@ -339,8 +331,8 @@ public class ClientHandshaker {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Security.addProvider(new BouncyCastleProvider());
 
-                Socket socket = new Socket("39.156.66.14", 443);
-//        Socket socket = new Socket("127.0.0.1", 12345);
+//        Socket socket = new Socket("39.156.66.14", 443);
+                Socket socket = new Socket("127.0.0.1", 12345);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
 
@@ -390,6 +382,36 @@ public class ClientHandshaker {
                 System.out.println("\n\n");
             }
         }
+    }
+
+    /**
+     * 计算masterKey
+     * @param phashSpi PhashSpi
+     * @param preMasterKey preMasterKey
+     * @param sessionHash sessionHash（对除了finished外的所有握手消息进行摘要），如果客户端和服务端使用extended_master_secret扩
+     *                    展，那么不应该为空
+     * @param clientRandom 客户端随机数
+     * @param serverRandom 服务端随机数
+     * @return master_secret
+     */
+    private byte[] calcMaster(PhashSpi phashSpi, byte[] preMasterKey, byte[] sessionHash,
+                              byte[] clientRandom, byte[] serverRandom) {
+        byte[] label;
+        byte[] seed;
+        if (sessionHash != null && sessionHash.length > 0) {
+            // 当有ExtendedMasterSecretExtension扩展的时候需要用extended master secret作为label，同时算法也略微有所不同
+            // 详情参见rfc7627
+            label = "extended master secret".getBytes();
+            seed = sessionHash;
+        } else {
+            label = "master secret".getBytes();
+            seed = CollectionUtil.merge(clientRandom, serverRandom);
+        }
+
+        byte[] masterSecret = new byte[48];
+        phashSpi.init(preMasterKey);
+        phashSpi.phash(CollectionUtil.merge(label, seed), masterSecret);
+        return masterSecret;
     }
 
     /**

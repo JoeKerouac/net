@@ -1918,6 +1918,7 @@ static final class Finished extends HandshakeMessage {
         // 这里是关键逻辑
         // 实际上这个是12byte的PRF,label是client finished，seed是摘要
         verifyData = getFinished(handshakeHash, sender, master);
+        System.out.println("要发送的finished数据是:" + Arrays.toString(verifyData));
     }
 
     /*

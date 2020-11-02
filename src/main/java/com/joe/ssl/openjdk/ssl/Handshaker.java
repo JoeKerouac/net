@@ -1206,10 +1206,12 @@ abstract class Handshaker {
             System.out.println("premaster计算使用sessionHash:" + Arrays.toString(sessionHash));
             spec = new TlsMasterSecretParameterSpec(preMasterSecret, protocolVersion.major,
                 protocolVersion.minor, sessionHash, prfHashAlg, prfHashLength, prfBlockSize);
+            System.out.println("走了sessionHash");
         } else {
             spec = new TlsMasterSecretParameterSpec(preMasterSecret, protocolVersion.major,
                 protocolVersion.minor, clnt_random.random_bytes, svr_random.random_bytes,
                 prfHashAlg, prfHashLength, prfBlockSize);
+            System.out.println("没走sessionHash");
         }
 
         try {

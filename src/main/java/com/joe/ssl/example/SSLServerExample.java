@@ -23,7 +23,8 @@ import com.joe.ssl.openjdk.ssl.SSLSocketFactoryImpl;
 public class SSLServerExample {
 
     public static void main(String[] args) throws Exception {
-        client();
+//        client();
+        server();
     }
 
     public static void client() throws Exception {
@@ -46,6 +47,7 @@ public class SSLServerExample {
     public static void server() throws Exception {
         // 运行需要的参数
         //        -Djava.security.debug=all -Djavax.net.debug=all -Djavax.net.ssl.keyStore=D:\temp\ssl\sslserverkeys -Djavax.net.ssl.keyStorePassword=123456 -Djavax.net.ssl.trustStore=D:\temp\ssl\sslservertrust -Djavax.net.ssl.trustStorePassword=123456
+        //        -Djava.security.debug=all -Djavax.net.debug=all -Djavax.net.ssl.keyStore=E:\temp\ssl\sslserverkeys -Djavax.net.ssl.keyStorePassword=123456 -Djavax.net.ssl.trustStore=E:\temp\ssl\sslservertrust -Djavax.net.ssl.trustStorePassword=123456
         // 对应的证书生成，注意，证书算法必须指定RSA，不然默认是DSA
         //        keytool -genkey -alias sslclient -keyalg RSA -keystore sslclientkeys
         //        keytool -export -alias sslclient -keystore sslclientkeys -file sslclient.cer

@@ -1,13 +1,14 @@
 package com.joe.ssl.message;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.joe.ssl.cipher.CipherSuite;
+import com.joe.ssl.message.extension.ExtensionReader;
 import com.joe.ssl.message.extension.ExtensionType;
 import com.joe.ssl.message.extension.HelloExtension;
-import com.joe.utils.common.Assert;
 
 import lombok.Getter;
 import sun.security.ssl.ProtocolVersion;
@@ -53,6 +54,7 @@ public class ServerHello implements HandshakeMessage {
     @Override
     public void init(int bodyLen, WrapedInputStream inputStream) {
         try {
+            this.extensions = new HashMap<>();
             this.version = inputStream.readInt16();
             this.serverRandom = inputStream.read(32);
             int sessionIdLen = inputStream.readInt8();
@@ -63,11 +65,30 @@ public class ServerHello implements HandshakeMessage {
             this.cipherSuite = CipherSuite.getById(cipherSuiteId);
             System.out.println("密码套件是：" + cipherSuiteId);
             System.out.println("密码套件是：" + cipherSuite);
-            // 其他的数据先不管
+            int compressionMethodLen = inputStream.readInt8();
+            if (compressionMethodLen > 0) {
+                throw new RuntimeException("不支持压缩算法，该算法已经不安全了");
+            }
+            // 读取扩展数据
+            List<HelloExtension> extensionList = ExtensionReader.read(inputStream);
+            extensionList
+                .forEach(extension -> extensions.put(extension.getExtensionType(), extension));
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * 获取指定extension
+     * @param type extension类型
+     * @return 对应的extension，如果没有则返回null
+     */
+    public HelloExtension getExtension(ExtensionType type) {
+        if (type == null) {
+            return null;
+        }
+        return extensions.get(type);
     }
 
     @Override

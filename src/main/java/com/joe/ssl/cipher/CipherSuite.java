@@ -157,10 +157,10 @@ public class CipherSuite {
             new CipherSuite("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
                 TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
                 CipherDesc.AES_128_GCM, PRFDesc.SHA256, true));
-//        ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-//            new CipherSuite("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-//                TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
-//                CipherDesc.AES_256_GCM, PRFDesc.SHA384, true));
+        ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+            new CipherSuite("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+                TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
+                CipherDesc.AES_256_GCM, PRFDesc.SHA384, true));
     }
 
     /**

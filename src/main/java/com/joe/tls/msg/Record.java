@@ -25,6 +25,12 @@ public interface Record {
     TlsVersion version();
 
     /**
+     * 协议消息的长度
+     * @return 协议消息的长度，2byte，不包含record层5byte的header（1byte type + 2byte version + 2byte长度）
+     */
+    int len();
+
+    /**
      * 协议消息
      * @param <T> 协议消息类型
      * @return 协议消息

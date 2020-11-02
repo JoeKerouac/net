@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.extension.ExtensionReader;
-import com.joe.ssl.message.extension.ExtensionType;
-import com.joe.ssl.message.extension.HelloExtension;
+import com.joe.tls.msg.extensions.ExtensionReader;
+import com.joe.tls.msg.extensions.ExtensionType;
+import com.joe.tls.msg.extensions.HelloExtension;
 
+import com.joe.tls.enums.HandshakeType;
 import lombok.Getter;
 import sun.security.ssl.ProtocolVersion;
 

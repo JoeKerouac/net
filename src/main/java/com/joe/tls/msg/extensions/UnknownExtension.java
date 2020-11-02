@@ -1,9 +1,11 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 
 /**
  * 目前不支持的扩展
@@ -36,6 +38,12 @@ public class UnknownExtension implements HelloExtension {
         if (data.length > 0) {
             outputStream.write(data);
         }
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
+        ByteBufferUtil.putBytes16(data, buffer);
     }
 
     @Override

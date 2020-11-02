@@ -1,10 +1,12 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import com.joe.ssl.message.SignatureAndHashAlgorithm;
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.common.Assert;
 
 /**
@@ -30,6 +32,16 @@ public class SignatureAndHashAlgorithmExtension implements HelloExtension {
         outputStream.writeInt16(supports.size() * 2);
         for (SignatureAndHashAlgorithm support : supports) {
             outputStream.writeInt16(support.getId());
+        }
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
+        ByteBufferUtil.writeInt16(supports.size() * 2 + 2, buffer);
+        ByteBufferUtil.writeInt16(supports.size() * 2, buffer);
+        for (SignatureAndHashAlgorithm support : supports) {
+            ByteBufferUtil.writeInt16(support.getId(), buffer);
         }
     }
 

@@ -3,6 +3,7 @@ package com.joe.ssl.message;
 import java.io.IOException;
 import java.security.*;
 
+import com.joe.tls.enums.HandshakeType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.JCEECPublicKey;
 

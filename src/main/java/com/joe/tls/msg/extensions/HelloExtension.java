@@ -1,8 +1,10 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 
 /**
  * extension格式如下：
@@ -21,7 +23,17 @@ public interface HelloExtension {
      * @param outputStream 输出流
      * @throws IOException 异常
      */
+    @Deprecated
     void write(WrapedOutputStream outputStream) throws IOException;
+
+    /**
+     * 写出扩展到指定ByteBuffer
+     *
+     * @param buffer ByteBuffer
+     * @throws IOException 异常
+     */
+    @Deprecated
+    void write(ByteBuffer buffer) throws IOException;
 
     /**
      * 该扩展的输出大小

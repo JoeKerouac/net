@@ -675,11 +675,10 @@ final class ClientHandshaker extends Handshaker {
             ExtensionType type = ext.type;
             if (type == ExtensionType.EXT_SERVER_NAME) {
                 serverNamesAccepted = true;
-            } else if ((type != ExtensionType.EXT_ELLIPTIC_CURVES)
-                       && (type != ExtensionType.EXT_EC_POINT_FORMATS)
-                       && (type != ExtensionType.EXT_SERVER_NAME)
-                       && (type != ExtensionType.EXT_RENEGOTIATION_INFO)
-                       && (type != ExtensionType.EXT_EXTENDED_MASTER_SECRET)) {
+            } else if (type != ExtensionType.EXT_ELLIPTIC_CURVES
+                       && type != ExtensionType.EXT_EC_POINT_FORMATS
+                       && type != ExtensionType.EXT_RENEGOTIATION_INFO
+                       && type != ExtensionType.EXT_EXTENDED_MASTER_SECRET) {
                 fatalSE(Alerts.alert_unsupported_extension,
                     "Server sent an unsupported extension: " + type);
             }

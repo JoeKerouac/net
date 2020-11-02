@@ -1,9 +1,11 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 
 /**
  *
@@ -32,6 +34,17 @@ public class EllipticPointFormatsExtension implements HelloExtension {
         outputStream.writeInt8(format.length);
         for (byte b : format) {
             outputStream.writeInt8(b);
+        }
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
+        ByteBufferUtil.writeInt16(format.length + 1, buffer);
+        ByteBufferUtil.writeInt16(format.length, buffer);
+
+        for (byte b : format) {
+            buffer.put(b);
         }
     }
 

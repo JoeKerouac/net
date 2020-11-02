@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.joe.ssl.crypto.DigestSpi;
 import com.joe.ssl.crypto.PhashSpi;
+import com.joe.tls.enums.HandshakeType;
 import com.joe.utils.collection.CollectionUtil;
 
 public class Finished implements HandshakeMessage {

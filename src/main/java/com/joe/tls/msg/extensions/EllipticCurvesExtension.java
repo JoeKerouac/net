@@ -1,9 +1,11 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.common.Assert;
 
 /**
@@ -29,6 +31,17 @@ public class EllipticCurvesExtension implements HelloExtension {
         outputStream.writeInt16(curve.length * 2);
         for (int curveId : curve) {
             outputStream.writeInt16(curveId);
+        }
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
+        ByteBufferUtil.writeInt16(curve.length * 2 + 2, buffer);
+        ByteBufferUtil.writeInt16(curve.length * 2, buffer);
+
+        for (int curveId : curve) {
+            ByteBufferUtil.writeInt16(curveId, buffer);
         }
     }
 

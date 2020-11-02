@@ -1,8 +1,10 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 
 /**
  * 该扩展定义master_secret的计算方式:
@@ -34,6 +36,12 @@ public class ExtendedMasterSecretExtension implements HelloExtension {
     public void write(WrapedOutputStream outputStream) throws IOException {
         outputStream.writeInt16(getExtensionType().id);
         outputStream.writeInt16(0);
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
+        ByteBufferUtil.writeInt16(0, buffer);
     }
 
     @Override

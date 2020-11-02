@@ -264,6 +264,7 @@ PRF结果包含以下内容（AEAD模式没有mac）：
 9、使用上边的签名器验证签名，对比本地生成签名与服务端生成签名是否一致；
 
 
+
 A = a * G;
 B = b * G;
 
@@ -271,3 +272,19 @@ Qa = a * B = a * b * G;
 Qb = b * A = b * a * G;
 
 Qa = Qb
+
+
+
+# TLS握手
+## clientHello
+
+
+# 类设计
+- InputRecord
+  - InputHandshake
+- OutputRecord
+  - OutputHandshake
+    - read
+
+
+

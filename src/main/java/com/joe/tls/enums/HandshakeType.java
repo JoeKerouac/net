@@ -1,4 +1,4 @@
-package com.joe.ssl.message;
+package com.joe.tls.enums;
 
 /**
  * 握手类型

@@ -3,6 +3,8 @@ package com.joe.ssl.message;
 import java.io.IOException;
 
 /**
+ * 将消息写入输出流
+ * 
  * @author JoeKerouac
  * @version 1.0
  * @date 2020-09-19 16:00

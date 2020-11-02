@@ -1,4 +1,4 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.util.ArrayList;
 import java.util.List;

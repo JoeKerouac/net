@@ -1,5 +1,7 @@
 package com.joe.ssl.message;
 
+import com.joe.tls.enums.HandshakeType;
+
 import java.io.IOException;
 
 public class ECDHClientKeyExchange implements HandshakeMessage {

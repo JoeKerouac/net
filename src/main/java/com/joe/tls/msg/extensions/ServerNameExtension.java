@@ -1,9 +1,13 @@
-package com.joe.ssl.message.extension;
+package com.joe.tls.msg.extensions;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.common.Assert;
+
+import lombok.Getter;
 
 /**
  * @author JoeKerouac
@@ -12,9 +16,10 @@ import com.joe.utils.common.Assert;
  */
 public class ServerNameExtension implements HelloExtension {
 
-    private byte   type;
+    private final byte   type;
 
-    private byte[] serverName;
+    @Getter
+    private final byte[] serverName;
 
     public ServerNameExtension(byte type, byte[] serverName) {
         Assert.notNull(serverName);
@@ -30,6 +35,15 @@ public class ServerNameExtension implements HelloExtension {
         // type字段，这里先写死host_name类型
         outputStream.writeInt8(type);
         outputStream.putBytes16(serverName);
+    }
+
+    @Override
+    public void write(ByteBuffer buffer) throws IOException {
+        ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
+        ByteBufferUtil.writeInt16(2 + 1 + 2 + serverName.length, buffer);
+        ByteBufferUtil.writeInt16(1 + 2 + serverName.length, buffer);
+        ByteBufferUtil.writeInt8(type, buffer);
+        ByteBufferUtil.putBytes8(serverName, buffer);
     }
 
     @Override

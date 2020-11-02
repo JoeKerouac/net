@@ -10,7 +10,8 @@ import java.util.List;
 
 import com.joe.ssl.crypto.NamedCurve;
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.extension.*;
+import com.joe.tls.enums.HandshakeType;
+import com.joe.tls.msg.extensions.*;
 import com.joe.utils.codec.Hex;
 
 import lombok.Data;
@@ -187,8 +188,7 @@ public class ClientHello implements HandshakeMessage {
     public void write(WrapedOutputStream stream) throws IOException {
         stream.writeInt8(type().getCode());
         stream.writeInt24(size() - 4);
-        stream.writeInt8(tlsVersion.getMajorVersion());
-        stream.writeInt8(tlsVersion.getMinorVersion());
+        tlsVersion.write(stream);
         stream.write(clientRandom);
         stream.putBytes8(sessionId);
         {

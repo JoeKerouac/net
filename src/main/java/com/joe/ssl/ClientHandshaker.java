@@ -10,6 +10,8 @@ import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
+import com.joe.tls.enums.ContentType;
+import com.joe.tls.enums.HandshakeType;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -25,7 +27,7 @@ import com.joe.ssl.crypto.*;
 import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
 import com.joe.ssl.example.ECDHKeyPair;
 import com.joe.ssl.message.*;
-import com.joe.ssl.message.extension.ExtensionType;
+import com.joe.tls.msg.extensions.ExtensionType;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
 import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.common.Assert;
@@ -127,7 +129,7 @@ public class ClientHandshaker {
                 this.serverHello = new ServerHello();
                 this.serverHello.init(bodyLen, inputStream);
                 // 初始化摘要器
-                String hashAlgorithm = this.serverHello.getCipherSuite().getPrfDesc().getHashAlg();
+                String hashAlgorithm = this.serverHello.getCipherSuite().getHashDesc().getHashAlg();
                 this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
                 // 补上client_hello的摘要
                 System.out.println("补充上client_hello的数据");
@@ -205,7 +207,7 @@ public class ClientHandshaker {
                 System.out.println("changeCipherSpec消息发送完毕");
 
                 PhashSpi phashSpi = PhashSpi
-                    .getInstance(this.serverHello.getCipherSuite().getPrfDesc().getHashAlg());
+                    .getInstance(this.serverHello.getCipherSuite().getHashDesc().getHashAlg());
 
                 // 判断serverHello中有没有包含extended_master_secret扩展，因为master_secret的具体算法跟这个相关
                 byte[] sessionHash = null;
@@ -254,7 +256,7 @@ public class ClientHandshaker {
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
                 // TODO 现在应该就差数据可能是错误的了
-                new Finished(digestSpi, this.serverHello.getCipherSuite().getPrfDesc().getHashAlg(),
+                new Finished(digestSpi, this.serverHello.getCipherSuite().getHashDesc().getHashAlg(),
                     masterSecret, true).write(new WrapedOutputStream(outputStream));
                 byte[] data = outputStream.toByteArray();
 

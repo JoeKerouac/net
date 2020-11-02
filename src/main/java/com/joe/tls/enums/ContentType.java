@@ -1,19 +1,22 @@
-package com.joe.ssl.message;
+package com.joe.tls.enums;
+
+import com.joe.ssl.message.EnumInterface;
 
 /**
  * @author JoeKerouac
  * @version 2020年06月17日 20:25
  */
 public enum ContentType implements EnumInterface {
+
                                                   CHANGE_CIPHER_SPEC(0x14, "CHANGE_CIPHER_SPEC",
-                                                                     "CHANGE_CIPHER_SPEC"),
+                                                                     "变更到加密通道消息"),
 
                                                   ALTER(0x15, "ALTER", "警告信息"),
 
                                                   HANDSHAKE(0x16, "HANDSHAKE", "握手类型"),
 
                                                   APPLICATION_DATA(0x17, "APPLICATION_DATA",
-                                                                   "APPLICATION_DATA"),
+                                                                   "应用数据"),
 
     ;
 

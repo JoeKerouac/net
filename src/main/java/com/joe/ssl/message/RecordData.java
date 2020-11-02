@@ -1,5 +1,7 @@
 package com.joe.ssl.message;
 
+import com.joe.tls.enums.ContentType;
+
 import java.io.IOException;
 
 /**

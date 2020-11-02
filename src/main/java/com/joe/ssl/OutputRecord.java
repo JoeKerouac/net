@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import com.joe.ssl.crypto.DigestSpi;
-import com.joe.ssl.message.ContentType;
+import com.joe.tls.enums.ContentType;
 import com.joe.ssl.message.HandshakeMessage;
 import com.joe.ssl.message.TlsVersion;
 import com.joe.ssl.message.WrapedOutputStream;

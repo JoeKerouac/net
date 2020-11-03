@@ -1,4 +1,4 @@
-package com.joe.ssl.crypto;
+package com.joe.tls.enums;
 
 import java.util.ArrayList;
 import java.util.HashMap;

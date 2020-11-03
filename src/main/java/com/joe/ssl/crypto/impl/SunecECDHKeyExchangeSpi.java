@@ -6,7 +6,7 @@ import java.security.Provider;
 import java.security.spec.*;
 
 import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
-import com.joe.ssl.crypto.NamedCurve;
+import com.joe.tls.enums.NamedCurve;
 
 import sun.security.ec.SunEC;
 import sun.security.util.ECUtil;

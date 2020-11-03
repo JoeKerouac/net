@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 import com.joe.tls.enums.ContentType;
 import com.joe.tls.enums.HandshakeType;
+import com.joe.tls.enums.NamedCurve;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;

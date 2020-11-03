@@ -29,8 +29,7 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import com.joe.ssl.crypto.NamedCurve;
-import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
+import com.joe.tls.enums.NamedCurve;
 import com.joe.ssl.openjdk.ssl.EllipticCurvesExtension;
 
 import sun.security.ec.SunEC;

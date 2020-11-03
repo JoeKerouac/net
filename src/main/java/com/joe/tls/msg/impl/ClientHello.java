@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.NamedCurve;
+import com.joe.tls.enums.NamedCurve;
 import com.joe.ssl.message.SignatureAndHashAlgorithm;
 import com.joe.ssl.message.TlsVersion;
 import com.joe.ssl.message.WrapedOutputStream;

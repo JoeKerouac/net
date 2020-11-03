@@ -18,7 +18,7 @@ import org.bouncycastle.jce.spec.ECPublicKeySpec;
 import org.bouncycastle.math.ec.ECPoint;
 
 import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
-import com.joe.ssl.crypto.NamedCurve;
+import com.joe.tls.enums.NamedCurve;
 import com.joe.utils.common.string.StringUtils;
 
 /**

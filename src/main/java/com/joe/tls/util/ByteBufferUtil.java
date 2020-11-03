@@ -85,6 +85,15 @@ public class ByteBufferUtil {
     }
 
     /**
+     * 从ByteBuffer读取32字节数据，合并为一个int
+     * @param buffer ByteBuffer
+     * @return 从当前位置往后读取32字节数据，合并为int返回
+     */
+    public static int mergeReadInt32(ByteBuffer buffer) {
+        return buffer.getInt();
+    }
+
+    /**
      * 从ByteBuffer中读取一个字节的长度信息，然后继续读取读取该长度的数据
      * @param buffer buffer
      * @return 数据

@@ -163,6 +163,14 @@ public class IHttpResponse implements Closeable {
 
             if (status >= 400) {
                 ErrorResp resp = JSON_PARSER.read(this.data, ErrorResp.class);
+                if (resp == null) {
+                    resp = new ErrorResp();
+                    resp.setMessage(data);
+                    resp.setError(data);
+                    resp.setStatus(status);
+                    resp.setPath("unknown");
+                    resp.setException("unknown");
+                }
                 exception = new ServerException(resp.getPath(), resp.getException(),
                     resp.getMessage(), resp.getError(), status);
                 throw exception;

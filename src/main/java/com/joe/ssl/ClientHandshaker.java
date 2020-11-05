@@ -10,9 +10,6 @@ import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
-import com.joe.tls.enums.ContentType;
-import com.joe.tls.enums.HandshakeType;
-import com.joe.tls.enums.NamedCurve;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -24,12 +21,18 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.BigIntegers;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.*;
+import com.joe.ssl.crypto.CipherSpi;
+import com.joe.ssl.crypto.DigestSpi;
+import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
+import com.joe.ssl.crypto.PhashSpi;
 import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
 import com.joe.ssl.example.ECDHKeyPair;
 import com.joe.ssl.message.*;
-import com.joe.tls.msg.extensions.ExtensionType;
 import com.joe.ssl.openjdk.ssl.CipherSuiteList;
+import com.joe.tls.enums.ContentType;
+import com.joe.tls.enums.HandshakeType;
+import com.joe.tls.enums.NamedCurve;
+import com.joe.tls.msg.extensions.ExtensionType;
 import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.common.Assert;
 import com.joe.utils.concurrent.ThreadUtil;
@@ -86,6 +89,7 @@ public class ClientHandshaker {
 
     // 摘要不对header摘要（最外层）
     private DigestSpi          digestSpi;
+    private PhashSpi           phashSpi;
 
     private CipherSpi          readCipher;
 
@@ -132,6 +136,7 @@ public class ClientHandshaker {
                 // 初始化摘要器
                 String hashAlgorithm = this.serverHello.getCipherSuite().getHashDesc().getHashAlg();
                 this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
+                this.phashSpi = PhashSpi.getInstance(hashAlgorithm);
                 // 补上client_hello的摘要
                 System.out.println("补充上client_hello的数据");
                 this.digestSpi.update(outputRecord.getStream().toByteArray());
@@ -207,9 +212,6 @@ public class ClientHandshaker {
                 sendChangeCipher(outputRecord);
                 System.out.println("changeCipherSpec消息发送完毕");
 
-                PhashSpi phashSpi = PhashSpi
-                    .getInstance(this.serverHello.getCipherSuite().getHashDesc().getHashAlg());
-
                 // 判断serverHello中有没有包含extended_master_secret扩展，因为master_secret的具体算法跟这个相关
                 byte[] sessionHash = null;
                 if (serverHello.getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null) {
@@ -257,8 +259,8 @@ public class ClientHandshaker {
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
                 // TODO 现在应该就差数据可能是错误的了
-                new Finished(digestSpi, this.serverHello.getCipherSuite().getHashDesc().getHashAlg(),
-                    masterSecret, true).write(new WrapedOutputStream(outputStream));
+                new Finished(digestSpi, phashSpi, masterSecret, true)
+                    .write(new WrapedOutputStream(outputStream));
                 byte[] data = outputStream.toByteArray();
 
                 // 实际上AEAD模式下就是sequenceNumber，第一个sequence就是0，这里先不管，因为目前只发送一个消息
@@ -334,8 +336,8 @@ public class ClientHandshaker {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Security.addProvider(new BouncyCastleProvider());
 
-//        Socket socket = new Socket("39.156.66.14", 443);
-                Socket socket = new Socket("127.0.0.1", 12345);
+        //        Socket socket = new Socket("39.156.66.14", 443);
+        Socket socket = new Socket("127.0.0.1", 12345);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
 

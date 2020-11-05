@@ -25,7 +25,7 @@ public class ECDHClientKeyExchange implements HandshakeProtocol {
 
     @Override
     public int len() {
-        throw new RuntimeException("为实现");
+        return 1 + publicKey.length;
     }
 
     @Override

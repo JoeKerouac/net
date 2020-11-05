@@ -13,17 +13,16 @@ public class Finished implements HandshakeMessage {
 
     private byte[]    data = new byte[12];
 
-    public Finished(DigestSpi digestSpi, String macAlg, byte[] masterKey, boolean isClient) {
-        init(digestSpi, macAlg, masterKey, isClient);
+    public Finished(DigestSpi digestSpi, PhashSpi phashSpi, byte[] masterKey, boolean isClient) {
+        init(digestSpi, phashSpi, masterKey, isClient);
     }
 
-    private void init(DigestSpi digestSpi, String macAlg, byte[] masterKey, boolean isClient) {
+    private void init(DigestSpi digestSpi, PhashSpi phashSpi, byte[] masterKey, boolean isClient) {
         this.digestSpi = digestSpi;
         String tlsLabel = isClient ? "client finished" : "server finished";
 
         try {
             byte[] seed = digestSpi.copy().digest();
-            PhashSpi phashSpi = PhashSpi.getInstance(macAlg);
             phashSpi.init(masterKey);
             phashSpi.phash(CollectionUtil.merge(tlsLabel.getBytes(), seed), this.data);
 

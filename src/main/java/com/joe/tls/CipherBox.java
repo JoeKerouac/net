@@ -65,19 +65,57 @@ public class CipherBox {
         this.cipherKey = cipherKey;
         this.iv = iv;
         this.mac = mac;
-        
-        if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
-            this.tagSize = 16;
-            this.cipherSpi = CipherSpi.getInstance(cipherDesc);
-        } else {
-            throw new RuntimeException("当前不支持的加密模式：" + cipherDesc.getCipherType());
-        }
 
         if (encrypt) {
             this.mode = CipherSpi.ENCRYPT_MODE;
         } else {
             this.mode = CipherSpi.DECRYPT_MODE;
         }
+
+        if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
+            this.tagSize = 16;
+            this.cipherSpi = CipherSpi.getInstance(cipherDesc);
+        } else {
+            this.cipherSpi = CipherSpi.getInstance(cipherDesc);
+            throw new RuntimeException("当前不支持的加密模式：" + cipherDesc.getCipherType());
+        }
+    }
+
+    public byte[] encrypt(byte[] data, int offset, int len) {
+
+
+        if (cipherDesc.getCipherType() == CipherSuite.CipherType.BLOCK) {
+            int blockSize = cipherSpi.getBlockSize();
+            // 如果是block模式，要对齐
+            len = addPadding(data, offset, len, blockSize);
+
+            return cipherSpi.doFinal(data)
+        }
+
+    }
+
+    private static int addPadding(byte[] buf, int offset, int len, int blockSize) {
+        int newlen = len + 1;
+        byte pad;
+        int i;
+
+        if ((newlen % blockSize) != 0) {
+            newlen += blockSize - 1;
+            newlen -= newlen % blockSize;
+        }
+        pad = (byte) (newlen - len);
+
+        if (buf.length < (newlen + offset)) {
+            throw new IllegalArgumentException("no space to pad buffer");
+        }
+
+        /*
+         * TLS version of the padding works for both SSLv3 and TLSv1
+         */
+        for (i = 0, offset += len; i < pad; i++) {
+            buf[offset++] = (byte) (pad - 1);
+        }
+        return newlen;
     }
 
 }

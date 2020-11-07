@@ -6,10 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Objects;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
+import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -26,7 +23,7 @@ import com.sun.crypto.provider.SunJCE;
  */
 public class AesCipher implements CipherSpi {
 
-    public Cipher                 cipher;
+    public Cipher                  cipher;
 
     private CipherSuite.CipherDesc cipherDesc;
 
@@ -54,6 +51,11 @@ public class AesCipher implements CipherSpi {
     }
 
     @Override
+    public int getBlockSize() {
+        return cipher.getBlockSize();
+    }
+
+    @Override
     public void update(byte[] data) {
         cipher.update(data);
     }
@@ -73,10 +75,33 @@ public class AesCipher implements CipherSpi {
     }
 
     @Override
+    public void update(byte[] data, int offset, int len) {
+
+    }
+
+    @Override
+    public byte[] doFinal(byte[] data, int offset, int len) {
+        try {
+            return cipher.doFinal(data, offset, len);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public byte[] doFinal() {
         try {
             return cipher.doFinal();
         } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public int doFinal(byte[] data, int offset, int len, byte[] result, int resultOffset) {
+        try {
+            return cipher.doFinal(data, offset, len, result, resultOffset);
+        } catch (IllegalBlockSizeException | BadPaddingException | ShortBufferException e) {
             throw new RuntimeException(e);
         }
     }

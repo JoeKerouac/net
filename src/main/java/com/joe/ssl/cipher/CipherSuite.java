@@ -194,7 +194,7 @@ public class CipherSuite {
     private final CipherDesc  cipher;
 
     @Getter
-    private final HashDesc hashDesc;
+    private final HashDesc    hashDesc;
     /**
      * 是否是包含ECC算法
      */
@@ -251,9 +251,9 @@ public class CipherSuite {
     }
 
     public enum HashDesc {
-                         SHA256("SHA256"),
+                          SHA256("SHA256"),
 
-                         SHA384("SHA384"),;
+                          SHA384("SHA384"),;
 
         @Getter
         private final String hashAlg;
@@ -289,13 +289,13 @@ public class CipherSuite {
      */
     public enum CipherDesc {
 
-                            AES_128("AES/CBC/NoPadding", CipherType.BLOCK, 16, 16, 0),
+                            AES_128("AES/CBC/NoPadding", CipherType.BLOCK, 16, 16, 0, false, 0),
 
-                            AES_128_GCM("AES/GCM/NoPadding", CipherType.AEAD, 16, 12, 4),
+                            AES_128_GCM("AES/GCM/NoPadding", CipherType.AEAD, 16, 12, 4, true, 16),
 
-                            AES_256("AES/CBC/NoPadding", CipherType.BLOCK, 32, 16, 0),
+                            AES_256("AES/CBC/NoPadding", CipherType.BLOCK, 32, 16, 0, false, 0),
 
-                            AES_256_GCM("AES/GCM/NoPadding", CipherType.AEAD, 32, 12, 4),
+                            AES_256_GCM("AES/GCM/NoPadding", CipherType.AEAD, 32, 12, 4, true, 16),
 
         ;
 
@@ -329,13 +329,27 @@ public class CipherSuite {
         @Getter
         private final CipherType cipherType;
 
-        CipherDesc(String cipherName, CipherType cipherType, int keySize, int ivLen,
-                   int fixedIvLen) {
+        /**
+         * 是否是GCM模式
+         */
+        @Getter
+        private final boolean    gcm;
+
+        /**
+         * 认证数据长度，只有GCM模式才会有，GCM模式会在加密数据的最后补充上该长度的认证数据
+         */
+        @Getter
+        private final int        tagLen;
+
+        CipherDesc(String cipherName, CipherType cipherType, int keySize, int ivLen, int fixedIvLen,
+                   boolean gcm, int tagLen) {
             this.cipherName = cipherName;
             this.cipherType = cipherType;
             this.keySize = keySize;
             this.ivLen = ivLen;
             this.fixedIvLen = fixedIvLen;
+            this.gcm = gcm;
+            this.tagLen = tagLen;
         }
     }
 

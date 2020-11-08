@@ -17,6 +17,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.utils.collection.CollectionUtil;
+import com.sun.crypto.provider.SunJCE;
 
 /**
  * AES示例
@@ -136,11 +137,11 @@ public class AesExample {
         byte[] jceResult = null;
         if (algorithm.getCipherType() == CipherSuite.CipherType.AEAD) {
             // 这里16 * 8 是固定的，实际上加解密时也不会用到
-            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, null,
-                new GCMParameterSpec(16 * 8, iv));
+            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey,
+                new SunJCE(), new GCMParameterSpec(16 * 8, iv));
         } else if (algorithm.getCipherType() == CipherSuite.CipherType.BLOCK) {
-            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, null,
-                new IvParameterSpec(iv));
+            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey,
+                new SunJCE(), new IvParameterSpec(iv));
         }
 
         // 使用BouncyCastle里边的实现来加密

@@ -4,37 +4,67 @@ import com.joe.ssl.message.TlsVersion;
 import com.joe.tls.enums.ContentType;
 
 /**
- * record消息
+ * record消息，record消息格式：
+ * <br/>
+ * <br/>
+ * | 1byte content type | 2byte version | 2byte content len | n byte nonce | content |
+ * <br/>
+ * <br/>
+ * 其中nonce的长度是加密套件决定的，同时对于AEAD模式来说nonce不能加密；
+ * 
  *
  * @author JoeKerouac
  * @version 1.0
  * @date 2020-11-02 10:42
  */
-public interface Record {
+public class Record {
+
+    private final ContentType   type;
+    private final TlsVersion    version;
+    private final RecordContent content;
+    private final byte[]        contentData;
+
+    public Record(ContentType type, TlsVersion version, RecordContent content) {
+        this(type, version, content, null);
+    }
+
+    public Record(ContentType type, TlsVersion version, RecordContent content, byte[] contentData) {
+        this.type = type;
+        this.version = version;
+        this.content = content;
+        this.contentData = contentData == null ? content.serialize() : contentData;
+    }
 
     /**
      * 消息contentType
      * @return 消息的contentType
      */
-    ContentType type();
+    public ContentType type() {
+        return type;
+    }
 
     /**
      * 消息版本号
      * @return 版本号
      */
-    TlsVersion version();
+    public TlsVersion version() {
+        return version;
+    }
 
     /**
      * 协议消息的长度
      * @return 协议消息的长度，2byte，不包含record层5byte的header（1byte type + 2byte version + 2byte长度）
      */
-    int len();
+    public int len() {
+        return contentData.length;
+    }
 
     /**
      * 协议消息
-     * @param <T> 协议消息类型
      * @return 协议消息
      */
-    <T extends RecordContent> T msg();
+    public RecordContent msg() {
+        return content;
+    }
 
 }

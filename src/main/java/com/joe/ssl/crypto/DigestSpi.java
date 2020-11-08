@@ -16,7 +16,18 @@ public interface DigestSpi extends AlgorithmSpi<DigestSpi> {
      *
      * @param data 源数据
      */
-    void update(byte[] data);
+    default void update(byte[] data) {
+        update(data, 0, data.length);
+    }
+
+    /**
+     * 更新数据
+     *
+     * @param data 源数据
+     * @param offset 起始位置
+     * @param len 长度
+     */
+    void update(byte[] data, int offset, int len);
 
     /**
      * 更新数据

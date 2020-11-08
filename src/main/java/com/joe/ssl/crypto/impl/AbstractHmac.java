@@ -93,7 +93,7 @@ public abstract class AbstractHmac implements HmacSpi {
     }
 
     @Override
-    public void update(byte[] data) {
+    public void update(byte[] data, int offset, int len) {
         if (!init) {
             throw new IllegalStateException("HMAC未初始化，请先初始化");
         }
@@ -102,11 +102,12 @@ public abstract class AbstractHmac implements HmacSpi {
             this.digestSpi.update(this.k_ipad);
             this.first = false;
         }
-        this.digestSpi.update(data);
+
+        this.digestSpi.update(data, offset, len);
     }
 
     @Override
-    public byte[] hmac() {
+    public byte[] doFinal() {
         if (!init) {
             throw new IllegalStateException("HMAC未初始化，请先初始化");
         }

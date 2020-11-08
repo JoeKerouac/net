@@ -71,14 +71,14 @@ public abstract class AbstractPhash implements PhashSpi {
                 hmacSpi.update(aBytes);
             }
 
-            aBytes = hmacSpi.hmac();
+            aBytes = hmacSpi.doFinal();
 
             /*
              * 计算HMAC_hash()
              */
             hmacSpi.update(aBytes);
             hmacSpi.update(seed);
-            tmp = hmacSpi.hmac();
+            tmp = hmacSpi.doFinal();
 
             int k = Math.min(hmacSize, remaining);
             for (int i = 0; i < k; i++) {

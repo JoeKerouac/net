@@ -9,4 +9,9 @@ package com.joe.tls.msg;
  */
 public interface RecordContent {
 
+    /**
+     * 消息序列化为网络传输数据，这里是完整数据，包含header
+     * @return 序列化后的网络传输数据
+     */
+    byte[] serialize();
 }

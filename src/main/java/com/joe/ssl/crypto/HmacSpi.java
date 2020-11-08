@@ -40,22 +40,33 @@ public interface HmacSpi extends AlgorithmSpi<HmacSpi> {
      *
      * @param data 源数据
      */
-    void update(byte[] data);
+    default void update(byte[] data) {
+        update(data, 0, data.length);
+    }
+
+    /**
+     * 更新数据
+     *
+     * @param data 源数据
+     * @param offset 要更新的数据的起始位置
+     * @param data 长度
+     */
+    void update(byte[] data, int offset, int len);
 
     /**
      * 对所有源数据进行hmac认证加密
      * @return 认证数据
      */
-    byte[] hmac();
+    byte[] doFinal();
 
     /**
      * 对指定数据生成认证数据
      * @param data 数据
      * @return 认证数据
      */
-    default byte[] hmac(byte[] data) {
+    default byte[] doFinal(byte[] data) {
         update(data);
-        return hmac();
+        return doFinal();
     }
 
     /**

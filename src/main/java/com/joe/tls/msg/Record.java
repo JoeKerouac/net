@@ -7,10 +7,10 @@ import com.joe.tls.enums.ContentType;
  * record消息，record消息格式：
  * <br/>
  * <br/>
- * | 1byte content type | 2byte version | 2byte content len | n byte nonce | content |
+ * | 1byte content type | 2byte version | 2byte content len | n byte nonce | content | mac |
  * <br/>
  * <br/>
- * 其中nonce的长度是加密套件决定的，同时对于AEAD模式来说nonce不能加密；
+ * 其中nonce的长度是加密套件决定的，同时对于AEAD模式来说nonce不能加密，要明文发送，最后的mac对于AEAD模式来说是没有的
  * 
  *
  * @author JoeKerouac

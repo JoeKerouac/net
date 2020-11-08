@@ -100,7 +100,9 @@ public class InputRecordStreamImpl implements InputRecordStream {
         int tagLen = cipherBox.getTagSize();
 
         if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
-            cipherBox.decrypt(data, 0, data.length);
+            // AEAD模式应该去除iv
+            return cipherBox.decrypt(data, cipherBox.getRecordIvSize(),
+                data.length - cipherBox.getRecordIvSize());
         } else if (cipherDesc.getCipherType() == CipherSuite.CipherType.BLOCK) {
         } else {
             throw new RuntimeException("不支持的加密模式：" + cipherDesc);

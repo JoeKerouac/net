@@ -81,6 +81,14 @@ public class CipherBox {
     }
 
     /**
+     * record中IV的长度
+     * @return record中IV的长度
+     */
+    public int getRecordIvSize() {
+        return recordIvSize;
+    }
+
+    /**
      * 获取该加密器的tagSize
      * @return tagSize
      */

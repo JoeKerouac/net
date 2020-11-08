@@ -3,6 +3,7 @@ package com.joe.tls.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.EnumInterface;
@@ -10,6 +11,7 @@ import com.joe.ssl.message.TlsVersion;
 import com.joe.tls.Authenticator;
 import com.joe.tls.CipherBox;
 import com.joe.tls.InputRecordStream;
+import com.joe.tls.MacAuthenticator;
 import com.joe.tls.enums.ContentType;
 import com.joe.tls.msg.HandshakeMsgReaderUtil;
 import com.joe.tls.msg.HandshakeProtocol;
@@ -80,7 +82,7 @@ public class InputRecordStreamImpl implements InputRecordStream {
         byte[] content = read(contentLen);
 
         if (cipherBox != null) {
-
+            content = decrypt(header[0], content);
         }
 
         switch (contentType) {
@@ -95,6 +97,12 @@ public class InputRecordStreamImpl implements InputRecordStream {
         }
     }
 
+    /**
+     * 解密数据，同时校验mac
+     * @param contentType content type
+     * @param data 要解密的数据
+     * @return 解密后的数据，没有nonce和mac
+     */
     private byte[] decrypt(byte contentType, byte[] data) {
         int nonceLen = cipherBox.applyExplicitNonce(authenticator, contentType, data);
         int tagLen = cipherBox.getTagSize();
@@ -104,6 +112,19 @@ public class InputRecordStreamImpl implements InputRecordStream {
             return cipherBox.decrypt(data, cipherBox.getRecordIvSize(),
                 data.length - cipherBox.getRecordIvSize());
         } else if (cipherDesc.getCipherType() == CipherSuite.CipherType.BLOCK) {
+            byte[] decryptResult = cipherBox.decrypt(data, 0, data.length);
+            MacAuthenticator macAuthenticator = (MacAuthenticator) authenticator;
+            int macLen = macAuthenticator.macLen();
+
+            byte[] mac = macAuthenticator.compute(contentType, decryptResult, nonceLen,
+                decryptResult.length - nonceLen - macLen, true);
+
+            if (Arrays.equals(mac, Arrays.copyOfRange(decryptResult, decryptResult.length - macLen,
+                decryptResult.length))) {
+                throw new RuntimeException("bad record MAC");
+            }
+
+            return Arrays.copyOfRange(decryptResult, nonceLen, decryptResult.length - macLen);
         } else {
             throw new RuntimeException("不支持的加密模式：" + cipherDesc);
         }

@@ -6,6 +6,8 @@ import java.util.Arrays;
 import com.joe.ssl.crypto.DigestSpi;
 
 /**
+ * 握手hash
+ *
  * @author JoeKerouac
  * @data 2020-11-06 22:26
  */

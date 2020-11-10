@@ -76,8 +76,6 @@ public class InputRecordStreamImpl implements InputRecordStream {
                 .format("不支持的version，major version: %d, minor version: %d", header[1], header[2]));
         }
 
-        System.out.println(String.format("收到%s类型的消息", contentType));
-
         // 长度
         int contentLen = Byte.toUnsignedInt(header[3]) << 8 | Byte.toUnsignedInt(header[4]);
         byte[] content = read(contentLen);
@@ -117,8 +115,8 @@ public class InputRecordStreamImpl implements InputRecordStream {
         int tagLen = cipherBox.getTagSize();
 
         if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
-            // AEAD模式应该去除iv和AEAD模式增加的认证信息
-            return cipherBox.decrypt(data, nonceLen, data.length - tagLen);
+            // AEAD模式下IV是明文的，所以不需要加密
+            return cipherBox.decrypt(data, nonceLen, data.length - nonceLen);
         } else if (cipherDesc.getCipherType() == CipherSuite.CipherType.BLOCK) {
             byte[] decryptResult = cipherBox.decrypt(data, 0, data.length);
             MacAuthenticator macAuthenticator = (MacAuthenticator) authenticator;

@@ -12,6 +12,11 @@ import lombok.Data;
 public class SecretCollection {
 
     /**
+     * 当前session的Hash
+     */
+    private byte[] sessionHash;
+
+    /**
      * preMaster key
      */
     private byte[] preMasterKey;

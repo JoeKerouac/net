@@ -86,6 +86,11 @@ public abstract class Handshaker {
      */
     private boolean              extExtendedMasterSecret = false;
 
+    /**
+     * 当前是否是client
+     */
+    private final boolean        isClient;
+
     public Handshaker(InputStream netInputStream, OutputStream netOutputStream,
                       SecureRandom secureRandom) {
         this.handshakeHash = new HandshakeHash();
@@ -95,6 +100,7 @@ public abstract class Handshaker {
             TlsVersion.TLS1_2);
         this.outputRecordStream = new OutputRecordStreamImpl(netOutputStream, handshakeHash,
             TlsVersion.TLS1_2);
+        isClient = this instanceof ClientHandshaker;
     }
 
     /**
@@ -174,16 +180,11 @@ public abstract class Handshaker {
                             outputRecordStream.write(new Record(ContentType.CHANGE_CIPHER_SPEC,
                                 tlsVersion, changeCipherSpace));
 
-                            byte[] masterKey;
                             byte[] sessionHash = handshakeHash.getFinishedHash();
-                            if (extExtendedMasterSecret) {
-                                masterKey = calcMaster(phashSpi, secretCollection.getPreMasterKey(),
-                                    sessionHash, null, null);
-                            } else {
-                                masterKey = calcMaster(phashSpi, secretCollection.getPreMasterKey(),
-                                    null, clientRandom, serverRandom);
-                            }
-                            secretCollection.setMasterKey(masterKey);
+                            secretCollection.setSessionHash(sessionHash);
+
+                            calcMaster();
+
                             // 算完masterKey开始算连接key，连接key依赖于masterKey
                             calcConnectionKeys();
 
@@ -191,11 +192,19 @@ public abstract class Handshaker {
                             changeCipher();
 
                             // 写出finish消息
-                            Finished finished = new Finished(phashSpi, masterKey, sessionHash,
-                                (this instanceof ClientHandshaker));
+                            Finished finished = new Finished(phashSpi,
+                                secretCollection.getMasterKey(), sessionHash, isClient);
 
                             outputRecordStream
                                 .write(new Record(ContentType.HANDSHAKE, tlsVersion, finished));
+                            break;
+                        case FINISHED:
+                            if (isClient) {
+                                // client收到这个消息说明已经握手完成
+                                return;
+                            } else {
+                                throw new RuntimeException("当前还不支持Server端收到finished消息");
+                            }
                     }
 
                     break;
@@ -224,19 +233,14 @@ public abstract class Handshaker {
 
     /**
      * 计算masterKey
-     * @param phashSpi PhashSpi
-     * @param preMasterKey preMasterKey
-     * @param sessionHash sessionHash（对除了finished外的所有握手消息进行摘要），如果客户端和服务端使用extended_master_secret扩
-     *                    展，那么不应该为空
-     * @param clientRandom 客户端随机数
-     * @param serverRandom 服务端随机数
-     * @return master_secret
      */
-    private byte[] calcMaster(PhashSpi phashSpi, byte[] preMasterKey, byte[] sessionHash,
-                              byte[] clientRandom, byte[] serverRandom) {
+    private void calcMaster() {
+        byte[] sessionHash = secretCollection.getSessionHash();
+        byte[] preMasterKey = secretCollection.getPreMasterKey();
         byte[] label;
         byte[] seed;
-        if (sessionHash != null && sessionHash.length > 0) {
+
+        if (extExtendedMasterSecret) {
             // 当有ExtendedMasterSecretExtension扩展的时候需要用extended master secret作为label，同时算法也略微有所不同
             // 详情参见rfc7627
             label = "extended master secret".getBytes();
@@ -249,7 +253,7 @@ public abstract class Handshaker {
         byte[] masterSecret = new byte[48];
         phashSpi.init(preMasterKey);
         phashSpi.phash(CollectionUtil.merge(label, seed), masterSecret);
-        return masterSecret;
+        secretCollection.setMasterKey(masterSecret);
     }
 
     /**

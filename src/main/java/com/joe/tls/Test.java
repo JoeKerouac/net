@@ -19,8 +19,8 @@ public class Test {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Security.addProvider(new BouncyCastleProvider());
 
-//        Socket socket = new Socket("39.156.66.14", 443);
-                Socket socket = new Socket("127.0.0.1", 12345);
+        Socket socket = new Socket("39.156.66.14", 443);
+        //                Socket socket = new Socket("127.0.0.1", 12345);
 
         InputStream inputStream = socket.getInputStream();
         OutputStream outputStream = socket.getOutputStream();
@@ -28,6 +28,7 @@ public class Test {
         ClientHandshaker handshaker = new ClientHandshaker(inputStream, outputStream,
             new SecureRandom());
         handshaker.kickstart();
+        System.out.println("握手完成");
     }
 
 }

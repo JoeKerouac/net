@@ -23,15 +23,10 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Output stream for handshake data.  This is used only internally
@@ -49,31 +44,28 @@ public class HandshakeOutStream extends OutputStream {
     private SSLSocketImpl socket;
     private SSLEngineImpl engine;
 
-    OutputRecord r;
+    OutputRecord          r;
 
-    HandshakeOutStream(ProtocolVersion protocolVersion,
-                       ProtocolVersion helloVersion, HandshakeHash handshakeHash,
-                       SSLSocketImpl socket) {
+    HandshakeOutStream(ProtocolVersion protocolVersion, ProtocolVersion helloVersion,
+                       HandshakeHash handshakeHash, SSLSocketImpl socket) {
         this.socket = socket;
         r = new OutputRecord(Record.ct_handshake);
         init(protocolVersion, helloVersion, handshakeHash);
     }
 
-    HandshakeOutStream(ProtocolVersion protocolVersion,
-            ProtocolVersion helloVersion, HandshakeHash handshakeHash,
-            SSLEngineImpl engine) {
+    HandshakeOutStream(ProtocolVersion protocolVersion, ProtocolVersion helloVersion,
+                       HandshakeHash handshakeHash, SSLEngineImpl engine) {
         this.engine = engine;
         r = new EngineOutputRecord(Record.ct_handshake, engine);
         init(protocolVersion, helloVersion, handshakeHash);
     }
 
-    private void init(ProtocolVersion protocolVersion,
-            ProtocolVersion helloVersion, HandshakeHash handshakeHash) {
+    private void init(ProtocolVersion protocolVersion, ProtocolVersion helloVersion,
+                      HandshakeHash handshakeHash) {
         r.setVersion(protocolVersion);
         r.setHelloVersion(helloVersion);
         r.setHandshakeHash(handshakeHash);
     }
-
 
     /*
      * Update the handshake data hashes ... mostly for use after a
@@ -130,13 +122,13 @@ public class HandshakeOutStream extends OutputStream {
                 // No alert was received, just rethrow exception
                 throw e;
             }
-        } else {  // engine != null
+        } else { // engine != null
             /*
              * Even if record might be empty, flush anyway in case
              * there is a finished handshake message that we need
              * to queue.
              */
-            engine.writeRecord((EngineOutputRecord)r);
+            engine.writeRecord((EngineOutputRecord) r);
         }
     }
 
@@ -147,9 +139,9 @@ public class HandshakeOutStream extends OutputStream {
      * that a finish message occurred.
      */
     void setFinishedMsg() {
-        assert(socket == null);
+        assert (socket == null);
 
-        ((EngineOutputRecord)r).setFinishedMsg();
+        ((EngineOutputRecord) r).setFinishedMsg();
     }
 
     /*
@@ -232,9 +224,8 @@ public class HandshakeOutStream extends OutputStream {
     private void checkOverflow(int length, int overflow) {
         if (length >= overflow) {
             // internal_error alert will be triggered
-            throw new RuntimeException(
-                    "Field length overflow, the field length (" +
-                    length + ") should be less than " + overflow);
+            throw new RuntimeException("Field length overflow, the field length (" + length
+                                       + ") should be less than " + overflow);
         }
     }
 }

@@ -631,14 +631,14 @@ final class CipherSuite implements Comparable<CipherSuite> {
      */
     enum PRF {
 
-                     // PRF algorithms
-                     P_NONE("NONE", 0, 0),
+              // PRF algorithms
+              P_NONE("NONE", 0, 0),
 
-                     P_SHA256("SHA-256", 32, 64),
+              P_SHA256("SHA-256", 32, 64),
 
-                     P_SHA384("SHA-384", 48, 128),
+              P_SHA384("SHA-384", 48, 128),
 
-                     P_SHA512("SHA-512", 64, 128); // not currently used.
+              P_SHA512("SHA-512", 64, 128); // not currently used.
 
         // PRF characteristics
         private final String prfHashAlg;

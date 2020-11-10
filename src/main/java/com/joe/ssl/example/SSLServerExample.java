@@ -5,12 +5,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyManagementException;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import com.joe.ssl.OutputRecord;
 import com.joe.ssl.openjdk.ssl.SSLContextImpl;
 import com.joe.ssl.openjdk.ssl.SSLServerSocketFactoryImpl;
 import com.joe.ssl.openjdk.ssl.SSLSocketFactoryImpl;
@@ -23,18 +20,17 @@ import com.joe.ssl.openjdk.ssl.SSLSocketFactoryImpl;
 public class SSLServerExample {
 
     public static void main(String[] args) throws Exception {
-//        client();
+        //        client();
         server();
     }
 
     public static void client() throws Exception {
-        SSLContextImpl sslContext = new SSLContextImpl.DefaultSSLContext(){
+        SSLContextImpl sslContext = new SSLContextImpl.DefaultSSLContext() {
             @Override
             public X509TrustManager chooseTrustManager(TrustManager[] tm) throws KeyManagementException {
                 return super.chooseTrustManager(tm);
             }
         };
-
 
         SSLSocketFactoryImpl socketFactory = new SSLSocketFactoryImpl();
         Socket socket = socketFactory.createSocket("39.156.66.14", 443);

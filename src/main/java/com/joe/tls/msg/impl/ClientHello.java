@@ -1,7 +1,5 @@
 package com.joe.tls.msg.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -9,10 +7,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.TlsVersion;
-import com.joe.ssl.message.WrapedOutputStream;
 import com.joe.tls.SignatureAndHashAlgorithm;
+import com.joe.tls.TlsVersion;
+import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.enums.NamedCurve;
 import com.joe.tls.msg.HandshakeProtocol;
@@ -135,50 +132,48 @@ public class ClientHello implements HandshakeProtocol {
             return data;
         }
 
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(len() + 4);
-            WrapedOutputStream stream = new WrapedOutputStream(out);
+        data = new byte[1 + 3 + len()];
+        ByteBuffer heapBuffer = ByteBuffer.wrap(data);
 
-            stream.writeInt8(type().getCode());
-            stream.writeInt24(len());
-            tlsVersion.write(stream);
-            stream.write(clientRandom);
-            stream.putBytes8(sessionId);
-            {
-                // 写出加密套件
-                // 加密套件的总长度，一个加密套件是2 byte，所以需要*2
-                stream.writeInt16(2 * cipherSuites.size());
-                // 实际加密套件写出
-                for (CipherSuite cipherSuite : cipherSuites) {
-                    stream.writeInt16(cipherSuite.getSuite());
-                }
+        ByteBufferUtil.writeInt8(type().getCode(), heapBuffer);
+        ByteBufferUtil.writeInt24(len(), heapBuffer);
+        ByteBufferUtil.writeInt8(tlsVersion.getMajorVersion(), heapBuffer);
+        ByteBufferUtil.writeInt8(tlsVersion.getMinorVersion(), heapBuffer);
+        heapBuffer.put(clientRandom);
+        ByteBufferUtil.putBytes8(sessionId, heapBuffer);
+
+        {
+            // 写出加密套件
+            // 加密套件的总长度，一个加密套件是2 byte，所以需要*2
+            ByteBufferUtil.writeInt16(2 * cipherSuites.size(), heapBuffer);
+            // 实际加密套件写出
+            for (CipherSuite cipherSuite : cipherSuites) {
+                ByteBufferUtil.writeInt16(cipherSuite.getSuite(), heapBuffer);
 
             }
 
-            {
-                // 写出compression_methods，固定写出null，表示不使用
-                stream.writeInt8(1);
-                stream.writeInt8(0);
-            }
-
-            // 写出extensions
-            {
-                // 计算扩展总长度，单位byte
-                int size = extensions.stream().mapToInt(HelloExtension::size).sum();
-                // 写出扩展长度
-                stream.writeInt16(size);
-                // 写出各个扩展
-                for (HelloExtension helloExtension : extensions) {
-                    helloExtension.write(stream);
-                }
-            }
-
-            // 最后记录数据
-            data = out.toByteArray();
-            return data;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+
+        {
+            // 写出compression_methods，固定写出null，表示不使用
+            ByteBufferUtil.writeInt8(1, heapBuffer);
+            ByteBufferUtil.writeInt8(0, heapBuffer);
+        }
+
+        // 写出extensions
+        {
+            // 计算扩展总长度，单位byte
+            int size = extensions.stream().mapToInt(HelloExtension::size).sum();
+            // 写出扩展长度
+            ByteBufferUtil.writeInt16(size, heapBuffer);
+            // 写出各个扩展
+            for (HelloExtension helloExtension : extensions) {
+                helloExtension.write(heapBuffer);
+            }
+        }
+
+        // 最后记录数据
+        return data;
     }
 
     /**

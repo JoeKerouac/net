@@ -29,15 +29,7 @@ import java.security.AlgorithmConstraints;
 import java.security.CryptoPrimitive;
 import java.security.PrivateKey;
 import java.security.Security;
-
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.EnumSet;
-import java.util.TreeMap;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.ArrayList;
+import java.util.*;
 
 import sun.security.util.KeyUtil;
 
@@ -65,34 +57,34 @@ import sun.security.util.KeyUtil;
 final class SignatureAndHashAlgorithm {
 
     // minimum priority for default enabled algorithms
-    final static int SUPPORTED_ALG_PRIORITY_MAX_NUM = 0x00F0;
+    final static int                                             SUPPORTED_ALG_PRIORITY_MAX_NUM = 0x00F0;
 
     // performance optimization
-    private final static Set<CryptoPrimitive> SIGNATURE_PRIMITIVE_SET =
-        Collections.unmodifiableSet(EnumSet.of(CryptoPrimitive.SIGNATURE));
+    private final static Set<CryptoPrimitive>                    SIGNATURE_PRIMITIVE_SET        = Collections
+        .unmodifiableSet(EnumSet.of(CryptoPrimitive.SIGNATURE));
 
     // supported pairs of signature and hash algorithm
     private final static Map<Integer, SignatureAndHashAlgorithm> supportedMap;
     private final static Map<Integer, SignatureAndHashAlgorithm> priorityMap;
 
     // the hash algorithm
-    private HashAlgorithm hash;
+    private HashAlgorithm                                        hash;
 
     // id in 16 bit MSB format, i.e. 0x0603 for SHA512withECDSA
-    private int id;
+    private int                                                  id;
 
     // the standard algorithm name, for example "SHA512withECDSA"
-    private String algorithm;
+    private String                                               algorithm;
 
     // Priority for the preference order. The lower the better.
     //
     // If the algorithm is unsupported, its priority should be bigger
     // than SUPPORTED_ALG_PRIORITY_MAX_NUM.
-    private int priority;
+    private int                                                  priority;
 
     // constructor for supported algorithm
-    private SignatureAndHashAlgorithm(HashAlgorithm hash,
-            SignatureAlgorithm signature, String algorithm, int priority) {
+    private SignatureAndHashAlgorithm(HashAlgorithm hash, SignatureAlgorithm signature,
+                                      String algorithm, int priority) {
         this.hash = hash;
         this.algorithm = algorithm;
         this.id = ((hash.value & 0xFF) << 8) | (signature.value & 0xFF);
@@ -112,8 +104,7 @@ final class SignatureAndHashAlgorithm {
     // Note that we do not use the sequence argument for supported algorithms,
     // so please don't sort by comparing the objects read from handshake
     // messages.
-    static SignatureAndHashAlgorithm valueOf(int hash,
-            int signature, int sequence) {
+    static SignatureAndHashAlgorithm valueOf(int hash, int signature, int sequence) {
         hash &= 0xFF;
         signature &= 0xFF;
 
@@ -122,8 +113,8 @@ final class SignatureAndHashAlgorithm {
         if (signAlg == null) {
             // unsupported algorithm
             signAlg = new SignatureAndHashAlgorithm(
-                "Unknown (hash:0x" + Integer.toString(hash, 16) +
-                ", signature:0x" + Integer.toString(signature, 16) + ")",
+                "Unknown (hash:0x" + Integer.toString(hash, 16) + ", signature:0x"
+                                                    + Integer.toString(signature, 16) + ")",
                 id, sequence);
         }
 
@@ -149,14 +140,12 @@ final class SignatureAndHashAlgorithm {
 
     // Get local supported algorithm collection complying to
     // algorithm constraints
-    static Collection<SignatureAndHashAlgorithm>
-            getSupportedAlgorithms(AlgorithmConstraints constraints) {
+    static Collection<SignatureAndHashAlgorithm> getSupportedAlgorithms(AlgorithmConstraints constraints) {
 
         Collection<SignatureAndHashAlgorithm> supported = new ArrayList<>();
         for (SignatureAndHashAlgorithm sigAlg : priorityMap.values()) {
-            if (sigAlg.priority <= SUPPORTED_ALG_PRIORITY_MAX_NUM &&
-                    constraints.permits(SIGNATURE_PRIMITIVE_SET,
-                            sigAlg.algorithm, null)) {
+            if (sigAlg.priority <= SUPPORTED_ALG_PRIORITY_MAX_NUM
+                && constraints.permits(SIGNATURE_PRIMITIVE_SET, sigAlg.algorithm, null)) {
                 supported.add(sigAlg);
             }
         }
@@ -165,14 +154,12 @@ final class SignatureAndHashAlgorithm {
     }
 
     // Get supported algorithm collection from an untrusted collection
-    static Collection<SignatureAndHashAlgorithm> getSupportedAlgorithms(
-            AlgorithmConstraints constraints,
-            Collection<SignatureAndHashAlgorithm> algorithms ) {
+    static Collection<SignatureAndHashAlgorithm> getSupportedAlgorithms(AlgorithmConstraints constraints,
+                                                                        Collection<SignatureAndHashAlgorithm> algorithms) {
         Collection<SignatureAndHashAlgorithm> supported = new ArrayList<>();
         for (SignatureAndHashAlgorithm sigAlg : algorithms) {
-            if (sigAlg.priority <= SUPPORTED_ALG_PRIORITY_MAX_NUM &&
-                    constraints.permits(SIGNATURE_PRIMITIVE_SET,
-                                sigAlg.algorithm, null)) {
+            if (sigAlg.priority <= SUPPORTED_ALG_PRIORITY_MAX_NUM
+                && constraints.permits(SIGNATURE_PRIMITIVE_SET, sigAlg.algorithm, null)) {
                 supported.add(sigAlg);
             }
         }
@@ -180,8 +167,7 @@ final class SignatureAndHashAlgorithm {
         return supported;
     }
 
-    static String[] getAlgorithmNames(
-            Collection<SignatureAndHashAlgorithm> algorithms) {
+    static String[] getAlgorithmNames(Collection<SignatureAndHashAlgorithm> algorithms) {
         ArrayList<String> algorithmNames = new ArrayList<>();
         if (algorithms != null) {
             for (SignatureAndHashAlgorithm sigAlg : algorithms) {
@@ -193,8 +179,7 @@ final class SignatureAndHashAlgorithm {
         return algorithmNames.toArray(array);
     }
 
-    static Set<String> getHashAlgorithmNames(
-            Collection<SignatureAndHashAlgorithm> algorithms) {
+    static Set<String> getHashAlgorithmNames(Collection<SignatureAndHashAlgorithm> algorithms) {
         Set<String> algorithmNames = new HashSet<>();
         if (algorithms != null) {
             for (SignatureAndHashAlgorithm sigAlg : algorithms) {
@@ -211,49 +196,44 @@ final class SignatureAndHashAlgorithm {
         return algorithm.hash.standardName;
     }
 
-    private static void supports(HashAlgorithm hash,
-            SignatureAlgorithm signature, String algorithm, int priority) {
+    private static void supports(HashAlgorithm hash, SignatureAlgorithm signature, String algorithm,
+                                 int priority) {
 
-        SignatureAndHashAlgorithm pair =
-            new SignatureAndHashAlgorithm(hash, signature, algorithm, priority);
+        SignatureAndHashAlgorithm pair = new SignatureAndHashAlgorithm(hash, signature, algorithm,
+            priority);
         if (supportedMap.put(pair.id, pair) != null) {
             throw new RuntimeException(
-                "Duplicate SignatureAndHashAlgorithm definition, id: " +
-                pair.id);
+                "Duplicate SignatureAndHashAlgorithm definition, id: " + pair.id);
         }
         if (priorityMap.put(pair.priority, pair) != null) {
             throw new RuntimeException(
-                "Duplicate SignatureAndHashAlgorithm definition, priority: " +
-                pair.priority);
+                "Duplicate SignatureAndHashAlgorithm definition, priority: " + pair.priority);
         }
     }
 
-    static SignatureAndHashAlgorithm getPreferableAlgorithm(
-        Collection<SignatureAndHashAlgorithm> algorithms, String expected) {
+    static SignatureAndHashAlgorithm getPreferableAlgorithm(Collection<SignatureAndHashAlgorithm> algorithms,
+                                                            String expected) {
 
-        return SignatureAndHashAlgorithm.getPreferableAlgorithm(
-                algorithms, expected, null);
+        return SignatureAndHashAlgorithm.getPreferableAlgorithm(algorithms, expected, null);
     }
 
-    static SignatureAndHashAlgorithm getPreferableAlgorithm(
-            Collection<SignatureAndHashAlgorithm> algorithms,
-            String expected, PrivateKey signingKey) {
+    static SignatureAndHashAlgorithm getPreferableAlgorithm(Collection<SignatureAndHashAlgorithm> algorithms,
+                                                            String expected,
+                                                            PrivateKey signingKey) {
 
         int maxDigestLength = getMaxDigestLength(signingKey);
         for (SignatureAndHashAlgorithm algorithm : algorithms) {
             int signValue = algorithm.id & 0xFF;
-            if ((expected == null) ||
-                    (expected.equalsIgnoreCase("rsa") &&
-                            signValue == SignatureAlgorithm.RSA.value) ||
-                    (expected.equalsIgnoreCase("dsa") &&
-                            signValue == SignatureAlgorithm.DSA.value) ||
-                    (expected.equalsIgnoreCase("ecdsa") &&
-                            signValue == SignatureAlgorithm.ECDSA.value) ||
-                    (expected.equalsIgnoreCase("ec") &&
-                            signValue == SignatureAlgorithm.ECDSA.value)) {
+            if ((expected == null)
+                || (expected.equalsIgnoreCase("rsa") && signValue == SignatureAlgorithm.RSA.value)
+                || (expected.equalsIgnoreCase("dsa") && signValue == SignatureAlgorithm.DSA.value)
+                || (expected.equalsIgnoreCase("ecdsa")
+                    && signValue == SignatureAlgorithm.ECDSA.value)
+                || (expected.equalsIgnoreCase("ec")
+                    && signValue == SignatureAlgorithm.ECDSA.value)) {
 
-                if (algorithm.priority <= SUPPORTED_ALG_PRIORITY_MAX_NUM &&
-                        algorithm.hash.length <= maxDigestLength) {
+                if (algorithm.priority <= SUPPORTED_ALG_PRIORITY_MAX_NUM
+                    && algorithm.hash.length <= maxDigestLength) {
 
                     return algorithm;
                 }
@@ -270,8 +250,7 @@ final class SignatureAndHashAlgorithm {
         int maxDigestLength = Integer.MAX_VALUE;
 
         // only need to check RSA algorithm at present.
-        if (signingKey != null &&
-                "rsa".equalsIgnoreCase(signingKey.getAlgorithm())) {
+        if (signingKey != null && "rsa".equalsIgnoreCase(signingKey.getAlgorithm())) {
             /*
              * RSA keys of 512 bits have been shown to be practically
              * breakable, it does not make much sense to use the strong
@@ -295,32 +274,39 @@ final class SignatureAndHashAlgorithm {
                 maxDigestLength = HashAlgorithm.SHA256.length;
             } else if ((keySize > 0) && (keySize < 512)) {
                 maxDigestLength = HashAlgorithm.SHA1.length;
-            }   // Otherwise, cannot determine the key size, prefer the most
-                // preferable hash algorithm.
+            } // Otherwise, cannot determine the key size, prefer the most
+              // preferable hash algorithm.
         }
 
         return maxDigestLength;
     }
 
     static enum HashAlgorithm {
-        UNDEFINED("undefined",        "", -1, -1),
-        NONE(          "none",    "NONE",  0, -1),
-        MD5(            "md5",     "MD5",  1, 16),
-        SHA1(          "sha1",   "SHA-1",  2, 20),
-        SHA224(      "sha224", "SHA-224",  3, 28),
-        SHA256(      "sha256", "SHA-256",  4, 32),
-        SHA384(      "sha384", "SHA-384",  5, 48),
-        SHA512(      "sha512", "SHA-512",  6, 64);
+                               UNDEFINED("undefined", "", -1,
+                                         -1), NONE("none", "NONE", 0,
+                                                   -1), MD5("md5", "MD5", 1,
+                                                            16), SHA1("sha1", "SHA-1", 2,
+                                                                      20), SHA224("sha224",
+                                                                                  "SHA-224", 3,
+                                                                                  28), SHA256("sha256",
+                                                                                              "SHA-256",
+                                                                                              4,
+                                                                                              32), SHA384("sha384",
+                                                                                                          "SHA-384",
+                                                                                                          5,
+                                                                                                          48), SHA512("sha512",
+                                                                                                                      "SHA-512",
+                                                                                                                      6,
+                                                                                                                      64);
 
-        final String name;  // not the standard signature algorithm name
-                            // except the UNDEFINED, other names are defined
-                            // by TLS 1.2 protocol
+        final String name;         // not the standard signature algorithm name
+        // except the UNDEFINED, other names are defined
+        // by TLS 1.2 protocol
         final String standardName; // the standard MessageDigest algorithm name
-        final int value;
-        final int length;   // digest length in bytes, -1 means not applicable
+        final int    value;
+        final int    length;       // digest length in bytes, -1 means not applicable
 
-        private HashAlgorithm(String name, String standardName,
-                int value, int length) {
+        private HashAlgorithm(String name, String standardName, int value, int length) {
             this.name = name;
             this.standardName = standardName;
             this.value = value;
@@ -358,16 +344,16 @@ final class SignatureAndHashAlgorithm {
     }
 
     static enum SignatureAlgorithm {
-        UNDEFINED("undefined", -1),
-        ANONYMOUS("anonymous",  0),
-        RSA(            "rsa",  1),
-        DSA(            "dsa",  2),
-        ECDSA(        "ecdsa",  3);
+                                    UNDEFINED("undefined",
+                                              -1), ANONYMOUS("anonymous",
+                                                             0), RSA("rsa",
+                                                                     1), DSA("dsa",
+                                                                             2), ECDSA("ecdsa", 3);
 
-        final String name;  // not the standard signature algorithm name
-                            // except the UNDEFINED, other names are defined
-                            // by TLS 1.2 protocol
-        final int value;
+        final String name; // not the standard signature algorithm name
+                           // except the UNDEFINED, other names are defined
+                           // by TLS 1.2 protocol
+        final int    value;
 
         private SignatureAlgorithm(String name, int value) {
             this.name = name;
@@ -396,46 +382,31 @@ final class SignatureAndHashAlgorithm {
     }
 
     static {
-        supportedMap = Collections.synchronizedSortedMap(
-            new TreeMap<Integer, SignatureAndHashAlgorithm>());
-        priorityMap = Collections.synchronizedSortedMap(
-            new TreeMap<Integer, SignatureAndHashAlgorithm>());
+        supportedMap = Collections
+            .synchronizedSortedMap(new TreeMap<Integer, SignatureAndHashAlgorithm>());
+        priorityMap = Collections
+            .synchronizedSortedMap(new TreeMap<Integer, SignatureAndHashAlgorithm>());
 
         synchronized (supportedMap) {
             int p = SUPPORTED_ALG_PRIORITY_MAX_NUM;
-            supports(HashAlgorithm.MD5,         SignatureAlgorithm.RSA,
-                    "MD5withRSA",           --p);
-            supports(HashAlgorithm.SHA1,        SignatureAlgorithm.DSA,
-                    "SHA1withDSA",          --p);
-            supports(HashAlgorithm.SHA1,        SignatureAlgorithm.RSA,
-                    "SHA1withRSA",          --p);
-            supports(HashAlgorithm.SHA1,        SignatureAlgorithm.ECDSA,
-                    "SHA1withECDSA",        --p);
+            supports(HashAlgorithm.MD5, SignatureAlgorithm.RSA, "MD5withRSA", --p);
+            supports(HashAlgorithm.SHA1, SignatureAlgorithm.DSA, "SHA1withDSA", --p);
+            supports(HashAlgorithm.SHA1, SignatureAlgorithm.RSA, "SHA1withRSA", --p);
+            supports(HashAlgorithm.SHA1, SignatureAlgorithm.ECDSA, "SHA1withECDSA", --p);
 
             if (Security.getProvider("SunMSCAPI") == null) {
-                supports(HashAlgorithm.SHA224,      SignatureAlgorithm.DSA,
-                        "SHA224withDSA",        --p);
-                supports(HashAlgorithm.SHA224,      SignatureAlgorithm.RSA,
-                        "SHA224withRSA",        --p);
-                supports(HashAlgorithm.SHA224,      SignatureAlgorithm.ECDSA,
-                        "SHA224withECDSA",      --p);
+                supports(HashAlgorithm.SHA224, SignatureAlgorithm.DSA, "SHA224withDSA", --p);
+                supports(HashAlgorithm.SHA224, SignatureAlgorithm.RSA, "SHA224withRSA", --p);
+                supports(HashAlgorithm.SHA224, SignatureAlgorithm.ECDSA, "SHA224withECDSA", --p);
             }
 
-            supports(HashAlgorithm.SHA256,      SignatureAlgorithm.DSA,
-                    "SHA256withDSA",        --p);
-            supports(HashAlgorithm.SHA256,      SignatureAlgorithm.RSA,
-                    "SHA256withRSA",        --p);
-            supports(HashAlgorithm.SHA256,      SignatureAlgorithm.ECDSA,
-                    "SHA256withECDSA",      --p);
-            supports(HashAlgorithm.SHA384,      SignatureAlgorithm.RSA,
-                    "SHA384withRSA",        --p);
-            supports(HashAlgorithm.SHA384,      SignatureAlgorithm.ECDSA,
-                    "SHA384withECDSA",      --p);
-            supports(HashAlgorithm.SHA512,      SignatureAlgorithm.RSA,
-                    "SHA512withRSA",        --p);
-            supports(HashAlgorithm.SHA512,      SignatureAlgorithm.ECDSA,
-                    "SHA512withECDSA",      --p);
+            supports(HashAlgorithm.SHA256, SignatureAlgorithm.DSA, "SHA256withDSA", --p);
+            supports(HashAlgorithm.SHA256, SignatureAlgorithm.RSA, "SHA256withRSA", --p);
+            supports(HashAlgorithm.SHA256, SignatureAlgorithm.ECDSA, "SHA256withECDSA", --p);
+            supports(HashAlgorithm.SHA384, SignatureAlgorithm.RSA, "SHA384withRSA", --p);
+            supports(HashAlgorithm.SHA384, SignatureAlgorithm.ECDSA, "SHA384withECDSA", --p);
+            supports(HashAlgorithm.SHA512, SignatureAlgorithm.RSA, "SHA512withRSA", --p);
+            supports(HashAlgorithm.SHA512, SignatureAlgorithm.ECDSA, "SHA512withECDSA", --p);
         }
     }
 }
-

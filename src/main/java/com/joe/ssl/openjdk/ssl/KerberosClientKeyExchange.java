@@ -25,47 +25,35 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
 import java.io.IOException;
 import java.io.PrintStream;
-import java.security.AccessController;
-import java.security.AccessControlContext;
-import java.security.Principal;
-import java.security.PrivilegedAction;
-import java.security.SecureRandom;
-import javax.crypto.SecretKey;
+import java.security.*;
 
 /**
  * A helper class that calls the KerberosClientKeyExchange implementation.
  */
 public class KerberosClientKeyExchange extends HandshakeMessage {
 
-    private static final String IMPL_CLASS =
-        "krb5.KerberosClientKeyExchangeImpl";
+    private static final String             IMPL_CLASS = "krb5.KerberosClientKeyExchangeImpl";
 
-    private static final Class<?> implClass = AccessController.doPrivileged(
-            new PrivilegedAction<Class<?>>() {
-                @Override
-                public Class<?> run() {
-                    try {
-                        return Class.forName(IMPL_CLASS, true, null);
-                    } catch (ClassNotFoundException cnf) {
-                        return null;
-                    }
-                }
-            }
-        );
-    private final KerberosClientKeyExchange impl = createImpl();
+    private static final Class<?>           implClass  = AccessController
+        .doPrivileged(new PrivilegedAction<Class<?>>() {
+                                                               @Override
+                                                               public Class<?> run() {
+                                                                   try {
+                                                                       return Class.forName(
+                                                                           IMPL_CLASS, true, null);
+                                                                   } catch (ClassNotFoundException cnf) {
+                                                                       return null;
+                                                                   }
+                                                               }
+                                                           });
+    private final KerberosClientKeyExchange impl       = createImpl();
 
     private KerberosClientKeyExchange createImpl() {
-        if (implClass != null &&
-                getClass() == KerberosClientKeyExchange.class) {
+        if (implClass != null && getClass() == KerberosClientKeyExchange.class) {
             try {
-                return (KerberosClientKeyExchange)implClass.newInstance();
+                return (KerberosClientKeyExchange) implClass.newInstance();
             } catch (InstantiationException e) {
                 throw new AssertionError(e);
             } catch (IllegalAccessException e) {
@@ -82,9 +70,9 @@ public class KerberosClientKeyExchange extends HandshakeMessage {
         // please won't check the value of impl variable
     }
 
-    public KerberosClientKeyExchange(String serverName,
-        AccessControlContext acc, ProtocolVersion protocolVersion,
-        SecureRandom rand) throws IOException {
+    public KerberosClientKeyExchange(String serverName, AccessControlContext acc,
+                                     ProtocolVersion protocolVersion,
+                                     SecureRandom rand) throws IOException {
 
         if (impl != null) {
             init(serverName, acc, protocolVersion, rand);
@@ -93,9 +81,9 @@ public class KerberosClientKeyExchange extends HandshakeMessage {
         }
     }
 
-    public KerberosClientKeyExchange(ProtocolVersion protocolVersion,
-                                     ProtocolVersion clientVersion, SecureRandom rand,
-                                     HandshakeInStream input, AccessControlContext acc,
+    public KerberosClientKeyExchange(ProtocolVersion protocolVersion, ProtocolVersion clientVersion,
+                                     SecureRandom rand, HandshakeInStream input,
+                                     AccessControlContext acc,
                                      Object serverKeys) throws IOException {
 
         if (impl != null) {
@@ -125,23 +113,20 @@ public class KerberosClientKeyExchange extends HandshakeMessage {
         impl.print(p);
     }
 
-    public void init(String serverName,
-        AccessControlContext acc, ProtocolVersion protocolVersion,
-        SecureRandom rand) throws IOException {
+    public void init(String serverName, AccessControlContext acc, ProtocolVersion protocolVersion,
+                     SecureRandom rand) throws IOException {
 
         if (impl != null) {
             impl.init(serverName, acc, protocolVersion, rand);
         }
     }
 
-    public void init(ProtocolVersion protocolVersion,
-                     ProtocolVersion clientVersion, SecureRandom rand,
-                     HandshakeInStream input, AccessControlContext acc,
+    public void init(ProtocolVersion protocolVersion, ProtocolVersion clientVersion,
+                     SecureRandom rand, HandshakeInStream input, AccessControlContext acc,
                      Object ServiceCreds) throws IOException {
 
         if (impl != null) {
-            impl.init(protocolVersion, clientVersion,
-                                    rand, input, acc, ServiceCreds);
+            impl.init(protocolVersion, clientVersion, rand, input, acc, ServiceCreds);
         }
     }
 
@@ -149,11 +134,11 @@ public class KerberosClientKeyExchange extends HandshakeMessage {
         return impl.getUnencryptedPreMasterSecret();
     }
 
-    public Principal getPeerPrincipal(){
+    public Principal getPeerPrincipal() {
         return impl.getPeerPrincipal();
     }
 
-    public Principal getLocalPrincipal(){
+    public Principal getLocalPrincipal() {
         return impl.getLocalPrincipal();
     }
 }

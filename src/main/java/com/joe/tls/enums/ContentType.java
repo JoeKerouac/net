@@ -1,6 +1,6 @@
 package com.joe.tls.enums;
 
-import com.joe.ssl.message.EnumInterface;
+import com.joe.tls.EnumInterface;
 
 /**
  * @author JoeKerouac

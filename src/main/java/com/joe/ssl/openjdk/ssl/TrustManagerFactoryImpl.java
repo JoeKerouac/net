@@ -25,21 +25,24 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-import java.util.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.security.*;
-import java.security.cert.*;
+import java.security.cert.CertPathParameters;
+import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+
 import javax.net.ssl.*;
-
-
 
 import sun.security.validator.Validator;
 
 abstract class TrustManagerFactoryImpl extends TrustManagerFactorySpi {
 
-    private static final Debug debug = Debug.getInstance("ssl");
-    private X509TrustManager trustManager = null;
-    private boolean isInitialized = false;
+    private static final Debug debug         = Debug.getInstance("ssl");
+    private X509TrustManager   trustManager  = null;
+    private boolean            isInitialized = false;
 
     TrustManagerFactoryImpl() {
         // empty
@@ -53,45 +56,37 @@ abstract class TrustManagerFactoryImpl extends TrustManagerFactorySpi {
             } catch (SecurityException se) {
                 // eat security exceptions but report other throwables
                 if (debug != null && Debug.isOn("trustmanager")) {
-                    System.out.println(
-                        "SunX509: skip default keystore: " + se);
+                    System.out.println("SunX509: skip default keystore: " + se);
                 }
             } catch (Error err) {
                 if (debug != null && Debug.isOn("trustmanager")) {
-                    System.out.println(
-                        "SunX509: skip default keystore: " + err);
+                    System.out.println("SunX509: skip default keystore: " + err);
                 }
                 throw err;
             } catch (RuntimeException re) {
                 if (debug != null && Debug.isOn("trustmanager")) {
-                    System.out.println(
-                        "SunX509: skip default keystore: " + re);
+                    System.out.println("SunX509: skip default keystore: " + re);
                 }
                 throw re;
             } catch (Exception e) {
                 if (debug != null && Debug.isOn("trustmanager")) {
-                    System.out.println(
-                        "SunX509: skip default keystore: " + e);
+                    System.out.println("SunX509: skip default keystore: " + e);
                 }
-                throw new KeyStoreException(
-                    "problem accessing trust store", e);
+                throw new KeyStoreException("problem accessing trust store", e);
             }
         } else {
-//            trustManager = getInstance(TrustStoreUtil.getTrustedCerts(ks));
+            //            trustManager = getInstance(TrustStoreUtil.getTrustedCerts(ks));
         }
 
         isInitialized = true;
     }
 
-    abstract X509TrustManager getInstance(
-            Collection<X509Certificate> trustedCerts);
+    abstract X509TrustManager getInstance(Collection<X509Certificate> trustedCerts);
 
-    abstract X509TrustManager getInstance(ManagerFactoryParameters spec)
-            throws InvalidAlgorithmParameterException;
+    abstract X509TrustManager getInstance(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException;
 
     @Override
-    protected void engineInit(ManagerFactoryParameters spec) throws
-            InvalidAlgorithmParameterException {
+    protected void engineInit(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException {
         trustManager = getInstance(spec);
         isInitialized = true;
     }
@@ -102,8 +97,7 @@ abstract class TrustManagerFactoryImpl extends TrustManagerFactorySpi {
     @Override
     protected TrustManager[] engineGetTrustManagers() {
         if (!isInitialized) {
-            throw new IllegalStateException(
-                        "TrustManagerFactoryImpl is not initialized");
+            throw new IllegalStateException("TrustManagerFactoryImpl is not initialized");
         }
         return new TrustManager[] { trustManager };
     }
@@ -111,64 +105,55 @@ abstract class TrustManagerFactoryImpl extends TrustManagerFactorySpi {
     /*
      * Try to get an InputStream based on the file we pass in.
      */
-    private static FileInputStream getFileInputStream(final File file)
-            throws Exception {
-        return AccessController.doPrivileged(
-                new PrivilegedExceptionAction<FileInputStream>() {
-                    @Override
-                    public FileInputStream run() throws Exception {
-                        try {
-                            if (file.exists()) {
-                                return new FileInputStream(file);
-                            } else {
-                                return null;
-                            }
-                        } catch (FileNotFoundException e) {
-                            // couldn't find it, oh well.
-                            return null;
-                        }
+    private static FileInputStream getFileInputStream(final File file) throws Exception {
+        return AccessController.doPrivileged(new PrivilegedExceptionAction<FileInputStream>() {
+            @Override
+            public FileInputStream run() throws Exception {
+                try {
+                    if (file.exists()) {
+                        return new FileInputStream(file);
+                    } else {
+                        return null;
                     }
-                });
+                } catch (FileNotFoundException e) {
+                    // couldn't find it, oh well.
+                    return null;
+                }
+            }
+        });
     }
 
     public static final class SimpleFactory extends TrustManagerFactoryImpl {
         @Override
-        X509TrustManager getInstance(
-                Collection<X509Certificate> trustedCerts) {
-            return new X509TrustManagerImpl(
-                    Validator.TYPE_SIMPLE, trustedCerts);
+        X509TrustManager getInstance(Collection<X509Certificate> trustedCerts) {
+            return new X509TrustManagerImpl(Validator.TYPE_SIMPLE, trustedCerts);
         }
 
         @Override
-        X509TrustManager getInstance(ManagerFactoryParameters spec)
-                throws InvalidAlgorithmParameterException {
-            throw new InvalidAlgorithmParameterException
-                ("SunX509 TrustManagerFactory does not use "
-                + "ManagerFactoryParameters");
+        X509TrustManager getInstance(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException {
+            throw new InvalidAlgorithmParameterException(
+                "SunX509 TrustManagerFactory does not use " + "ManagerFactoryParameters");
         }
     }
 
     public static final class PKIXFactory extends TrustManagerFactoryImpl {
         @Override
-        X509TrustManager getInstance(
-                Collection<X509Certificate> trustedCerts) {
+        X509TrustManager getInstance(Collection<X509Certificate> trustedCerts) {
             return new X509TrustManagerImpl(Validator.TYPE_PKIX, trustedCerts);
         }
 
         @Override
-        X509TrustManager getInstance(ManagerFactoryParameters spec)
-                throws InvalidAlgorithmParameterException {
+        X509TrustManager getInstance(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException {
             if (spec instanceof CertPathTrustManagerParameters == false) {
-                throw new InvalidAlgorithmParameterException
-                    ("Parameters must be CertPathTrustManagerParameters");
+                throw new InvalidAlgorithmParameterException(
+                    "Parameters must be CertPathTrustManagerParameters");
             }
-            CertPathParameters params =
-                ((CertPathTrustManagerParameters)spec).getParameters();
+            CertPathParameters params = ((CertPathTrustManagerParameters) spec).getParameters();
             if (params instanceof PKIXBuilderParameters == false) {
-                throw new InvalidAlgorithmParameterException
-                    ("Encapsulated parameters must be PKIXBuilderParameters");
+                throw new InvalidAlgorithmParameterException(
+                    "Encapsulated parameters must be PKIXBuilderParameters");
             }
-            PKIXBuilderParameters pkixParams = (PKIXBuilderParameters)params;
+            PKIXBuilderParameters pkixParams = (PKIXBuilderParameters) params;
             return new X509TrustManagerImpl(Validator.TYPE_PKIX, pkixParams);
         }
     }

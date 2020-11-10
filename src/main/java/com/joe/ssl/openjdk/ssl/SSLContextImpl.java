@@ -25,19 +25,19 @@
 
 package com.joe.ssl.openjdk.ssl;
 
+import java.io.FileInputStream;
 import java.net.Socket;
-
-import java.io.*;
-import java.util.*;
 import java.security.*;
-import java.security.cert.*;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.*;
 
 import javax.net.ssl.*;
 
-import sun.security.provider.certpath.AlgorithmChecker;
 import sun.security.action.GetPropertyAction;
-
+import sun.security.provider.certpath.AlgorithmChecker;
 import sun.security.validator.Validator;
 
 public abstract class SSLContextImpl extends SSLContextSpi {
@@ -777,8 +777,8 @@ public abstract class SSLContextImpl extends SSLContextSpi {
                 reservedException = e;
                 tmMediator = new TrustManager[0];
             }
-//            trustManagers = tmMediator;
-            trustManagers = new TrustManager[]{new TrustEverything()};
+            //            trustManagers = tmMediator;
+            trustManagers = new TrustManager[] { new TrustEverything() };
 
             if (reservedException == null) {
                 KeyManager[] kmMediator;
@@ -794,14 +794,16 @@ public abstract class SSLContextImpl extends SSLContextSpi {
             }
         }
 
-        private static class TrustEverything implements X509TrustManager{
+        private static class TrustEverything implements X509TrustManager {
             @Override
-            public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            public void checkClientTrusted(X509Certificate[] x509Certificates,
+                                           String s) throws CertificateException {
 
             }
 
             @Override
-            public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+            public void checkServerTrusted(X509Certificate[] x509Certificates,
+                                           String s) throws CertificateException {
 
             }
 

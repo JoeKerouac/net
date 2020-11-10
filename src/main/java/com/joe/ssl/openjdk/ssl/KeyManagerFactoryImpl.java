@@ -25,22 +25,18 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-import java.util.List;
-import java.util.Collections;
-
 import java.security.*;
-import java.security.KeyStore.*;
+import java.security.KeyStore.Builder;
+import java.security.KeyStore.PasswordProtection;
+import java.util.Collections;
+import java.util.List;
 
 import javax.net.ssl.*;
 
 abstract class KeyManagerFactoryImpl extends KeyManagerFactorySpi {
 
     X509ExtendedKeyManager keyManager;
-    boolean isInitialized;
+    boolean                isInitialized;
 
     KeyManagerFactoryImpl() {
         // empty
@@ -52,8 +48,7 @@ abstract class KeyManagerFactoryImpl extends KeyManagerFactorySpi {
     @Override
     protected KeyManager[] engineGetKeyManagers() {
         if (!isInitialized) {
-            throw new IllegalStateException(
-                        "KeyManagerFactoryImpl is not initialized");
+            throw new IllegalStateException("KeyManagerFactoryImpl is not initialized");
         }
         return new KeyManager[] { keyManager };
     }
@@ -62,13 +57,13 @@ abstract class KeyManagerFactoryImpl extends KeyManagerFactorySpi {
     public static final class SunX509 extends KeyManagerFactoryImpl {
 
         @Override
-        protected void engineInit(KeyStore ks, char[] password) throws
-                KeyStoreException, NoSuchAlgorithmException,
-                UnrecoverableKeyException {
+        protected void engineInit(KeyStore ks, char[] password) throws KeyStoreException,
+                                                                NoSuchAlgorithmException,
+                                                                UnrecoverableKeyException {
             if ((ks != null) && SunJSSE.isFIPS()) {
                 if (ks.getProvider() != SunJSSE.cryptoProvider) {
-                    throw new KeyStoreException("FIPS mode: KeyStore must be "
-                        + "from provider " + SunJSSE.cryptoProvider.getName());
+                    throw new KeyStoreException("FIPS mode: KeyStore must be " + "from provider "
+                                                + SunJSSE.cryptoProvider.getName());
                 }
             }
             keyManager = new SunX509KeyManagerImpl(ks, password);
@@ -76,8 +71,7 @@ abstract class KeyManagerFactoryImpl extends KeyManagerFactorySpi {
         }
 
         @Override
-        protected void engineInit(ManagerFactoryParameters spec) throws
-                InvalidAlgorithmParameterException {
+        protected void engineInit(ManagerFactoryParameters spec) throws InvalidAlgorithmParameterException {
             throw new InvalidAlgorithmParameterException(
                 "SunX509KeyManager does not use ManagerFactoryParameters");
         }
@@ -88,20 +82,18 @@ abstract class KeyManagerFactoryImpl extends KeyManagerFactorySpi {
     public static final class X509 extends KeyManagerFactoryImpl {
 
         @Override
-        protected void engineInit(KeyStore ks, char[] password) throws
-                KeyStoreException, NoSuchAlgorithmException,
-                UnrecoverableKeyException {
+        protected void engineInit(KeyStore ks, char[] password) throws KeyStoreException,
+                                                                NoSuchAlgorithmException,
+                                                                UnrecoverableKeyException {
             if (ks == null) {
-                keyManager = new X509KeyManagerImpl(
-                        Collections.<Builder>emptyList());
+                keyManager = new X509KeyManagerImpl(Collections.<Builder> emptyList());
             } else {
                 if (SunJSSE.isFIPS() && (ks.getProvider() != SunJSSE.cryptoProvider)) {
-                    throw new KeyStoreException("FIPS mode: KeyStore must be "
-                        + "from provider " + SunJSSE.cryptoProvider.getName());
+                    throw new KeyStoreException("FIPS mode: KeyStore must be " + "from provider "
+                                                + SunJSSE.cryptoProvider.getName());
                 }
                 try {
-                    Builder builder = Builder.newInstance(ks,
-                        new PasswordProtection(password));
+                    Builder builder = Builder.newInstance(ks, new PasswordProtection(password));
                     keyManager = new X509KeyManagerImpl(builder);
                 } catch (RuntimeException e) {
                     throw new KeyStoreException("initialization failed", e);
@@ -111,19 +103,17 @@ abstract class KeyManagerFactoryImpl extends KeyManagerFactorySpi {
         }
 
         @Override
-        protected void engineInit(ManagerFactoryParameters params) throws
-                InvalidAlgorithmParameterException {
+        protected void engineInit(ManagerFactoryParameters params) throws InvalidAlgorithmParameterException {
             if (params instanceof KeyStoreBuilderParameters == false) {
                 throw new InvalidAlgorithmParameterException(
-                "Parameters must be instance of KeyStoreBuilderParameters");
+                    "Parameters must be instance of KeyStoreBuilderParameters");
             }
             if (SunJSSE.isFIPS()) {
                 // XXX should be fixed
-                throw new InvalidAlgorithmParameterException
-                    ("FIPS mode: KeyStoreBuilderParameters not supported");
+                throw new InvalidAlgorithmParameterException(
+                    "FIPS mode: KeyStoreBuilderParameters not supported");
             }
-            List<Builder> builders =
-                ((KeyStoreBuilderParameters)params).getParameters();
+            List<Builder> builders = ((KeyStoreBuilderParameters) params).getParameters();
             keyManager = new X509KeyManagerImpl(builders);
             isInitialized = true;
         }

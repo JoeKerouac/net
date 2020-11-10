@@ -1,9 +1,7 @@
 package com.joe.tls.msg.extensions;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import com.joe.ssl.message.WrapedOutputStream;
 import com.joe.tls.util.ByteBufferUtil;
 
 /**
@@ -33,13 +31,7 @@ import com.joe.tls.util.ByteBufferUtil;
 public class ExtendedMasterSecretExtension implements HelloExtension {
 
     @Override
-    public void write(WrapedOutputStream outputStream) throws IOException {
-        outputStream.writeInt16(getExtensionType().id);
-        outputStream.writeInt16(0);
-    }
-
-    @Override
-    public void write(ByteBuffer buffer) throws IOException {
+    public void write(ByteBuffer buffer) {
         ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
         ByteBufferUtil.writeInt16(0, buffer);
     }

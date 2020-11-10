@@ -25,7 +25,8 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-import java.nio.*;
+import java.nio.ByteBuffer;
+import java.nio.ReadOnlyBufferException;
 
 /*
  * A multi-purpose class which handles all of the SSLEngine arguments.
@@ -39,11 +40,11 @@ class EngineArgs {
     /*
      * Keep track of the input parameters.
      */
-    ByteBuffer netData;
-    ByteBuffer [] appData;
+    ByteBuffer      netData;
+    ByteBuffer[]    appData;
 
-    private int offset;         // offset/len for the appData array.
-    private int len;
+    private int     offset;          // offset/len for the appData array.
+    private int     len;
 
     /*
      * The initial pos/limit conditions.  This is useful because we can
@@ -51,24 +52,23 @@ class EngineArgs {
      * operations, or easily return the buffers to their pre-error
      * conditions.
      */
-    private int netPos;
-    private int netLim;
+    private int     netPos;
+    private int     netLim;
 
-    private int [] appPoss;
-    private int [] appLims;
+    private int[]   appPoss;
+    private int[]   appLims;
 
     /*
      * Sum total of the space remaining in all of the appData buffers
      */
-    private int appRemaining = 0;
+    private int     appRemaining = 0;
 
     private boolean wrapMethod;
 
     /*
      * Called by the SSLEngine.wrap() method.
      */
-    EngineArgs(ByteBuffer [] appData, int offset, int len,
-            ByteBuffer netData) {
+    EngineArgs(ByteBuffer[] appData, int offset, int len, ByteBuffer netData) {
         this.wrapMethod = true;
         init(netData, appData, offset, len);
     }
@@ -76,8 +76,7 @@ class EngineArgs {
     /*
      * Called by the SSLEngine.unwrap() method.
      */
-    EngineArgs(ByteBuffer netData, ByteBuffer [] appData, int offset,
-            int len) {
+    EngineArgs(ByteBuffer netData, ByteBuffer[] appData, int offset, int len) {
         this.wrapMethod = false;
         init(netData, appData, offset, len);
     }
@@ -93,8 +92,7 @@ class EngineArgs {
      * determine how much more we can copy into the outgoing data
      * buffer.
      */
-    private void init(ByteBuffer netData, ByteBuffer [] appData,
-            int offset, int len) {
+    private void init(ByteBuffer netData, ByteBuffer[] appData, int offset, int len) {
 
         if ((netData == null) || (appData == null)) {
             throw new IllegalArgumentException("src/dst is null");
@@ -111,13 +109,12 @@ class EngineArgs {
         netPos = netData.position();
         netLim = netData.limit();
 
-        appPoss = new int [appData.length];
-        appLims = new int [appData.length];
+        appPoss = new int[appData.length];
+        appLims = new int[appData.length];
 
         for (int i = offset; i < offset + len; i++) {
             if (appData[i] == null) {
-                throw new IllegalArgumentException(
-                    "appData[" + i + "] == null");
+                throw new IllegalArgumentException("appData[" + i + "] == null");
             }
 
             /*
@@ -170,14 +167,13 @@ class EngineArgs {
     void scatter(ByteBuffer readyData) {
         int amountLeft = readyData.remaining();
 
-        for (int i = offset; (i < (offset + len)) && (amountLeft > 0);
-                i++) {
+        for (int i = offset; (i < (offset + len)) && (amountLeft > 0); i++) {
             int amount = Math.min(appData[i].remaining(), amountLeft);
             readyData.limit(readyData.position() + amount);
             appData[i].put(readyData);
             amountLeft -= amount;
         }
-        assert(readyData.remaining() == 0);
+        assert (readyData.remaining() == 0);
     }
 
     int getAppRemaining() {
@@ -197,7 +193,7 @@ class EngineArgs {
      * we saved this off earlier?
      */
     int deltaApp() {
-        int sum = 0;    // Only calculating 2^14 here, don't need a long.
+        int sum = 0; // Only calculating 2^14 here, don't need a long.
 
         for (int i = offset; i < offset + len; i++) {
             sum += appData[i].position() - appPoss[i];

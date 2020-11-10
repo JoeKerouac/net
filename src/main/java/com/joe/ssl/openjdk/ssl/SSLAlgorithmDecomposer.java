@@ -25,13 +25,12 @@
 
 package com.joe.ssl.openjdk.ssl;
 
+import static com.joe.ssl.openjdk.ssl.CipherSuite.*;
+
 import java.util.HashSet;
 import java.util.Set;
 
-
 import sun.security.util.AlgorithmDecomposer;
-import static com.joe.ssl.openjdk.ssl.CipherSuite.*;
-import static com.joe.ssl.openjdk.ssl.CipherSuite.KeyExchange.*;
 
 /**
  * The class decomposes standard SSL/TLS cipher suites into sub-elements.
@@ -139,7 +138,7 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
                 break;
             default:
                 // ignore
-            }
+        }
 
         return components;
     }
@@ -179,12 +178,10 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
         return components;
     }
 
-    private Set<String> decomposes(CipherSuite.MacAlg macAlg,
-                                   BulkCipher cipher) {
+    private Set<String> decomposes(CipherSuite.MacAlg macAlg, BulkCipher cipher) {
         Set<String> components = new HashSet<>();
 
-        if (macAlg == M_NULL
-                && cipher.cipherType != CipherType.AEAD_CIPHER) {
+        if (macAlg == M_NULL && cipher.cipherType != CipherType.AEAD_CIPHER) {
             components.add("M_NULL");
         } else if (macAlg == M_MD5) {
             components.add("MD5");
@@ -206,8 +203,7 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
         return components;
     }
 
-    private Set<String> decompose(KeyExchange keyExchange, BulkCipher cipher,
-            MacAlg macAlg) {
+    private Set<String> decompose(KeyExchange keyExchange, BulkCipher cipher, MacAlg macAlg) {
         Set<String> components = new HashSet<>();
 
         if (keyExchange != null) {
@@ -241,10 +237,9 @@ class SSLAlgorithmDecomposer extends AlgorithmDecomposer {
                 // ignore: unknown or unsupported ciphersuite
             }
 
-            if (cipherSuite != null &&
-                cipherSuite != CipherSuite.C_SCSV /* TLS_EMPTY_RENEGOTIATION_INFO_SCSV */) {
-                return decompose(cipherSuite.keyExchange, cipherSuite.cipher,
-                        cipherSuite.macAlg);
+            if (cipherSuite != null
+                && cipherSuite != CipherSuite.C_SCSV /* TLS_EMPTY_RENEGOTIATION_INFO_SCSV */) {
+                return decompose(cipherSuite.keyExchange, cipherSuite.cipher, cipherSuite.macAlg);
             }
         }
 

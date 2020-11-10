@@ -1,6 +1,6 @@
 package com.joe.tls.msg;
 
-import com.joe.ssl.message.TlsVersion;
+import com.joe.tls.TlsVersion;
 import com.joe.tls.enums.ContentType;
 
 /**

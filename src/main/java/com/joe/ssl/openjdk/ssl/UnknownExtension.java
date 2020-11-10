@@ -25,20 +25,13 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
 import java.io.IOException;
 
 final class UnknownExtension extends HelloExtension {
 
     private final byte[] data;
 
-    UnknownExtension(HandshakeInStream s, int len, ExtensionType type)
-            throws IOException {
+    UnknownExtension(HandshakeInStream s, int len, ExtensionType type) throws IOException {
         super(type);
         data = new byte[len];
         // s.read() does not handle 0-length arrays.
@@ -60,7 +53,6 @@ final class UnknownExtension extends HelloExtension {
 
     @Override
     public String toString() {
-        return "Unsupported extension " + type + ", data: " +
-            Debug.toString(data);
+        return "Unsupported extension " + type + ", data: " + Debug.toString(data);
     }
 }

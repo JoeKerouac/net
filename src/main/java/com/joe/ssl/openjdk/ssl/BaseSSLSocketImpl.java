@@ -25,14 +25,17 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.SequenceInputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
 import java.nio.channels.SocketChannel;
-import java.net.*;
 
-import javax.net.ssl.*;
+import javax.net.ssl.SSLSocket;
 
 /**
  * Abstract base class for SSLSocketImpl. Its purpose is to house code with
@@ -57,7 +60,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      * recurse infinitely ... e.g. close() calling itself, or doing
      * I/O in terms of our own streams.
      */
-    final private Socket self;
+    final private Socket      self;
     final private InputStream consumedInput;
 
     BaseSSLSocketImpl() {
@@ -90,11 +93,9 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      *
      * The default is "false", i.e. tolerate the broken behavior.
      */
-    private final static String PROP_NAME =
-                                "com.sun.net.ssl.requireCloseNotify";
+    private final static String PROP_NAME          = "com.sun.net.ssl.requireCloseNotify";
 
-    final static boolean requireCloseNotify =
-                                Debug.getBooleanProperty(PROP_NAME, false);
+    final static boolean        requireCloseNotify = Debug.getBooleanProperty(PROP_NAME, false);
 
     //
     // MISC SOCKET METHODS
@@ -127,8 +128,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
             super.bind(bindpoint);
         } else {
             // If we're binding on a layered socket...
-            throw new IOException(
-                "Underlying socket should already be connected");
+            throw new IOException("Underlying socket should already be connected");
         }
     }
 
@@ -215,8 +215,8 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      */
     @Override
     public final void shutdownInput() throws IOException {
-        throw new UnsupportedOperationException("The method shutdownInput()" +
-                   " is not supported in SSLSocket");
+        throw new UnsupportedOperationException(
+            "The method shutdownInput()" + " is not supported in SSLSocket");
     }
 
     /**
@@ -228,8 +228,8 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      */
     @Override
     public final void shutdownOutput() throws IOException {
-        throw new UnsupportedOperationException("The method shutdownOutput()" +
-                   " is not supported in SSLSocket");
+        throw new UnsupportedOperationException(
+            "The method shutdownOutput()" + " is not supported in SSLSocket");
 
     }
 
@@ -382,8 +382,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      * @see Socket#setSoLinger
      */
     @Override
-    public final void setSoLinger(boolean flag, int linger)
-            throws SocketException {
+    public final void setSoLinger(boolean flag, int linger) throws SocketException {
         if (self == this) {
             super.setSoLinger(flag, linger);
         } else {
@@ -413,8 +412,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      */
     @Override
     public final void sendUrgentData(int data) throws SocketException {
-        throw new SocketException("This method is not supported "
-                        + "by SSLSockets");
+        throw new SocketException("This method is not supported " + "by SSLSockets");
     }
 
     /**
@@ -428,7 +426,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
     @Override
     public final void setOOBInline(boolean on) throws SocketException {
         throw new SocketException("This method is ineffective, since"
-                + " sending urgent data is not supported by SSLSockets");
+                                  + " sending urgent data is not supported by SSLSockets");
     }
 
     /**
@@ -438,7 +436,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
     @Override
     public final boolean getOOBInline() throws SocketException {
         throw new SocketException("This method is ineffective, since"
-                + " sending urgent data is not supported by SSLSockets");
+                                  + " sending urgent data is not supported by SSLSockets");
     }
 
     /**
@@ -576,14 +574,11 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
      * @see Socket#setPerformancePreferences(int, int, int)
      */
     @Override
-    public void setPerformancePreferences(int connectionTime,
-            int latency, int bandwidth) {
+    public void setPerformancePreferences(int connectionTime, int latency, int bandwidth) {
         if (self == this) {
-            super.setPerformancePreferences(
-                connectionTime, latency, bandwidth);
+            super.setPerformancePreferences(connectionTime, latency, bandwidth);
         } else {
-            self.setPerformancePreferences(
-                connectionTime, latency, bandwidth);
+            self.setPerformancePreferences(connectionTime, latency, bandwidth);
         }
     }
 
@@ -603,8 +598,7 @@ abstract class BaseSSLSocketImpl extends SSLSocket {
         }
 
         if (consumedInput != null) {
-            return new SequenceInputStream(consumedInput,
-                                                self.getInputStream());
+            return new SequenceInputStream(consumedInput, self.getInputStream());
         }
 
         return self.getInputStream();

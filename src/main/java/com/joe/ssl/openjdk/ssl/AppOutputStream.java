@@ -23,12 +23,10 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-import java.io.OutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /*
  * Output stream for application data. This is the kind of stream
@@ -44,10 +42,10 @@ import java.io.IOException;
 class AppOutputStream extends OutputStream {
 
     private SSLSocketImpl c;
-    OutputRecord r;
+    OutputRecord          r;
 
     // One element array used to implement the write(byte) method
-    private final byte[] oneByte = new byte[1];
+    private final byte[]  oneByte = new byte[1];
 
     AppOutputStream(SSLSocketImpl conn) {
         r = new OutputRecord(Record.ct_application_data);
@@ -58,8 +56,7 @@ class AppOutputStream extends OutputStream {
      * Write the data out, NOW.
      */
     @Override
-    synchronized public void write(byte b[], int off, int len)
-            throws IOException {
+    synchronized public void write(byte b[], int off, int len) throws IOException {
         if (b == null) {
             throw new NullPointerException();
         } else if (off < 0 || len < 0 || len > b.length - off) {
@@ -97,16 +94,16 @@ class AppOutputStream extends OutputStream {
                 int howmuch;
                 if (isFirstRecordOfThePayload && c.needToSplitPayload()) {
                     howmuch = Math.min(0x01, r.availableDataBytes());
-                     /*
-                      * Nagle's algorithm (TCP_NODELAY) was coming into
-                      * play here when writing short (split) packets.
-                      * Signal to the OutputRecord code to internally
-                      * buffer this small packet until the next outbound
-                      * packet (of any type) is written.
-                      */
-                     if ((len != 1) && (howmuch == 1)) {
-                         holdRecord = true;
-                     }
+                    /*
+                     * Nagle's algorithm (TCP_NODELAY) was coming into
+                     * play here when writing short (split) packets.
+                     * Signal to the OutputRecord code to internally
+                     * buffer this small packet until the next outbound
+                     * packet (of any type) is written.
+                     */
+                    if ((len != 1) && (howmuch == 1)) {
+                        holdRecord = true;
+                    }
                 } else {
                     howmuch = Math.min(len, r.availableDataBytes());
                 }
@@ -135,7 +132,7 @@ class AppOutputStream extends OutputStream {
      */
     @Override
     synchronized public void write(int i) throws IOException {
-        oneByte[0] = (byte)i;
+        oneByte[0] = (byte) i;
         write(oneByte, 0, 1);
     }
 

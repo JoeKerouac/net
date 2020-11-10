@@ -25,25 +25,20 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-import java.util.*;
 import java.math.BigInteger;
-
 import java.security.*;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.*;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.EllipticCurve;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Map;
 
 import javax.crypto.*;
 
-// explicit import to override the Provider class in this package
-import java.security.Provider;
-
-// need internal Sun classes for FIPS tricks
-import sun.security.jca.Providers;
 import sun.security.jca.ProviderList;
-
-
+import sun.security.jca.Providers;
 import sun.security.util.ECUtil;
-
 
 /**
  * This class contains a few static methods for interaction with the JCA/JCE
@@ -53,26 +48,24 @@ import sun.security.util.ECUtil;
  */
 final class JsseJce {
 
-    private static Provider cryptoProvider;
+    private static Provider           cryptoProvider;
 
     private final static ProviderList fipsProviderList;
 
     // Flag indicating whether Kerberos crypto is available.
     // If true, then all the Kerberos-based crypto we need is available.
-    private final static boolean kerberosAvailable;
+    private final static boolean      kerberosAvailable;
     static {
         boolean temp;
         try {
-            AccessController.doPrivileged(
-                new PrivilegedExceptionAction<Void>() {
-                    @Override
-                    public Void run() throws Exception {
-                        // Test for Kerberos using the bootstrap class loader
-                        Class.forName("sun.security.krb5.PrincipalName", true,
-                                null);
-                        return null;
-                    }
-                });
+            AccessController.doPrivileged(new PrivilegedExceptionAction<Void>() {
+                @Override
+                public Void run() throws Exception {
+                    // Test for Kerberos using the bootstrap class loader
+                    Class.forName("sun.security.krb5.PrincipalName", true, null);
+                    return null;
+                }
+            });
             temp = true;
 
         } catch (Exception e) {
@@ -95,8 +88,7 @@ final class JsseJce {
             // certificate related services from the SUN provider.
             Provider sun = Security.getProvider("SUN");
             if (sun == null) {
-                throw new RuntimeException
-                    ("FIPS mode: SUN provider must be installed");
+                throw new RuntimeException("FIPS mode: SUN provider must be installed");
             }
             Provider sunCerts = new SunCertificates(sun);
             fipsProviderList = ProviderList.newList(cryptoProvider, sunCerts);
@@ -112,12 +104,11 @@ final class JsseJce {
                 @Override
                 public Object run() {
                     // copy certificate related services from the Sun provider
-                    for (Map.Entry<Object,Object> entry : p.entrySet()) {
-                        String key = (String)entry.getKey();
+                    for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                        String key = (String) entry.getKey();
                         if (key.startsWith("CertPathValidator.")
-                                || key.startsWith("CertPathBuilder.")
-                                || key.startsWith("CertStore.")
-                                || key.startsWith("CertificateFactory.")) {
+                            || key.startsWith("CertPathBuilder.") || key.startsWith("CertStore.")
+                            || key.startsWith("CertificateFactory.")) {
                             put(key, entry.getValue());
                         }
                     }
@@ -131,45 +122,45 @@ final class JsseJce {
      * JCE transformation string for RSA with PKCS#1 v1.5 padding.
      * Can be used for encryption, decryption, signing, verifying.
      */
-    final static String CIPHER_RSA_PKCS1 = "RSA/ECB/PKCS1Padding";
+    final static String CIPHER_RSA_PKCS1   = "RSA/ECB/PKCS1Padding";
     /**
      * JCE transformation string for the stream cipher RC4.
      */
-    final static String CIPHER_RC4 = "RC4";
+    final static String CIPHER_RC4         = "RC4";
     /**
      * JCE transformation string for DES in CBC mode without padding.
      */
-    final static String CIPHER_DES = "DES/CBC/NoPadding";
+    final static String CIPHER_DES         = "DES/CBC/NoPadding";
     /**
      * JCE transformation string for (3-key) Triple DES in CBC mode
      * without padding.
      */
-    final static String CIPHER_3DES = "DESede/CBC/NoPadding";
+    final static String CIPHER_3DES        = "DESede/CBC/NoPadding";
     /**
      * JCE transformation string for AES in CBC mode
      * without padding.
      */
-    final static String CIPHER_AES = "AES/CBC/NoPadding";
+    final static String CIPHER_AES         = "AES/CBC/NoPadding";
     /**
      * JCE transformation string for AES in GCM mode
      * without padding.
      */
-    final static String CIPHER_AES_GCM = "AES/GCM/NoPadding";
+    final static String CIPHER_AES_GCM     = "AES/GCM/NoPadding";
     /**
      * JCA identifier string for DSA, i.e. a DSA with SHA-1.
      */
-    final static String SIGNATURE_DSA = "DSA";
+    final static String SIGNATURE_DSA      = "DSA";
     /**
      * JCA identifier string for ECDSA, i.e. a ECDSA with SHA-1.
      */
-    final static String SIGNATURE_ECDSA = "SHA1withECDSA";
+    final static String SIGNATURE_ECDSA    = "SHA1withECDSA";
     /**
      * JCA identifier string for Raw DSA, i.e. a DSA signature without
      * hashing where the application provides the SHA-1 hash of the data.
      * Note that the standard name is "NONEwithDSA" but we use "RawDSA"
      * for compatibility.
      */
-    final static String SIGNATURE_RAWDSA = "RawDSA";
+    final static String SIGNATURE_RAWDSA   = "RawDSA";
     /**
      * JCA identifier string for Raw ECDSA, i.e. a DSA signature without
      * hashing where the application provides the SHA-1 hash of the data.
@@ -180,13 +171,13 @@ final class JsseJce {
      * without hashing where the application provides the hash of the data.
      * Used for RSA client authentication with a 36 byte hash.
      */
-    final static String SIGNATURE_RAWRSA = "NONEwithRSA";
+    final static String SIGNATURE_RAWRSA   = "NONEwithRSA";
     /**
      * JCA identifier string for the SSL/TLS style RSA Signature. I.e.
      * an signature using RSA with PKCS#1 v1.5 padding signing a
      * concatenation of an MD5 and SHA-1 digest.
      */
-    final static String SIGNATURE_SSLRSA = "MD5andSHA1withRSA";
+    final static String SIGNATURE_SSLRSA   = "MD5andSHA1withRSA";
 
     private JsseJce() {
         // no instantiation of this class
@@ -203,8 +194,7 @@ final class JsseJce {
     /**
      * Return an JCE cipher implementation for the specified algorithm.
      */
-    static Cipher getCipher(String transformation)
-            throws NoSuchAlgorithmException {
+    static Cipher getCipher(String transformation) throws NoSuchAlgorithmException {
         try {
             if (cryptoProvider == null) {
                 return Cipher.getInstance(transformation);
@@ -221,8 +211,7 @@ final class JsseJce {
      * The algorithm string should be one of the constants defined
      * in this class.
      */
-    static Signature getSignature(String algorithm)
-            throws NoSuchAlgorithmException {
+    static Signature getSignature(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return Signature.getInstance(algorithm);
         } else {
@@ -247,8 +236,7 @@ final class JsseJce {
         }
     }
 
-    static KeyGenerator getKeyGenerator(String algorithm)
-            throws NoSuchAlgorithmException {
+    static KeyGenerator getKeyGenerator(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return KeyGenerator.getInstance(algorithm);
         } else {
@@ -256,8 +244,7 @@ final class JsseJce {
         }
     }
 
-    static KeyPairGenerator getKeyPairGenerator(String algorithm)
-            throws NoSuchAlgorithmException {
+    static KeyPairGenerator getKeyPairGenerator(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return KeyPairGenerator.getInstance(algorithm);
         } else {
@@ -265,8 +252,7 @@ final class JsseJce {
         }
     }
 
-    static KeyAgreement getKeyAgreement(String algorithm)
-            throws NoSuchAlgorithmException {
+    static KeyAgreement getKeyAgreement(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return KeyAgreement.getInstance(algorithm);
         } else {
@@ -274,8 +260,7 @@ final class JsseJce {
         }
     }
 
-    static Mac getMac(String algorithm)
-            throws NoSuchAlgorithmException {
+    static Mac getMac(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return Mac.getInstance(algorithm);
         } else {
@@ -283,8 +268,7 @@ final class JsseJce {
         }
     }
 
-    static KeyFactory getKeyFactory(String algorithm)
-            throws NoSuchAlgorithmException {
+    static KeyFactory getKeyFactory(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return KeyFactory.getInstance(algorithm);
         } else {
@@ -292,8 +276,7 @@ final class JsseJce {
         }
     }
 
-    static AlgorithmParameters getAlgorithmParameters(String algorithm)
-            throws NoSuchAlgorithmException {
+    static AlgorithmParameters getAlgorithmParameters(String algorithm) throws NoSuchAlgorithmException {
         if (cryptoProvider == null) {
             return AlgorithmParameters.getInstance(algorithm);
         } else {
@@ -321,8 +304,9 @@ final class JsseJce {
                 }
             }
         }
-        throw new KeyManagementException("FIPS mode: no SecureRandom "
-            + " implementation found in provider " + cryptoProvider.getName());
+        throw new KeyManagementException(
+            "FIPS mode: no SecureRandom " + " implementation found in provider "
+                                         + cryptoProvider.getName());
     }
 
     static MessageDigest getMD5() {
@@ -341,15 +325,14 @@ final class JsseJce {
                 return MessageDigest.getInstance(algorithm, cryptoProvider);
             }
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException
-                        ("Algorithm " + algorithm + " not available", e);
+            throw new RuntimeException("Algorithm " + algorithm + " not available", e);
         }
     }
 
     static int getRSAKeyLength(PublicKey key) {
         BigInteger modulus;
         if (key instanceof RSAPublicKey) {
-            modulus = ((RSAPublicKey)key).getModulus();
+            modulus = ((RSAPublicKey) key).getModulus();
         } else {
             RSAPublicKeySpec spec = getRSAPublicKeySpec(key);
             modulus = spec.getModulus();
@@ -359,9 +342,8 @@ final class JsseJce {
 
     static RSAPublicKeySpec getRSAPublicKeySpec(PublicKey key) {
         if (key instanceof RSAPublicKey) {
-            RSAPublicKey rsaKey = (RSAPublicKey)key;
-            return new RSAPublicKeySpec(rsaKey.getModulus(),
-                                        rsaKey.getPublicExponent());
+            RSAPublicKey rsaKey = (RSAPublicKey) key;
+            return new RSAPublicKeySpec(rsaKey.getModulus(), rsaKey.getPublicExponent());
         }
         try {
             KeyFactory factory = JsseJce.getKeyFactory("RSA");
@@ -379,8 +361,7 @@ final class JsseJce {
         return ECUtil.getCurveName(cryptoProvider, params);
     }
 
-    static ECPoint decodePoint(byte[] encoded, EllipticCurve curve)
-            throws java.io.IOException {
+    static ECPoint decodePoint(byte[] encoded, EllipticCurve curve) throws java.io.IOException {
         return ECUtil.decodePoint(encoded, curve);
     }
 
@@ -400,10 +381,9 @@ final class JsseJce {
 
     static void endFipsProvider(Object o) {
         if (fipsProviderList != null) {
-            Providers.endThreadProviderList((ProviderList)o);
+            Providers.endThreadProviderList((ProviderList) o);
         }
     }
-
 
     // lazy initialization holder class idiom for static default parameters
     //

@@ -25,19 +25,13 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
-
-
-
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.*;
-import javax.net.ssl.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.net.ssl.SSLProtocolException;
 
 /**
  * This file contains all the classes relevant to TLS Extensions for the
@@ -68,7 +62,7 @@ import javax.net.ssl.*;
 final class HelloExtensions {
 
     private List<HelloExtension> extensions;
-    private int encodedLength;
+    private int                  encodedLength;
 
     HelloExtensions() {
         extensions = Collections.emptyList();
@@ -102,8 +96,7 @@ final class HelloExtensions {
             len -= extlen + 4;
         }
         if (len != 0) {
-            throw new SSLProtocolException(
-                        "Error parsing extensions: extra data");
+            throw new SSLProtocolException("Error parsing extensions: extra data");
         }
     }
 

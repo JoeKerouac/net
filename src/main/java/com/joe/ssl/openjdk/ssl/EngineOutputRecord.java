@@ -23,17 +23,12 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
-import java.io.*;
-import java.nio.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * A OutputRecord class extension which uses external ByteBuffers
@@ -49,9 +44,9 @@ import java.nio.*;
 final class EngineOutputRecord extends OutputRecord {
 
     private SSLEngineImpl engine;
-    private EngineWriter writer;
+    private EngineWriter  writer;
 
-    private boolean finishedMsg = false;
+    private boolean       finishedMsg = false;
 
     /*
      * All handshake hashing is done by the superclass
@@ -79,15 +74,15 @@ final class EngineOutputRecord extends OutputRecord {
     private static int recordSize(byte type) {
         switch (type) {
 
-        case ct_change_cipher_spec:
-        case ct_alert:
-            return maxAlertRecordSize;
+            case ct_change_cipher_spec:
+            case ct_alert:
+                return maxAlertRecordSize;
 
-        case ct_handshake:
-            return maxRecordSize;
+            case ct_handshake:
+                return maxRecordSize;
 
-        case ct_application_data:
-            return 0;
+            case ct_application_data:
+                return 0;
         }
 
         throw new RuntimeException("Unknown record type: " + type);
@@ -114,13 +109,12 @@ final class EngineOutputRecord extends OutputRecord {
      * generated.
      */
     @Override
-    void writeBuffer(OutputStream s, byte [] buf, int off, int len,
-            int debugOffset) throws IOException {
+    void writeBuffer(OutputStream s, byte[] buf, int off, int len,
+                     int debugOffset) throws IOException {
         /*
          * Copy data out of buffer, it's ready to go.
          */
-        ByteBuffer netBB = (ByteBuffer)
-            ByteBuffer.allocate(len).put(buf, off, len).flip();
+        ByteBuffer netBB = (ByteBuffer) ByteBuffer.allocate(len).put(buf, off, len).flip();
 
         writer.putOutboundData(netBB);
     }
@@ -129,8 +123,7 @@ final class EngineOutputRecord extends OutputRecord {
      * Main method for writing non-application data.
      * We MAC/encrypt, then send down for processing.
      */
-    void write(Authenticator authenticator, CipherBox writeCipher)
-            throws IOException {
+    void write(Authenticator authenticator, CipherBox writeCipher) throws IOException {
 
         /*
          * Sanity check.
@@ -160,7 +153,7 @@ final class EngineOutputRecord extends OutputRecord {
             encrypt(authenticator, writeCipher);
 
             // send down for processing
-            write((OutputStream)null, false, (ByteArrayOutputStream)null);
+            write((OutputStream) null, false, (ByteArrayOutputStream) null);
         }
         return;
     }
@@ -175,7 +168,7 @@ final class EngineOutputRecord extends OutputRecord {
          * send us an impossible combination we don't know how
          * to process.
          */
-        assert(contentType() == ct_application_data);
+        assert (contentType() == ct_application_data);
 
         /*
          * Have we set the MAC's yet?  If not, we're not ready
@@ -220,9 +213,8 @@ final class EngineOutputRecord extends OutputRecord {
         int length;
         if (engine.needToSplitPayload(writeCipher, protocolVersion)) {
             write(ea, authenticator, writeCipher, 0x01);
-            ea.resetLim();      // reset application data buffer limit
-            length = Math.min(ea.getAppRemaining(),
-                        maxDataSizeMinusOneByteRecord);
+            ea.resetLim(); // reset application data buffer limit
+            length = Math.min(ea.getAppRemaining(), maxDataSizeMinusOneByteRecord);
         } else {
             // TLS1.2走这里
             length = Math.min(ea.getAppRemaining(), maxDataSize);
@@ -236,8 +228,8 @@ final class EngineOutputRecord extends OutputRecord {
         return;
     }
 
-    void write(EngineArgs ea, Authenticator authenticator,
-               CipherBox writeCipher, int length) throws IOException {
+    void write(EngineArgs ea, Authenticator authenticator, CipherBox writeCipher,
+               int length) throws IOException {
         /*
          * Copy out existing buffer values.
          */
@@ -266,7 +258,7 @@ final class EngineOutputRecord extends OutputRecord {
          * "flip" but skip over header again, add MAC & encrypt
          */
         if (authenticator instanceof MAC) {
-            MAC signer = (MAC)authenticator;
+            MAC signer = (MAC) authenticator;
             if (signer.MAClen() != 0) {
                 byte[] hash = signer.compute(contentType(), dstBB, false);
 
@@ -291,16 +283,16 @@ final class EngineOutputRecord extends OutputRecord {
              * Requires explicit IV/nonce for CBC/AEAD cipher suites for TLS 1.1
              * or later.
              */
-            if (protocolVersion.v >= ProtocolVersion.TLS11.v &&
-                    (writeCipher.isCBCMode() || writeCipher.isAEADMode())) {
-                byte[] nonce = writeCipher.createExplicitNonce(
-                        authenticator, contentType(), dstBB.remaining());
+            if (protocolVersion.v >= ProtocolVersion.TLS11.v
+                && (writeCipher.isCBCMode() || writeCipher.isAEADMode())) {
+                byte[] nonce = writeCipher.createExplicitNonce(authenticator, contentType(),
+                    dstBB.remaining());
                 dstBB.position(dstPos + headerSize);
                 dstBB.put(nonce);
                 if (!writeCipher.isAEADMode()) {
                     // The explicit IV in TLS 1.1 and later can be encrypted.
                     dstBB.position(dstPos + headerSize);
-                }   // Otherwise, DON'T encrypt the nonce_explicit for AEAD mode
+                } // Otherwise, DON'T encrypt the nonce_explicit for AEAD mode
             }
 
             /*
@@ -308,14 +300,14 @@ final class EngineOutputRecord extends OutputRecord {
              */
             writeCipher.encrypt(dstBB, dstLim);
 
-            if ((debug != null) && (Debug.isOn("record") ||
-                    (Debug.isOn("handshake") &&
-                        (contentType() == ct_change_cipher_spec)))) {
+            if ((debug != null)
+                && (Debug.isOn("record")
+                    || (Debug.isOn("handshake") && (contentType() == ct_change_cipher_spec)))) {
                 System.out.println(Thread.currentThread().getName()
-                    // v3.0/v3.1 ...
-                    + ", WRITE: " + protocolVersion
-                    + " " + InputRecord.contentName(contentType())
-                    + ", length = " + length);
+                                   // v3.0/v3.1 ...
+                                   + ", WRITE: " + protocolVersion + " "
+                                   + InputRecord.contentName(contentType()) + ", length = "
+                                   + length);
             }
         } else {
             dstBB.position(dstBB.limit());
@@ -329,8 +321,8 @@ final class EngineOutputRecord extends OutputRecord {
         dstBB.put(dstPos, contentType());
         dstBB.put(dstPos + 1, protocolVersion.major);
         dstBB.put(dstPos + 2, protocolVersion.minor);
-        dstBB.put(dstPos + 3, (byte)(packetLength >> 8));
-        dstBB.put(dstPos + 4, (byte)packetLength);
+        dstBB.put(dstPos + 3, (byte) (packetLength >> 8));
+        dstBB.put(dstPos + 4, (byte) packetLength);
 
         /*
          * Position was already set by encrypt() above.

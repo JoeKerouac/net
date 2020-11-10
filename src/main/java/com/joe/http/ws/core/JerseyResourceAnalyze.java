@@ -59,12 +59,12 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
     /**
      * 请求contentType
      */
-    private String[]          requestContentTypes;
+    private String[]        requestContentTypes;
 
     /**
      * 响应contentType
      */
-    private String[]          responseContentTypes;
+    private String[]        responseContentTypes;
 
     /**
      * 是否是一个资源

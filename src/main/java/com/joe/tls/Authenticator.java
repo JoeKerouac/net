@@ -2,8 +2,6 @@ package com.joe.tls;
 
 import java.util.Arrays;
 
-import com.joe.ssl.message.TlsVersion;
-
 /**
  * TLS消息身份认证令牌，该令牌封装序列号并确保可以检测到删除或重新排序消息的尝试。该令牌针对读取和写入分别维护一个，序列号必须从0开始；
  *

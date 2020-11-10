@@ -25,21 +25,17 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-import java.util.Collections;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.HashMap;
-import javax.net.ssl.SSLProtocolException;
-
 import static com.joe.ssl.openjdk.ssl.CipherSuite.KeyExchange;
 import static com.joe.ssl.openjdk.ssl.CipherSuite.KeyExchange.*;
-import static com.joe.ssl.openjdk.ssl.HandshakeStateManager.HandshakeState.*;
 import static com.joe.ssl.openjdk.ssl.HandshakeMessage.*;
+import static com.joe.ssl.openjdk.ssl.HandshakeStateManager.HandshakeState.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.net.ssl.SSLProtocolException;
 
 /*
  * Handshake state manager.
@@ -211,27 +207,26 @@ import static com.joe.ssl.openjdk.ssl.HandshakeMessage.*;
  */
 final class HandshakeStateManager {
     // upcoming handshake states.
-    private LinkedList<HandshakeState> upcomingStates;
-    private LinkedList<HandshakeState> alternatives;
+    private LinkedList<HandshakeState>         upcomingStates;
+    private LinkedList<HandshakeState>         alternatives;
 
-    private static final boolean debugIsOn;
+    private static final boolean               debugIsOn;
 
     private static final HashMap<Byte, String> handshakeTypes;
 
     static {
-        debugIsOn = (Handshaker.debug != null) &&
-                Debug.isOn("handshake") && Debug.isOn("verbose");
+        debugIsOn = (Handshaker.debug != null) && Debug.isOn("handshake") && Debug.isOn("verbose");
         handshakeTypes = new HashMap<>(8);
 
-        handshakeTypes.put(ht_hello_request,            "hello_request");
-        handshakeTypes.put(ht_client_hello,             "client_hello");
-        handshakeTypes.put(ht_server_hello,             "server_hello");
-        handshakeTypes.put(ht_certificate,              "certificate");
-        handshakeTypes.put(ht_server_key_exchange,      "server_key_exchange");
-        handshakeTypes.put(ht_server_hello_done,        "server_hello_done");
-        handshakeTypes.put(ht_certificate_verify,       "certificate_verify");
-        handshakeTypes.put(ht_client_key_exchange,      "client_key_exchange");
-        handshakeTypes.put(ht_finished,                 "finished");
+        handshakeTypes.put(ht_hello_request, "hello_request");
+        handshakeTypes.put(ht_client_hello, "client_hello");
+        handshakeTypes.put(ht_server_hello, "server_hello");
+        handshakeTypes.put(ht_certificate, "certificate");
+        handshakeTypes.put(ht_server_key_exchange, "server_key_exchange");
+        handshakeTypes.put(ht_server_hello_done, "server_hello_done");
+        handshakeTypes.put(ht_certificate_verify, "certificate_verify");
+        handshakeTypes.put(ht_client_key_exchange, "client_key_exchange");
+        handshakeTypes.put(ht_finished, "finished");
     }
 
     HandshakeStateManager() {
@@ -243,51 +238,28 @@ final class HandshakeStateManager {
     // enumation of handshake type
     //
     enum HandshakeState {
-        HS_HELLO_REQUEST(
-                "hello_request",
-                HandshakeMessage.ht_hello_request),
-        HS_CLIENT_HELLO(
-                "client_hello",
-                HandshakeMessage.ht_client_hello),
-        HS_SERVER_HELLO(
-                "server_hello",
-                HandshakeMessage.ht_server_hello),
-        HS_SERVER_CERTIFICATE(
-                "server certificate",
-                HandshakeMessage.ht_certificate),
-        HS_SERVER_KEY_EXCHANGE(
-                "server_key_exchange",
-                HandshakeMessage.ht_server_key_exchange, true),
-        HS_CERTIFICATE_REQUEST(
-                "certificate_request",
-                HandshakeMessage.ht_certificate_request, true),
-        HS_SERVER_HELLO_DONE(
-                "server_hello_done",
-                HandshakeMessage.ht_server_hello_done),
-        HS_CLIENT_CERTIFICATE(
-                "client certificate",
-                HandshakeMessage.ht_certificate, true),
-        HS_CLIENT_KEY_EXCHANGE(
-                "client_key_exchange",
-                HandshakeMessage.ht_client_key_exchange),
-        HS_CERTIFICATE_VERIFY(
-                "certificate_verify",
-                HandshakeMessage.ht_certificate_verify, true),
-        HS_CLIENT_CHANGE_CIPHER_SPEC(
-                "client change_cipher_spec",
-                HandshakeMessage.ht_not_applicable),
-        HS_CLIENT_FINISHED(
-                "client finished",
-                HandshakeMessage.ht_finished),
-        HS_SERVER_CHANGE_CIPHER_SPEC(
-                "server change_cipher_spec",
-                HandshakeMessage.ht_not_applicable),
-        HS_SERVER_FINISHED(
-                "server finished",
-                HandshakeMessage.ht_finished);
+                         HS_HELLO_REQUEST("hello_request",
+                                          HandshakeMessage.ht_hello_request), HS_CLIENT_HELLO("client_hello",
+                                                                                              HandshakeMessage.ht_client_hello), HS_SERVER_HELLO("server_hello",
+                                                                                                                                                 HandshakeMessage.ht_server_hello), HS_SERVER_CERTIFICATE("server certificate",
+                                                                                                                                                                                                          HandshakeMessage.ht_certificate), HS_SERVER_KEY_EXCHANGE("server_key_exchange",
+                                                                                                                                                                                                                                                                   HandshakeMessage.ht_server_key_exchange,
+                                                                                                                                                                                                                                                                   true), HS_CERTIFICATE_REQUEST("certificate_request",
+                                                                                                                                                                                                                                                                                                 HandshakeMessage.ht_certificate_request,
+                                                                                                                                                                                                                                                                                                 true), HS_SERVER_HELLO_DONE("server_hello_done",
+                                                                                                                                                                                                                                                                                                                             HandshakeMessage.ht_server_hello_done), HS_CLIENT_CERTIFICATE("client certificate",
+                                                                                                                                                                                                                                                                                                                                                                                           HandshakeMessage.ht_certificate,
+                                                                                                                                                                                                                                                                                                                                                                                           true), HS_CLIENT_KEY_EXCHANGE("client_key_exchange",
+                                                                                                                                                                                                                                                                                                                                                                                                                         HandshakeMessage.ht_client_key_exchange), HS_CERTIFICATE_VERIFY("certificate_verify",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         HandshakeMessage.ht_certificate_verify,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         true), HS_CLIENT_CHANGE_CIPHER_SPEC("client change_cipher_spec",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             HandshakeMessage.ht_not_applicable), HS_CLIENT_FINISHED("client finished",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     HandshakeMessage.ht_finished), HS_SERVER_CHANGE_CIPHER_SPEC("server change_cipher_spec",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 HandshakeMessage.ht_not_applicable), HS_SERVER_FINISHED("server finished",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         HandshakeMessage.ht_finished);
 
-        final String description;
-        final byte handshakeType;
+        final String  description;
+        final byte    handshakeType;
         final boolean isOptional;
 
         HandshakeState(String description, byte handshakeType) {
@@ -296,8 +268,7 @@ final class HandshakeStateManager {
             this.isOptional = false;
         }
 
-        HandshakeState(String description,
-                byte handshakeType, boolean isOptional) {
+        HandshakeState(String description, byte handshakeType, boolean isOptional) {
 
             this.description = description;
             this.handshakeType = handshakeType;
@@ -305,8 +276,7 @@ final class HandshakeStateManager {
         }
 
         public String toString() {
-            return description + "[" + handshakeType + "]" +
-                    (isOptional ? "(optional)" : "");
+            return description + "[" + handshakeType + "]" + (isOptional ? "(optional)" : "");
         }
     }
 
@@ -316,18 +286,16 @@ final class HandshakeStateManager {
 
     List<Byte> check(byte handshakeType) throws SSLProtocolException {
         List<Byte> ignoredOptional = new LinkedList<>();
-        String exceptionMsg =
-                 "Handshake message sequence violation, " + handshakeType;
+        String exceptionMsg = "Handshake message sequence violation, " + handshakeType;
 
         if (debugIsOn) {
-            System.out.println(
-                    "check handshake state: " + toString(handshakeType));
+            System.out.println("check handshake state: " + toString(handshakeType));
         }
 
         if (upcomingStates.isEmpty()) {
             // Is it a kickstart message?
-            if ((handshakeType != HandshakeMessage.ht_hello_request) &&
-                (handshakeType != HandshakeMessage.ht_client_hello)) {
+            if ((handshakeType != HandshakeMessage.ht_hello_request)
+                && (handshakeType != HandshakeMessage.ht_client_hello)) {
                 throw new SSLProtocolException(
                     "Handshake message sequence violation, " + handshakeType);
             }
@@ -368,355 +336,341 @@ final class HandshakeStateManager {
         }
 
         // Not an expected Handshake message.
-        throw new SSLProtocolException(
-                "Handshake message sequence violation, " + handshakeType);
+        throw new SSLProtocolException("Handshake message sequence violation, " + handshakeType);
     }
 
     void update(HandshakeMessage handshakeMessage,
                 boolean isAbbreviated) throws SSLProtocolException {
 
-        byte handshakeType = (byte)handshakeMessage.messageType();
-        String exceptionMsg =
-                 "Handshake message sequence violation, " + handshakeType;
+        byte handshakeType = (byte) handshakeMessage.messageType();
+        String exceptionMsg = "Handshake message sequence violation, " + handshakeType;
 
         if (debugIsOn) {
-            System.out.println(
-                    "update handshake state: " + toString(handshakeType));
+            System.out.println("update handshake state: " + toString(handshakeType));
         }
 
         boolean hasPresentState = false;
         switch (handshakeType) {
-        case HandshakeMessage.ht_hello_request:
-            //
-            // State machine:
-            //     PRESENT: START
-            //        TO  : ClientHello
-            //
-
-            // No old state to update.
-
-            // Add the upcoming states.
-            if (!upcomingStates.isEmpty()) {
-                // A ClientHello message should be followed.
-                upcomingStates.add(HS_CLIENT_HELLO);
-
-            }   // Otherwise, ignore this HelloRequest message.
-
-            break;
-
-        case HandshakeMessage.ht_client_hello:
-            //
-            // State machine:
-            //     PRESENT: START
-            //              HS_CLIENT_HELLO
-            //        TO  : HS_SERVER_HELLO
-            //
-
-            // Check and update the present state.
-            if (!upcomingStates.isEmpty()) {
-                // The current state should be HS_CLIENT_HELLO.
-                HandshakeState handshakeState = upcomingStates.pop();
-                if (handshakeState != HS_CLIENT_HELLO) {
-                    throw new SSLProtocolException(exceptionMsg);
-                }
-            }
-
-            // Add the upcoming states.
-            ClientHello clientHello = (ClientHello)handshakeMessage;
-            upcomingStates.add(HS_SERVER_HELLO);
-
-            break;
-
-        case HandshakeMessage.ht_server_hello:
-            //
-            // State machine:
-            //     PRESENT: HS_SERVER_HELLO
-            //        TO  :
-            //          Full handshake state stacks
-            //              (ServerHello Flight)
-            //              HS_SERVER_SUPPLEMENTAL_DATA [optional]
-            //          --> HS_SERVER_CERTIFICATE [optional]
-            //          --> HS_CERTIFICATE_STATUS [optional]
-            //          --> HS_SERVER_KEY_EXCHANGE [optional]
-            //          --> HS_CERTIFICATE_REQUEST [optional]
-            //          --> HS_SERVER_HELLO_DONE
-            //              (Client ClientKeyExchange Flight)
-            //          --> HS_CLIENT_SUPPLEMENTAL_DATA [optional]
-            //          --> HS_CLIENT_CERTIFICATE or
-            //              HS_CERTIFICATE_URL
-            //          --> HS_CLIENT_KEY_EXCHANGE
-            //          --> HS_CERTIFICATE_VERIFY [optional]
-            //          --> HS_CLIENT_CHANGE_CIPHER_SPEC
-            //          --> HS_CLIENT_FINISHED
-            //              (Server Finished Flight)
-            //          --> HS_CLIENT_SUPPLEMENTAL_DATA [optional]
-            //
-            //          Abbreviated handshake state stacks
-            //              (Server Finished Flight)
-            //              HS_NEW_SESSION_TICKET
-            //          --> HS_SERVER_CHANGE_CIPHER_SPEC
-            //          --> HS_SERVER_FINISHED
-            //              (Client Finished Flight)
-            //          --> HS_CLIENT_CHANGE_CIPHER_SPEC
-            //          --> HS_CLIENT_FINISHED
-            //
-            // Note that this state may have an alternative option.
-
-            // Check and update the present state.
-            if (!upcomingStates.isEmpty()) {
-                // The current state should be HS_SERVER_HELLO
-                HandshakeState handshakeState = upcomingStates.pop();
-                HandshakeState alternative = null;
-                if (!alternatives.isEmpty()) {
-                    alternative = alternatives.pop();
-                }
-
-                if ((handshakeState != HS_SERVER_HELLO) &&
-                        (alternative != HS_SERVER_HELLO)) {
-                    throw new SSLProtocolException(exceptionMsg);
-                }
-            } else {
-                // No present state.
-                throw new SSLProtocolException(exceptionMsg);
-            }
-
-            // Add the upcoming states.
-            ServerHello serverHello = (ServerHello)handshakeMessage;
-            HelloExtensions hes = serverHello.extensions;
-
-
-            // Not support SessionTicket extension yet.
-            //
-            // boolean hasSessionTicketExt =
-            //     (hes.get(HandshakeMessage.ht_new_session_ticket) != null);
-
-            if (isAbbreviated) {
-                // Not support SessionTicket extension yet.
+            case HandshakeMessage.ht_hello_request:
                 //
-                // // Mandatory NewSessionTicket message
-                // if (hasSessionTicketExt) {
-                //     upcomingStates.add(HS_NEW_SESSION_TICKET);
-                // }
-
-                // Mandatory server ChangeCipherSpec and Finished messages
-                upcomingStates.add(HS_SERVER_CHANGE_CIPHER_SPEC);
-                upcomingStates.add(HS_SERVER_FINISHED);
-
-                // Mandatory client ChangeCipherSpec and Finished messages
-                upcomingStates.add(HS_CLIENT_CHANGE_CIPHER_SPEC);
-                upcomingStates.add(HS_CLIENT_FINISHED);
-            } else {
-                // Not support SupplementalData extension yet.
+                // State machine:
+                //     PRESENT: START
+                //        TO  : ClientHello
                 //
-                // boolean hasSupplementalDataExt =
-                //     (hes.get(HandshakeMessage.ht_supplemental_data) != null);
 
-                // Not support CertificateURL extension yet.
+                // No old state to update.
+
+                // Add the upcoming states.
+                if (!upcomingStates.isEmpty()) {
+                    // A ClientHello message should be followed.
+                    upcomingStates.add(HS_CLIENT_HELLO);
+
+                } // Otherwise, ignore this HelloRequest message.
+
+                break;
+
+            case HandshakeMessage.ht_client_hello:
                 //
-                // boolean hasCertificateUrlExt =
-                //     (hes.get(ExtensionType EXT_CLIENT_CERTIFICATE_URL)
-                //          != null);
-
-                // Not support SupplementalData extension yet.
+                // State machine:
+                //     PRESENT: START
+                //              HS_CLIENT_HELLO
+                //        TO  : HS_SERVER_HELLO
                 //
-                // // Optional SupplementalData message
-                // if (hasSupplementalDataExt) {
-                //     upcomingStates.add(HS_SERVER_SUPPLEMENTAL_DATA);
-                // }
 
-                // Need server Certificate message or not?
-                KeyExchange keyExchange = serverHello.cipherSuite.keyExchange;
-                if ((keyExchange != K_KRB5) &&
-                        (keyExchange != K_KRB5_EXPORT) &&
-                        (keyExchange != K_DH_ANON) &&
-                        (keyExchange != K_ECDH_ANON)) {
-                    // Mandatory Certificate message
-                    upcomingStates.add(HS_SERVER_CERTIFICATE);
-                }
-
-                // Need ServerKeyExchange message or not?
-                if ((keyExchange == K_RSA_EXPORT) ||
-                        (keyExchange == K_DHE_RSA) ||
-                        (keyExchange == K_DHE_DSS) ||
-                        (keyExchange == K_DH_ANON) ||
-                        (keyExchange == K_ECDHE_RSA) ||
-                        (keyExchange == K_ECDHE_ECDSA) ||
-                        (keyExchange == K_ECDH_ANON)) {
-                    // Optional ServerKeyExchange message
-                    upcomingStates.add(HS_SERVER_KEY_EXCHANGE);
-                }
-
-                // Optional CertificateRequest message
-                upcomingStates.add(HS_CERTIFICATE_REQUEST);
-
-                // Mandatory ServerHelloDone message
-                upcomingStates.add(HS_SERVER_HELLO_DONE);
-
-                // Not support SupplementalData extension yet.
-                //
-                // // Optional SupplementalData message
-                // if (hasSupplementalDataExt) {
-                //     upcomingStates.add(HS_CLIENT_SUPPLEMENTAL_DATA);
-                // }
-
-                // Optional client Certificate message
-                upcomingStates.add(HS_CLIENT_CERTIFICATE);
-
-                // Not support CertificateURL extension yet.
-                //
-                // // Alternative CertificateURL message, optional too.
-                // //
-                // // Please put CertificateURL rather than Certificate
-                // // message in the alternatives list.  So that we can
-                // // simplify the process of this alternative pair later.
-                // if (hasCertificateUrlExt) {
-                //     alternatives.add(HS_CERTIFICATE_URL);
-                // }
-
-                // Mandatory ClientKeyExchange message
-                upcomingStates.add(HS_CLIENT_KEY_EXCHANGE);
-
-                // Optional CertificateVerify message
-                upcomingStates.add(HS_CERTIFICATE_VERIFY);
-
-                // Mandatory client ChangeCipherSpec and Finished messages
-                upcomingStates.add(HS_CLIENT_CHANGE_CIPHER_SPEC);
-                upcomingStates.add(HS_CLIENT_FINISHED);
-
-                // Not support SessionTicket extension yet.
-                //
-                // // Mandatory NewSessionTicket message
-                // if (hasSessionTicketExt) {
-                //     upcomingStates.add(HS_NEW_SESSION_TICKET);
-                // }
-
-                // Mandatory server ChangeCipherSpec and Finished messages
-                upcomingStates.add(HS_SERVER_CHANGE_CIPHER_SPEC);
-                upcomingStates.add(HS_SERVER_FINISHED);
-            }
-
-            break;
-
-        case HandshakeMessage.ht_certificate:
-            //
-            // State machine:
-            //     PRESENT: HS_CERTIFICATE_URL or
-            //              HS_CLIENT_CERTIFICATE
-            //        TO  : HS_CLIENT_KEY_EXCHANGE
-            //
-            //     Or
-            //
-            //     PRESENT: HS_SERVER_CERTIFICATE
-            //        TO  : HS_CERTIFICATE_STATUS [optional]
-            //              HS_SERVER_KEY_EXCHANGE [optional]
-            //              HS_CERTIFICATE_REQUEST [optional]
-            //              HS_SERVER_HELLO_DONE
-            //
-            // Note that this state may have an alternative option.
-
-            // Check and update the present state.
-            while (!upcomingStates.isEmpty()) {
-                HandshakeState handshakeState = upcomingStates.pop();
-                if (handshakeState.handshakeType == handshakeType) {
-                    hasPresentState = true;
-
-                    // The current state should be HS_CLIENT_CERTIFICATE or
-                    // HS_SERVER_CERTIFICATE.
-                    //
-                    // Note that we won't put HS_CLIENT_CERTIFICATE into
-                    // the alternative list.
-                    if ((handshakeState != HS_CLIENT_CERTIFICATE) &&
-                            (handshakeState != HS_SERVER_CERTIFICATE)) {
+                // Check and update the present state.
+                if (!upcomingStates.isEmpty()) {
+                    // The current state should be HS_CLIENT_HELLO.
+                    HandshakeState handshakeState = upcomingStates.pop();
+                    if (handshakeState != HS_CLIENT_HELLO) {
                         throw new SSLProtocolException(exceptionMsg);
                     }
+                }
 
-                    // Is it an expected client Certificate message?
-                    boolean isClientMessage = false;
-                    if (!upcomingStates.isEmpty()) {
-                        // If the next expected message is ClientKeyExchange,
-                        // this one should be an expected client Certificate
-                        // message.
-                        HandshakeState nextState = upcomingStates.getFirst();
-                        if (nextState == HS_CLIENT_KEY_EXCHANGE) {
-                            isClientMessage = true;
-                        }
+                // Add the upcoming states.
+                ClientHello clientHello = (ClientHello) handshakeMessage;
+                upcomingStates.add(HS_SERVER_HELLO);
+
+                break;
+
+            case HandshakeMessage.ht_server_hello:
+                //
+                // State machine:
+                //     PRESENT: HS_SERVER_HELLO
+                //        TO  :
+                //          Full handshake state stacks
+                //              (ServerHello Flight)
+                //              HS_SERVER_SUPPLEMENTAL_DATA [optional]
+                //          --> HS_SERVER_CERTIFICATE [optional]
+                //          --> HS_CERTIFICATE_STATUS [optional]
+                //          --> HS_SERVER_KEY_EXCHANGE [optional]
+                //          --> HS_CERTIFICATE_REQUEST [optional]
+                //          --> HS_SERVER_HELLO_DONE
+                //              (Client ClientKeyExchange Flight)
+                //          --> HS_CLIENT_SUPPLEMENTAL_DATA [optional]
+                //          --> HS_CLIENT_CERTIFICATE or
+                //              HS_CERTIFICATE_URL
+                //          --> HS_CLIENT_KEY_EXCHANGE
+                //          --> HS_CERTIFICATE_VERIFY [optional]
+                //          --> HS_CLIENT_CHANGE_CIPHER_SPEC
+                //          --> HS_CLIENT_FINISHED
+                //              (Server Finished Flight)
+                //          --> HS_CLIENT_SUPPLEMENTAL_DATA [optional]
+                //
+                //          Abbreviated handshake state stacks
+                //              (Server Finished Flight)
+                //              HS_NEW_SESSION_TICKET
+                //          --> HS_SERVER_CHANGE_CIPHER_SPEC
+                //          --> HS_SERVER_FINISHED
+                //              (Client Finished Flight)
+                //          --> HS_CLIENT_CHANGE_CIPHER_SPEC
+                //          --> HS_CLIENT_FINISHED
+                //
+                // Note that this state may have an alternative option.
+
+                // Check and update the present state.
+                if (!upcomingStates.isEmpty()) {
+                    // The current state should be HS_SERVER_HELLO
+                    HandshakeState handshakeState = upcomingStates.pop();
+                    HandshakeState alternative = null;
+                    if (!alternatives.isEmpty()) {
+                        alternative = alternatives.pop();
                     }
 
-                    if (isClientMessage) {
-                        if (handshakeState != HS_CLIENT_CERTIFICATE) {
+                    if ((handshakeState != HS_SERVER_HELLO) && (alternative != HS_SERVER_HELLO)) {
+                        throw new SSLProtocolException(exceptionMsg);
+                    }
+                } else {
+                    // No present state.
+                    throw new SSLProtocolException(exceptionMsg);
+                }
+
+                // Add the upcoming states.
+                ServerHello serverHello = (ServerHello) handshakeMessage;
+                HelloExtensions hes = serverHello.extensions;
+
+                // Not support SessionTicket extension yet.
+                //
+                // boolean hasSessionTicketExt =
+                //     (hes.get(HandshakeMessage.ht_new_session_ticket) != null);
+
+                if (isAbbreviated) {
+                    // Not support SessionTicket extension yet.
+                    //
+                    // // Mandatory NewSessionTicket message
+                    // if (hasSessionTicketExt) {
+                    //     upcomingStates.add(HS_NEW_SESSION_TICKET);
+                    // }
+
+                    // Mandatory server ChangeCipherSpec and Finished messages
+                    upcomingStates.add(HS_SERVER_CHANGE_CIPHER_SPEC);
+                    upcomingStates.add(HS_SERVER_FINISHED);
+
+                    // Mandatory client ChangeCipherSpec and Finished messages
+                    upcomingStates.add(HS_CLIENT_CHANGE_CIPHER_SPEC);
+                    upcomingStates.add(HS_CLIENT_FINISHED);
+                } else {
+                    // Not support SupplementalData extension yet.
+                    //
+                    // boolean hasSupplementalDataExt =
+                    //     (hes.get(HandshakeMessage.ht_supplemental_data) != null);
+
+                    // Not support CertificateURL extension yet.
+                    //
+                    // boolean hasCertificateUrlExt =
+                    //     (hes.get(ExtensionType EXT_CLIENT_CERTIFICATE_URL)
+                    //          != null);
+
+                    // Not support SupplementalData extension yet.
+                    //
+                    // // Optional SupplementalData message
+                    // if (hasSupplementalDataExt) {
+                    //     upcomingStates.add(HS_SERVER_SUPPLEMENTAL_DATA);
+                    // }
+
+                    // Need server Certificate message or not?
+                    KeyExchange keyExchange = serverHello.cipherSuite.keyExchange;
+                    if ((keyExchange != K_KRB5) && (keyExchange != K_KRB5_EXPORT)
+                        && (keyExchange != K_DH_ANON) && (keyExchange != K_ECDH_ANON)) {
+                        // Mandatory Certificate message
+                        upcomingStates.add(HS_SERVER_CERTIFICATE);
+                    }
+
+                    // Need ServerKeyExchange message or not?
+                    if ((keyExchange == K_RSA_EXPORT) || (keyExchange == K_DHE_RSA)
+                        || (keyExchange == K_DHE_DSS) || (keyExchange == K_DH_ANON)
+                        || (keyExchange == K_ECDHE_RSA) || (keyExchange == K_ECDHE_ECDSA)
+                        || (keyExchange == K_ECDH_ANON)) {
+                        // Optional ServerKeyExchange message
+                        upcomingStates.add(HS_SERVER_KEY_EXCHANGE);
+                    }
+
+                    // Optional CertificateRequest message
+                    upcomingStates.add(HS_CERTIFICATE_REQUEST);
+
+                    // Mandatory ServerHelloDone message
+                    upcomingStates.add(HS_SERVER_HELLO_DONE);
+
+                    // Not support SupplementalData extension yet.
+                    //
+                    // // Optional SupplementalData message
+                    // if (hasSupplementalDataExt) {
+                    //     upcomingStates.add(HS_CLIENT_SUPPLEMENTAL_DATA);
+                    // }
+
+                    // Optional client Certificate message
+                    upcomingStates.add(HS_CLIENT_CERTIFICATE);
+
+                    // Not support CertificateURL extension yet.
+                    //
+                    // // Alternative CertificateURL message, optional too.
+                    // //
+                    // // Please put CertificateURL rather than Certificate
+                    // // message in the alternatives list.  So that we can
+                    // // simplify the process of this alternative pair later.
+                    // if (hasCertificateUrlExt) {
+                    //     alternatives.add(HS_CERTIFICATE_URL);
+                    // }
+
+                    // Mandatory ClientKeyExchange message
+                    upcomingStates.add(HS_CLIENT_KEY_EXCHANGE);
+
+                    // Optional CertificateVerify message
+                    upcomingStates.add(HS_CERTIFICATE_VERIFY);
+
+                    // Mandatory client ChangeCipherSpec and Finished messages
+                    upcomingStates.add(HS_CLIENT_CHANGE_CIPHER_SPEC);
+                    upcomingStates.add(HS_CLIENT_FINISHED);
+
+                    // Not support SessionTicket extension yet.
+                    //
+                    // // Mandatory NewSessionTicket message
+                    // if (hasSessionTicketExt) {
+                    //     upcomingStates.add(HS_NEW_SESSION_TICKET);
+                    // }
+
+                    // Mandatory server ChangeCipherSpec and Finished messages
+                    upcomingStates.add(HS_SERVER_CHANGE_CIPHER_SPEC);
+                    upcomingStates.add(HS_SERVER_FINISHED);
+                }
+
+                break;
+
+            case HandshakeMessage.ht_certificate:
+                //
+                // State machine:
+                //     PRESENT: HS_CERTIFICATE_URL or
+                //              HS_CLIENT_CERTIFICATE
+                //        TO  : HS_CLIENT_KEY_EXCHANGE
+                //
+                //     Or
+                //
+                //     PRESENT: HS_SERVER_CERTIFICATE
+                //        TO  : HS_CERTIFICATE_STATUS [optional]
+                //              HS_SERVER_KEY_EXCHANGE [optional]
+                //              HS_CERTIFICATE_REQUEST [optional]
+                //              HS_SERVER_HELLO_DONE
+                //
+                // Note that this state may have an alternative option.
+
+                // Check and update the present state.
+                while (!upcomingStates.isEmpty()) {
+                    HandshakeState handshakeState = upcomingStates.pop();
+                    if (handshakeState.handshakeType == handshakeType) {
+                        hasPresentState = true;
+
+                        // The current state should be HS_CLIENT_CERTIFICATE or
+                        // HS_SERVER_CERTIFICATE.
+                        //
+                        // Note that we won't put HS_CLIENT_CERTIFICATE into
+                        // the alternative list.
+                        if ((handshakeState != HS_CLIENT_CERTIFICATE)
+                            && (handshakeState != HS_SERVER_CERTIFICATE)) {
                             throw new SSLProtocolException(exceptionMsg);
                         }
 
-                        // Not support CertificateURL extension yet.
-                        /*******************************************
-                        // clear up the alternatives list
-                        if (!alternatives.isEmpty()) {
-                            HandshakeState alternative = alternatives.pop();
+                        // Is it an expected client Certificate message?
+                        boolean isClientMessage = false;
+                        if (!upcomingStates.isEmpty()) {
+                            // If the next expected message is ClientKeyExchange,
+                            // this one should be an expected client Certificate
+                            // message.
+                            HandshakeState nextState = upcomingStates.getFirst();
+                            if (nextState == HS_CLIENT_KEY_EXCHANGE) {
+                                isClientMessage = true;
+                            }
+                        }
 
+                        if (isClientMessage) {
+                            if (handshakeState != HS_CLIENT_CERTIFICATE) {
+                                throw new SSLProtocolException(exceptionMsg);
+                            }
+
+                            // Not support CertificateURL extension yet.
+                            /*******************************************
+                            // clear up the alternatives list
+                            if (!alternatives.isEmpty()) {
+                            HandshakeState alternative = alternatives.pop();
+                            
                             if (alternative != HS_CERTIFICATE_URL) {
                                 throw new SSLProtocolException(exceptionMsg);
                             }
+                            }
+                            ********************************************/
+                        } else {
+                            if ((handshakeState != HS_SERVER_CERTIFICATE)) {
+                                throw new SSLProtocolException(exceptionMsg);
+                            }
                         }
-                        ********************************************/
-                    } else {
-                        if ((handshakeState != HS_SERVER_CERTIFICATE)) {
-                            throw new SSLProtocolException(exceptionMsg);
-                        }
-                    }
 
-                    break;
-                } else if (!handshakeState.isOptional) {
+                        break;
+                    } else if (!handshakeState.isOptional) {
+                        throw new SSLProtocolException(exceptionMsg);
+                    } // Otherwise, looking for next state track.
+                }
+
+                // No present state.
+                if (!hasPresentState) {
                     throw new SSLProtocolException(exceptionMsg);
-                }   // Otherwise, looking for next state track.
-            }
+                }
 
-            // No present state.
-            if (!hasPresentState) {
-                throw new SSLProtocolException(exceptionMsg);
-            }
+                // no new upcoming states.
 
-            // no new upcoming states.
+                break;
 
-            break;
+            default:
+                // Check and update the present state.
+                while (!upcomingStates.isEmpty()) {
+                    HandshakeState handshakeState = upcomingStates.pop();
+                    if (handshakeState.handshakeType == handshakeType) {
+                        hasPresentState = true;
+                        break;
+                    } else if (!handshakeState.isOptional) {
+                        throw new SSLProtocolException(exceptionMsg);
+                    } // Otherwise, looking for next state track.
+                }
 
-        default:
-            // Check and update the present state.
-            while (!upcomingStates.isEmpty()) {
-                HandshakeState handshakeState = upcomingStates.pop();
-                if (handshakeState.handshakeType == handshakeType) {
-                    hasPresentState = true;
-                    break;
-                } else if (!handshakeState.isOptional) {
+                // No present state.
+                if (!hasPresentState) {
                     throw new SSLProtocolException(exceptionMsg);
-                }   // Otherwise, looking for next state track.
-            }
+                }
 
-            // No present state.
-            if (!hasPresentState) {
-                throw new SSLProtocolException(exceptionMsg);
-            }
-
-            // no new upcoming states.
+                // no new upcoming states.
         }
 
         if (debugIsOn) {
             for (HandshakeState handshakeState : upcomingStates) {
-                System.out.println(
-                    "upcoming handshake states: " + handshakeState);
+                System.out.println("upcoming handshake states: " + handshakeState);
             }
             for (HandshakeState handshakeState : alternatives) {
-                System.out.println(
-                    "upcoming handshake alternative state: " + handshakeState);
+                System.out.println("upcoming handshake alternative state: " + handshakeState);
             }
         }
     }
 
-    void changeCipherSpec(boolean isInput,
-            boolean isClient) throws SSLProtocolException {
+    void changeCipherSpec(boolean isInput, boolean isClient) throws SSLProtocolException {
 
         if (debugIsOn) {
-            System.out.println(
-                    "update handshake state: change_cipher_spec");
+            System.out.println("update handshake state: change_cipher_spec");
         }
 
         String exceptionMsg = "ChangeCipherSpec message sequence violation";
@@ -738,7 +692,7 @@ final class HandshakeStateManager {
                 break;
             } else if (!handshakeState.isOptional) {
                 throw new SSLProtocolException(exceptionMsg);
-            }   // Otherwise, looking for next state track.
+            } // Otherwise, looking for next state track.
         }
 
         // No present state.
@@ -750,12 +704,10 @@ final class HandshakeStateManager {
 
         if (debugIsOn) {
             for (HandshakeState handshakeState : upcomingStates) {
-                System.out.println(
-                    "upcoming handshake states: " + handshakeState);
+                System.out.println("upcoming handshake states: " + handshakeState);
             }
             for (HandshakeState handshakeState : alternatives) {
-                System.out.println(
-                    "upcoming handshake alternative state: " + handshakeState);
+                System.out.println("upcoming handshake alternative state: " + handshakeState);
             }
         }
     }

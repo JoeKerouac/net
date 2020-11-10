@@ -26,78 +26,89 @@
 package com.joe.ssl.openjdk.ssl;
 
 import java.io.IOException;
-import java.security.spec.ECParameterSpec;
-import java.security.spec.ECGenParameterSpec;
-import java.security.spec.InvalidParameterSpecException;
-import java.security.AlgorithmParameters;
-import java.security.AlgorithmConstraints;
-import java.security.CryptoPrimitive;
 import java.security.AccessController;
+import java.security.AlgorithmConstraints;
+import java.security.AlgorithmParameters;
+import java.security.CryptoPrimitive;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.InvalidParameterSpecException;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ArrayList;
+
 import javax.net.ssl.SSLProtocolException;
 
 import sun.security.action.GetPropertyAction;
 
-
-
 public final class EllipticCurvesExtension extends HelloExtension {
 
     /* Class and subclass dynamic debugging support */
-    private static final Debug debug = Debug.getInstance("ssl");
+    private static final Debug                             debug           = Debug
+        .getInstance("ssl");
 
-    private static final int ARBITRARY_PRIME = 0xff01;
-    private static final int ARBITRARY_CHAR2 = 0xff02;
+    private static final int                               ARBITRARY_PRIME = 0xff01;
+    private static final int                               ARBITRARY_CHAR2 = 0xff02;
 
     // speed up the searching
-    private static final Map<String, Integer> oidToIdMap = new HashMap<>();
-    private static final Map<Integer, String> idToOidMap = new HashMap<>();
+    private static final Map<String, Integer>              oidToIdMap      = new HashMap<>();
+    private static final Map<Integer, String>              idToOidMap      = new HashMap<>();
 
     // speed up the parameters construction
-    private static final Map<Integer,
-                AlgorithmParameters> idToParams = new HashMap<>();
+    private static final Map<Integer, AlgorithmParameters> idToParams      = new HashMap<>();
 
     // the supported elliptic curves
-    private static final int[] supportedCurveIds;
+    private static final int[]                             supportedCurveIds;
 
     // the curves of the extension
-    private final int[] curveIds;
+    private final int[]                                    curveIds;
 
     // See sun.security.util.CurveDB for the OIDs
     private static enum NamedEllipticCurve {
-        T163_K1(1,  "sect163k1",    "1.3.132.0.1",      true),  // NIST K-163
-        T163_R1(2,  "sect163r1",    "1.3.132.0.2",      false),
-        T163_R2(3,  "sect163r2",    "1.3.132.0.15",     true),  // NIST B-163
-        T193_R1(4,  "sect193r1",    "1.3.132.0.24",     false),
-        T193_R2(5,  "sect193r2",    "1.3.132.0.25",     false),
-        T233_K1(6,  "sect233k1",    "1.3.132.0.26",     true),  // NIST K-233
-        T233_R1(7,  "sect233r1",    "1.3.132.0.27",     true),  // NIST B-233
-        T239_K1(8,  "sect239k1",    "1.3.132.0.3",      false),
-        T283_K1(9,  "sect283k1",    "1.3.132.0.16",     true),  // NIST K-283
-        T283_R1(10, "sect283r1",    "1.3.132.0.17",     true),  // NIST B-283
-        T409_K1(11, "sect409k1",    "1.3.132.0.36",     true),  // NIST K-409
-        T409_R1(12, "sect409r1",    "1.3.132.0.37",     true),  // NIST B-409
-        T571_K1(13, "sect571k1",    "1.3.132.0.38",     true),  // NIST K-571
-        T571_R1(14, "sect571r1",    "1.3.132.0.39",     true),  // NIST B-571
+                                            T163_K1(1, "sect163k1", "1.3.132.0.1", true), // NIST K-163
+                                            T163_R1(2, "sect163r1", "1.3.132.0.2",
+                                                    false), T163_R2(3, "sect163r2", "1.3.132.0.15",
+                                                                    true), // NIST B-163
+                                            T193_R1(4, "sect193r1", "1.3.132.0.24",
+                                                    false), T193_R2(5, "sect193r2", "1.3.132.0.25",
+                                                                    false), T233_K1(6, "sect233k1",
+                                                                                    "1.3.132.0.26",
+                                                                                    true), // NIST K-233
+                                            T233_R1(7, "sect233r1", "1.3.132.0.27", true), // NIST B-233
+                                            T239_K1(8, "sect239k1", "1.3.132.0.3",
+                                                    false), T283_K1(9, "sect283k1", "1.3.132.0.16",
+                                                                    true), // NIST K-283
+                                            T283_R1(10, "sect283r1", "1.3.132.0.17", true), // NIST B-283
+                                            T409_K1(11, "sect409k1", "1.3.132.0.36", true), // NIST K-409
+                                            T409_R1(12, "sect409r1", "1.3.132.0.37", true), // NIST B-409
+                                            T571_K1(13, "sect571k1", "1.3.132.0.38", true), // NIST K-571
+                                            T571_R1(14, "sect571r1", "1.3.132.0.39", true), // NIST B-571
 
-        P160_K1(15, "secp160k1",    "1.3.132.0.9",      false),
-        P160_R1(16, "secp160r1",    "1.3.132.0.8",      false),
-        P160_R2(17, "secp160r2",    "1.3.132.0.30",     false),
-        P192_K1(18, "secp192k1",    "1.3.132.0.31",     false),
-        P192_R1(19, "secp192r1",    "1.2.840.10045.3.1.1", true), // NIST P-192
-        P224_K1(20, "secp224k1",    "1.3.132.0.32",     false),
-        P224_R1(21, "secp224r1",    "1.3.132.0.33",     true),  // NIST P-224
-        P256_K1(22, "secp256k1",    "1.3.132.0.10",     false),
-        P256_R1(23, "secp256r1",    "1.2.840.10045.3.1.7", true), // NIST P-256
-        P384_R1(24, "secp384r1",    "1.3.132.0.34",     true),  // NIST P-384
-        P521_R1(25, "secp521r1",    "1.3.132.0.35",     true);  // NIST P-521
+                                            P160_K1(15, "secp160k1", "1.3.132.0.9",
+                                                    false), P160_R1(16, "secp160r1", "1.3.132.0.8",
+                                                                    false), P160_R2(17, "secp160r2",
+                                                                                    "1.3.132.0.30",
+                                                                                    false), P192_K1(18,
+                                                                                                    "secp192k1",
+                                                                                                    "1.3.132.0.31",
+                                                                                                    false), P192_R1(19,
+                                                                                                                    "secp192r1",
+                                                                                                                    "1.2.840.10045.3.1.1",
+                                                                                                                    true), // NIST P-192
+                                            P224_K1(20, "secp224k1", "1.3.132.0.32",
+                                                    false), P224_R1(21, "secp224r1", "1.3.132.0.33",
+                                                                    true), // NIST P-224
+                                            P256_K1(22, "secp256k1", "1.3.132.0.10",
+                                                    false), P256_R1(23, "secp256r1",
+                                                                    "1.2.840.10045.3.1.7", true), // NIST P-256
+                                            P384_R1(24, "secp384r1", "1.3.132.0.34", true), // NIST P-384
+                                            P521_R1(25, "secp521r1", "1.3.132.0.35", true); // NIST P-521
 
-        int          id;
-        String       name;
-        String       oid;
-        boolean      isFips;
+        int     id;
+        String  name;
+        String  oid;
+        boolean isFips;
 
         NamedEllipticCurve(int id, String name, String oid, boolean isFips) {
             this.id = id;
@@ -105,11 +116,9 @@ public final class EllipticCurvesExtension extends HelloExtension {
             this.oid = oid;
             this.isFips = isFips;
 
-            if (oidToIdMap.put(oid, id) != null ||
-                idToOidMap.put(id, oid) != null) {
+            if (oidToIdMap.put(oid, id) != null || idToOidMap.put(id, oid) != null) {
 
-                throw new RuntimeException(
-                        "Duplicate named elliptic curve definition: " + name);
+                throw new RuntimeException("Duplicate named elliptic curve definition: " + name);
             }
         }
 
@@ -128,8 +137,7 @@ public final class EllipticCurvesExtension extends HelloExtension {
         boolean requireFips = SunJSSE.isFIPS();
 
         // hack code to initialize NamedEllipticCurve
-        NamedEllipticCurve nec =
-                NamedEllipticCurve.getCurve("secp256r1", false);
+        NamedEllipticCurve nec = NamedEllipticCurve.getCurve("secp256r1", false);
 
         // The value of the System Property defines a list of enabled named
         // curves in preference order, separated with comma.  For example:
@@ -138,51 +146,48 @@ public final class EllipticCurvesExtension extends HelloExtension {
         //
         // If the System Property is not defined or the value is empty, the
         // default curves and preferences will be used.
-        String property = AccessController.doPrivileged(
-                    new GetPropertyAction("jdk.tls.namedGroups"));
+        String property = AccessController
+            .doPrivileged(new GetPropertyAction("jdk.tls.namedGroups"));
         if (property != null && property.length() != 0) {
             // remove double quote marks from beginning/end of the property
-            if (property.length() > 1 && property.charAt(0) == '"' &&
-                    property.charAt(property.length() - 1) == '"') {
+            if (property.length() > 1 && property.charAt(0) == '"'
+                && property.charAt(property.length() - 1) == '"') {
                 property = property.substring(1, property.length() - 1);
             }
         }
 
         ArrayList<Integer> idList;
-        if (property != null && property.length() != 0) {   // customized curves
+        if (property != null && property.length() != 0) { // customized curves
             String[] curves = property.split(",");
             idList = new ArrayList<>(curves.length);
             for (String curve : curves) {
                 curve = curve.trim();
                 if (!curve.isEmpty()) {
-                    NamedEllipticCurve namedCurve =
-                            NamedEllipticCurve.getCurve(curve, requireFips);
+                    NamedEllipticCurve namedCurve = NamedEllipticCurve.getCurve(curve, requireFips);
                     if (namedCurve != null) {
                         if (isAvailableCurve(namedCurve.id)) {
                             idList.add(namedCurve.id);
                         }
-                    }   // ignore unknown curves
+                    } // ignore unknown curves
                 }
             }
             if (idList.isEmpty() && JsseJce.isEcAvailable()) {
                 throw new IllegalArgumentException(
-                    "System property jdk.tls.namedGroups(" + property + ") " +
-                    "contains no supported elliptic curves");
+                    "System property jdk.tls.namedGroups(" + property + ") "
+                                                   + "contains no supported elliptic curves");
             }
-        } else {        // default curves
+        } else { // default curves
             int[] ids;
             if (requireFips) {
                 ids = new int[] {
-                    // only NIST curves in FIPS mode
-                    23, 24, 25, 9, 10, 11, 12, 13, 14,
-                };
+                                  // only NIST curves in FIPS mode
+                                  23, 24, 25, 9, 10, 11, 12, 13, 14, };
             } else {
                 ids = new int[] {
-                    // NIST curves first
-                    23, 24, 25, 9, 10, 11, 12, 13, 14,
-                    // non-NIST curves
-                    22,
-                };
+                                  // NIST curves first
+                                  23, 24, 25, 9, 10, 11, 12, 13, 14,
+                                  // non-NIST curves
+                                  22, };
             }
 
             idList = new ArrayList<>(ids.length);
@@ -194,18 +199,17 @@ public final class EllipticCurvesExtension extends HelloExtension {
         }
 
         if (debug != null && idList.isEmpty()) {
-            debug.println(
-                "Initialized [jdk.tls.namedGroups|default] list contains " +
-                "no available elliptic curves. " +
-                (property != null ? "(" + property + ")" : "[Default]"));
+            debug.println("Initialized [jdk.tls.namedGroups|default] list contains "
+                          + "no available elliptic curves. "
+                          + (property != null ? "(" + property + ")" : "[Default]"));
         }
 
-            supportedCurveIds = new int[idList.size()];
-            int i = 0;
-            for (Integer id : idList) {
-                supportedCurveIds[i++] = id;
-            }
+        supportedCurveIds = new int[idList.size()];
+        int i = 0;
+        for (Integer id : idList) {
+            supportedCurveIds[i++] = id;
         }
+    }
 
     // check whether the curve is supported by the underlying providers
     private static boolean isAvailableCurve(int curveId) {
@@ -233,8 +237,7 @@ public final class EllipticCurvesExtension extends HelloExtension {
         this.curveIds = curveIds;
     }
 
-    EllipticCurvesExtension(HandshakeInStream s, int len)
-            throws IOException {
+    EllipticCurvesExtension(HandshakeInStream s, int len) throws IOException {
         super(ExtensionType.EXT_ELLIPTIC_CURVES);
         int k = s.getInt16();
         if (((len & 1) != 0) || (k + 2 != len)) {
@@ -257,14 +260,12 @@ public final class EllipticCurvesExtension extends HelloExtension {
         return getActiveCurves(constraints) >= 0;
     }
 
-    static EllipticCurvesExtension createExtension(
-                AlgorithmConstraints constraints) {
+    static EllipticCurvesExtension createExtension(AlgorithmConstraints constraints) {
 
         ArrayList<Integer> idList = new ArrayList<>(supportedCurveIds.length);
         for (int curveId : supportedCurveIds) {
-            if (constraints.permits(
-                    EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
-                                "EC", idToParams.get(curveId))) {
+            if (constraints.permits(EnumSet.of(CryptoPrimitive.KEY_AGREEMENT), "EC",
+                idToParams.get(curveId))) {
                 idList.add(curveId);
             }
         }
@@ -288,12 +289,10 @@ public final class EllipticCurvesExtension extends HelloExtension {
     }
 
     // get a preferred activated curve
-    private static int getPreferredCurve(int[] curves,
-                AlgorithmConstraints constraints) {
+    private static int getPreferredCurve(int[] curves, AlgorithmConstraints constraints) {
         for (int curveId : curves) {
             if (isSupported(curveId) && constraints.permits(
-                    EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
-                                "EC", idToParams.get(curveId))) {
+                EnumSet.of(CryptoPrimitive.KEY_AGREEMENT), "EC", idToParams.get(curveId))) {
                 return curveId;
             }
         }

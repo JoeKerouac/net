@@ -1,6 +1,5 @@
 package com.joe.tls.msg.extensions;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.joe.tls.SignatureAndHashAlgorithm;
-import com.joe.ssl.message.WrapedInputStream;
 import com.joe.tls.util.ByteBufferUtil;
 
 /**
@@ -31,31 +29,6 @@ public class ExtensionReader {
         register(new RenegotiationInfoExtensionReader());
         register(new ServerNameExtensionReader());
         register(new SignatureAndHashAlgorithmExtensionReader());
-    }
-
-    /**
-     * 从输入流读取扩展数据，此时数据流起始位置应该是扩展数据的总长度字段开始处
-     * 
-     * @param inputStream 输入流
-     * @return 读到的扩展数据
-     * @throws IOException IO异常
-     */
-    @Deprecated
-    public static List<HelloExtension> read(WrapedInputStream inputStream) throws IOException {
-        List<HelloExtension> extensions = new ArrayList<>();
-        // 总长度
-        int len = inputStream.readInt16();
-        while (len > 0) {
-            // 读取2byte类型
-            int extensionType = inputStream.readInt16();
-            // 路由读取
-            HelloExtensionReader reader = READER_MAP.getOrDefault(ExtensionType.get(extensionType),
-                UNKNOWN_READER);
-            HelloExtension extension = reader.read(extensionType, inputStream);
-            extensions.add(extension);
-            len -= extension.size();
-        }
-        return extensions;
     }
 
     /**
@@ -94,17 +67,6 @@ public class ExtensionReader {
          */
         ExtensionType readableType();
 
-        /**
-         * 从流中读取扩展，流应该从实际内容开始
-         * 
-         * @param extensionType 扩展类型
-         * @param inputStream 输入流
-         * @return 读取到的HelloExtension
-         * @throws IOException IO异常
-         */
-        @Deprecated
-        HelloExtension read(int extensionType, WrapedInputStream inputStream) throws IOException;
-
         HelloExtension read(int extensionType, ByteBuffer buffer);
     }
 
@@ -112,12 +74,6 @@ public class ExtensionReader {
         @Override
         public ExtensionType readableType() {
             return null;
-        }
-
-        @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            return new UnknownExtension(extensionType, inputStream.read(inputStream.readInt16()));
         }
 
         @Override
@@ -131,18 +87,6 @@ public class ExtensionReader {
         @Override
         public ExtensionType readableType() {
             return ExtensionType.EXT_ELLIPTIC_CURVES;
-        }
-
-        @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            // 抛弃总长度
-            inputStream.skip(2);
-            int[] curve = new int[inputStream.readInt16() / 2];
-            for (int i = 0; i < curve.length; i++) {
-                curve[i] = inputStream.readInt16();
-            }
-            return new EllipticCurvesExtension(curve);
         }
 
         @Override
@@ -164,18 +108,6 @@ public class ExtensionReader {
         }
 
         @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            // 抛弃总长度
-            inputStream.skip(2);
-            byte[] format = new byte[inputStream.readInt8()];
-            for (int i = 0; i < format.length; i++) {
-                format[i] = (byte) inputStream.readInt8();
-            }
-            return new EllipticPointFormatsExtension(format);
-        }
-
-        @Override
         public HelloExtension read(int extensionType, ByteBuffer buffer) {
             // 抛弃总长度
             buffer.getShort();
@@ -194,13 +126,6 @@ public class ExtensionReader {
         }
 
         @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            inputStream.skip(2);
-            return new ExtendedMasterSecretExtension();
-        }
-
-        @Override
         public HelloExtension read(int extensionType, ByteBuffer buffer) {
             buffer.getShort();
             return new ExtendedMasterSecretExtension();
@@ -212,13 +137,6 @@ public class ExtensionReader {
         @Override
         public ExtensionType readableType() {
             return ExtensionType.EXT_RENEGOTIATION_INFO;
-        }
-
-        @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            inputStream.skip(inputStream.readInt16());
-            return new RenegotiationInfoExtension();
         }
 
         @Override
@@ -235,19 +153,12 @@ public class ExtensionReader {
         }
 
         @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            inputStream.skip(4);
-            byte type = (byte) inputStream.readInt8();
-            int len = inputStream.readInt16();
-            return new ServerNameExtension(type, inputStream.read(len));
-        }
-
-        @Override
         public HelloExtension read(int extensionType, ByteBuffer buffer) {
+            // 跳过4byte信息
             buffer.getInt();
             byte type = buffer.get();
-            return new ServerNameExtension(type, ByteBufferUtil.getInt16(buffer));
+            byte[] serverName = ByteBufferUtil.getInt16(buffer);
+            return new ServerNameExtension(type, serverName);
         }
     }
 
@@ -255,20 +166,6 @@ public class ExtensionReader {
         @Override
         public ExtensionType readableType() {
             return ExtensionType.EXT_SIGNATURE_ALGORITHMS;
-        }
-
-        @Override
-        public HelloExtension read(int extensionType,
-                                   WrapedInputStream inputStream) throws IOException {
-            inputStream.skip(2);
-            int len = inputStream.readInt16() / 2;
-            Map<Integer, SignatureAndHashAlgorithm> allSupports = SignatureAndHashAlgorithm
-                .getAllSupports();
-            List<SignatureAndHashAlgorithm> supports = new ArrayList<>();
-            for (int i = 0; i < len; i++) {
-                supports.add(allSupports.get(inputStream.readInt16()));
-            }
-            return new SignatureAndHashAlgorithmExtension(supports);
         }
 
         @Override

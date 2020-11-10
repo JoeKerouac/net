@@ -23,17 +23,12 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
-
-
-
-
-
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
+
 import javax.net.ssl.SSLHandshakeException;
 
 /*
@@ -53,7 +48,7 @@ final class DHClientKeyExchange extends HandshakeMessage {
      * This value may be empty if it was included in the
      * client's certificate ...
      */
-    private byte dh_Yc[];               // 1 to 2^16 -1 bytes
+    private byte dh_Yc[]; // 1 to 2^16 -1 bytes
 
     BigInteger getClientPublicKey() {
         return dh_Yc == null ? null : new BigInteger(1, dh_Yc);
@@ -83,8 +78,7 @@ final class DHClientKeyExchange extends HandshakeMessage {
         } else {
             // currently, we don't support cipher suites that requires
             // implicit public key of client.
-            throw new SSLHandshakeException(
-                    "Unsupported implicit client DiffieHellman public key");
+            throw new SSLHandshakeException("Unsupported implicit client DiffieHellman public key");
         }
     }
 

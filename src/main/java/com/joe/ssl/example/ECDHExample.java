@@ -8,9 +8,10 @@ import javax.crypto.KeyAgreement;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
-import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
-import com.joe.ssl.crypto.impl.SunecECDHKeyExchangeSpi;
+import com.joe.tls.ECDHKeyPair;
+import com.joe.tls.crypto.ECDHKeyExchangeSpi;
+import com.joe.tls.crypto.impl.BCECDHKeyExchangeSpi;
+import com.joe.tls.crypto.impl.SunecECDHKeyExchangeSpi;
 
 /**
  * @author JoeKerouac
@@ -21,9 +22,9 @@ public class ECDHExample {
 
     public static void main(String[] args) throws Exception {
         test();
-//        BCECDHKeyExchangeSpi bcecdhKeyExchangeSpi = new BCECDHKeyExchangeSpi();
-//        ECDHKeyPair ecdhKeyPair = bcecdhKeyExchangeSpi.generate(9);
-//        bcecdhKeyExchangeSpi.keyExchange(ecdhKeyPair.getPublicKey(), ecdhKeyPair.getPrivateKey(), 9);
+        //        BCECDHKeyExchangeSpi bcecdhKeyExchangeSpi = new BCECDHKeyExchangeSpi();
+        //        ECDHKeyPair ecdhKeyPair = bcecdhKeyExchangeSpi.generate(9);
+        //        bcecdhKeyExchangeSpi.keyExchange(ecdhKeyPair.getPublicKey(), ecdhKeyPair.getPrivateKey(), 9);
     }
 
     public static void test() throws Exception {

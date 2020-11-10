@@ -23,7 +23,6 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
 import java.security.*;
@@ -59,22 +58,21 @@ public abstract class SunJSSE extends Provider {
 
     private static final long serialVersionUID = 3231825739635378733L;
 
-    private static String info = "Sun JSSE provider" +
-        "(PKCS12, SunX509/PKIX key/trust factories, " +
-        "SSLv3/TLSv1/TLSv1.1/TLSv1.2)";
+    private static String     info             = "Sun JSSE provider"
+                                                 + "(PKCS12, SunX509/PKIX key/trust factories, "
+                                                 + "SSLv3/TLSv1/TLSv1.1/TLSv1.2)";
 
-    private static String fipsInfo =
-        "Sun JSSE provider (FIPS mode, crypto provider ";
+    private static String     fipsInfo         = "Sun JSSE provider (FIPS mode, crypto provider ";
 
     // tri-valued flag:
     // null  := no final decision made
     // false := data structures initialized in non-FIPS mode
     // true  := data structures initialized in FIPS mode
-    private static Boolean fips;
+    private static Boolean    fips;
 
     // the FIPS certificate crypto provider that we use to perform all crypto
     // operations. null in non-FIPS mode
-    static Provider cryptoProvider;
+    static Provider           cryptoProvider;
 
     protected static synchronized boolean isFIPS() {
         if (fips == null) {
@@ -91,13 +89,11 @@ public abstract class SunJSSE extends Provider {
             cryptoProvider = p;
         } else {
             if (fips == false) {
-                throw new ProviderException
-                    ("SunJSSE already initialized in non-FIPS mode");
+                throw new ProviderException("SunJSSE already initialized in non-FIPS mode");
             }
             if (cryptoProvider != p) {
-                throw new ProviderException
-                    ("SunJSSE already initialized with FIPS crypto provider "
-                    + cryptoProvider);
+                throw new ProviderException(
+                    "SunJSSE already initialized with FIPS crypto provider " + cryptoProvider);
             }
         }
     }
@@ -107,19 +103,18 @@ public abstract class SunJSSE extends Provider {
         super("SunJSSE", 1.8d, info);
         subclassCheck();
         if (Boolean.TRUE.equals(fips)) {
-            throw new ProviderException
-                ("SunJSSE is already initialized in FIPS mode");
+            throw new ProviderException("SunJSSE is already initialized in FIPS mode");
         }
         registerAlgorithms(false);
     }
 
     // preferred constructor to enable FIPS mode at runtime
-    protected SunJSSE(Provider cryptoProvider){
+    protected SunJSSE(Provider cryptoProvider) {
         this(checkNull(cryptoProvider), cryptoProvider.getName());
     }
 
     // constructor to enable FIPS mode from java.security file
-    protected SunJSSE(String cryptoProvider){
+    protected SunJSSE(String cryptoProvider) {
         this(null, checkNull(cryptoProvider));
     }
 
@@ -130,8 +125,7 @@ public abstract class SunJSSE extends Provider {
         return t;
     }
 
-    private SunJSSE(Provider cryptoProvider,
-                    String providerName) {
+    private SunJSSE(Provider cryptoProvider, String providerName) {
         super("SunJSSE", 1.8d, fipsInfo + providerName + ")");
         subclassCheck();
         if (cryptoProvider == null) {
@@ -139,8 +133,7 @@ public abstract class SunJSSE extends Provider {
             // loaded. That is not good but unavoidable here.
             cryptoProvider = Security.getProvider(providerName);
             if (cryptoProvider == null) {
-                throw new ProviderException
-                    ("Crypto provider not installed: " + providerName);
+                throw new ProviderException("Crypto provider not installed: " + providerName);
             }
         }
         ensureFIPS(cryptoProvider);
@@ -159,75 +152,56 @@ public abstract class SunJSSE extends Provider {
 
     private void doRegister(boolean isfips) {
         if (isfips == false) {
-            put("KeyFactory.RSA",
-                "sun.security.rsa.RSAKeyFactory");
+            put("KeyFactory.RSA", "sun.security.rsa.RSAKeyFactory");
             put("Alg.Alias.KeyFactory.1.2.840.113549.1.1", "RSA");
             put("Alg.Alias.KeyFactory.OID.1.2.840.113549.1.1", "RSA");
 
-            put("KeyPairGenerator.RSA",
-                "sun.security.rsa.RSAKeyPairGenerator");
+            put("KeyPairGenerator.RSA", "sun.security.rsa.RSAKeyPairGenerator");
             put("Alg.Alias.KeyPairGenerator.1.2.840.113549.1.1", "RSA");
             put("Alg.Alias.KeyPairGenerator.OID.1.2.840.113549.1.1", "RSA");
 
-            put("Signature.MD2withRSA",
-                "sun.security.rsa.RSASignature$MD2withRSA");
+            put("Signature.MD2withRSA", "sun.security.rsa.RSASignature$MD2withRSA");
             put("Alg.Alias.Signature.1.2.840.113549.1.1.2", "MD2withRSA");
-            put("Alg.Alias.Signature.OID.1.2.840.113549.1.1.2",
-                "MD2withRSA");
+            put("Alg.Alias.Signature.OID.1.2.840.113549.1.1.2", "MD2withRSA");
 
-            put("Signature.MD5withRSA",
-                "sun.security.rsa.RSASignature$MD5withRSA");
+            put("Signature.MD5withRSA", "sun.security.rsa.RSASignature$MD5withRSA");
             put("Alg.Alias.Signature.1.2.840.113549.1.1.4", "MD5withRSA");
-            put("Alg.Alias.Signature.OID.1.2.840.113549.1.1.4",
-                "MD5withRSA");
+            put("Alg.Alias.Signature.OID.1.2.840.113549.1.1.4", "MD5withRSA");
 
-            put("Signature.SHA1withRSA",
-                "sun.security.rsa.RSASignature$SHA1withRSA");
+            put("Signature.SHA1withRSA", "sun.security.rsa.RSASignature$SHA1withRSA");
             put("Alg.Alias.Signature.1.2.840.113549.1.1.5", "SHA1withRSA");
-            put("Alg.Alias.Signature.OID.1.2.840.113549.1.1.5",
-                "SHA1withRSA");
+            put("Alg.Alias.Signature.OID.1.2.840.113549.1.1.5", "SHA1withRSA");
             put("Alg.Alias.Signature.1.3.14.3.2.29", "SHA1withRSA");
             put("Alg.Alias.Signature.OID.1.3.14.3.2.29", "SHA1withRSA");
 
         }
-        put("Signature.MD5andSHA1withRSA",
-            "RSASignature");
+        put("Signature.MD5andSHA1withRSA", "RSASignature");
 
-        put("KeyManagerFactory.SunX509",
-            "KeyManagerFactoryImpl$SunX509");
-        put("KeyManagerFactory.NewSunX509",
-            "KeyManagerFactoryImpl$X509");
+        put("KeyManagerFactory.SunX509", "KeyManagerFactoryImpl$SunX509");
+        put("KeyManagerFactory.NewSunX509", "KeyManagerFactoryImpl$X509");
         put("Alg.Alias.KeyManagerFactory.PKIX", "NewSunX509");
 
-        put("TrustManagerFactory.SunX509",
-            "TrustManagerFactoryImpl$SimpleFactory");
-        put("TrustManagerFactory.PKIX",
-            "TrustManagerFactoryImpl$PKIXFactory");
+        put("TrustManagerFactory.SunX509", "TrustManagerFactoryImpl$SimpleFactory");
+        put("TrustManagerFactory.PKIX", "TrustManagerFactoryImpl$PKIXFactory");
         put("Alg.Alias.TrustManagerFactory.SunPKIX", "PKIX");
         put("Alg.Alias.TrustManagerFactory.X509", "PKIX");
         put("Alg.Alias.TrustManagerFactory.X.509", "PKIX");
 
-        put("SSLContext.TLSv1",
-            "SSLContextImpl$TLS10Context");
-        put("SSLContext.TLSv1.1",
-            "SSLContextImpl$TLS11Context");
-        put("SSLContext.TLSv1.2",
-            "SSLContextImpl$TLS12Context");
-        put("SSLContext.TLS",
-            "SSLContextImpl$TLSContext");
+        put("SSLContext.TLSv1", "SSLContextImpl$TLS10Context");
+        put("SSLContext.TLSv1.1", "SSLContextImpl$TLS11Context");
+        put("SSLContext.TLSv1.2", "SSLContextImpl$TLS12Context");
+        put("SSLContext.TLS", "SSLContextImpl$TLSContext");
         if (isfips == false) {
             put("Alg.Alias.SSLContext.SSL", "TLS");
             put("Alg.Alias.SSLContext.SSLv3", "TLSv1");
         }
 
-        put("SSLContext.Default",
-            "SSLContextImpl$DefaultSSLContext");
+        put("SSLContext.Default", "SSLContextImpl$DefaultSSLContext");
 
         /*
          * KeyStore
          */
-        put("KeyStore.PKCS12",
-            "sun.security.pkcs12.PKCS12KeyStore");
+        put("KeyStore.PKCS12", "sun.security.pkcs12.PKCS12KeyStore");
     }
 
     private void subclassCheck() {

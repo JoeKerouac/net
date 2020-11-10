@@ -23,23 +23,21 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.security.*;
 
-import javax.crypto.*;
-
-import javax.net.ssl.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLKeyException;
+import javax.net.ssl.SSLProtocolException;
 
 import sun.security.internal.spec.TlsRsaPremasterSecretParameterSpec;
-
-
-
-
-
-
 import sun.security.util.KeyUtil;
 
 /**
@@ -60,8 +58,8 @@ final class RSAClientKeyExchange extends HandshakeMessage {
      * here in DECRYPTED form.
      */
     private ProtocolVersion protocolVersion; // preMaster [0,1]
-    SecretKey preMaster;
-    private byte[] encrypted;           // same size as public modulus
+    SecretKey               preMaster;
+    private byte[]          encrypted;       // same size as public modulus
 
     /*
      * Client randomly creates a pre-master secret and encrypts it
@@ -69,29 +67,27 @@ final class RSAClientKeyExchange extends HandshakeMessage {
      * it, using its RSA private key.  Result is the same size as the
      * server's public key, and uses PKCS #1 block format 02.
      */
-    RSAClientKeyExchange(ProtocolVersion protocolVersion,
-                         ProtocolVersion maxVersion,
+    RSAClientKeyExchange(ProtocolVersion protocolVersion, ProtocolVersion maxVersion,
                          SecureRandom generator, PublicKey publicKey) throws IOException {
         if (publicKey.getAlgorithm().equals("RSA") == false) {
-            throw new SSLKeyException("Public key not of type RSA: " +
-                publicKey.getAlgorithm());
+            throw new SSLKeyException("Public key not of type RSA: " + publicKey.getAlgorithm());
         }
         this.protocolVersion = protocolVersion;
 
         try {
-            String s = ((protocolVersion.v >= ProtocolVersion.TLS12.v) ?
-                "SunTls12RsaPremasterSecret" : "SunTlsRsaPremasterSecret");
+            String s = ((protocolVersion.v >= ProtocolVersion.TLS12.v)
+                ? "SunTls12RsaPremasterSecret"
+                : "SunTlsRsaPremasterSecret");
             KeyGenerator kg = JsseJce.getKeyGenerator(s);
-            kg.init(new TlsRsaPremasterSecretParameterSpec(
-                    maxVersion.v, protocolVersion.v), generator);
+            kg.init(new TlsRsaPremasterSecretParameterSpec(maxVersion.v, protocolVersion.v),
+                generator);
             preMaster = kg.generateKey();
 
             Cipher cipher = JsseJce.getCipher(JsseJce.CIPHER_RSA_PKCS1);
             cipher.init(Cipher.WRAP_MODE, publicKey, generator);
             encrypted = cipher.wrap(preMaster);
         } catch (GeneralSecurityException e) {
-            throw (SSLKeyException)new SSLKeyException
-                                ("RSA premaster secret error").initCause(e);
+            throw (SSLKeyException) new SSLKeyException("RSA premaster secret error").initCause(e);
         }
     }
 
@@ -104,16 +100,16 @@ final class RSAClientKeyExchange extends HandshakeMessage {
             return cipher.getProvider().toString();
         } catch (Exception e) {
             if (debug != null && Debug.isOn("handshake")) {
-                System.out.println("Retrieving The Cipher provider name" +
-                        " caused exception " + e.getMessage());
+                System.out.println(
+                    "Retrieving The Cipher provider name" + " caused exception " + e.getMessage());
             }
         }
         try {
             return cipher.toString() + " (provider name not available)";
         } catch (Exception e) {
             if (debug != null && Debug.isOn("handshake")) {
-                System.out.println("Retrieving The Cipher name" +
-                        " caused exception " + e.getMessage());
+                System.out
+                    .println("Retrieving The Cipher name" + " caused exception " + e.getMessage());
             }
         }
         return "(cipher/provider names not available)";
@@ -123,23 +119,20 @@ final class RSAClientKeyExchange extends HandshakeMessage {
      * Server gets the PKCS #1 (block format 02) data, decrypts
      * it with its private key.
      */
-    RSAClientKeyExchange(ProtocolVersion currentVersion,
-                         ProtocolVersion maxVersion,
-                         SecureRandom generator, HandshakeInStream input,
-                         int messageSize, PrivateKey privateKey) throws IOException {
+    RSAClientKeyExchange(ProtocolVersion currentVersion, ProtocolVersion maxVersion,
+                         SecureRandom generator, HandshakeInStream input, int messageSize,
+                         PrivateKey privateKey) throws IOException {
 
         if (privateKey.getAlgorithm().equals("RSA") == false) {
-            throw new SSLKeyException("Private key not of type RSA: " +
-                 privateKey.getAlgorithm());
+            throw new SSLKeyException("Private key not of type RSA: " + privateKey.getAlgorithm());
         }
 
         if (currentVersion.v >= ProtocolVersion.TLS10.v) {
             encrypted = input.getBytes16();
         } else {
-            encrypted = new byte [messageSize];
+            encrypted = new byte[messageSize];
             if (input.read(encrypted) != messageSize) {
-                throw new SSLProtocolException(
-                        "SSL: read PreMasterSecret: short read");
+                throw new SSLProtocolException("SSL: read PreMasterSecret: short read");
             }
         }
 
@@ -150,19 +143,16 @@ final class RSAClientKeyExchange extends HandshakeMessage {
             try {
                 // Try UNWRAP_MODE mode firstly.
                 cipher.init(Cipher.UNWRAP_MODE, privateKey,
-                        new TlsRsaPremasterSecretParameterSpec(
-                                maxVersion.v, currentVersion.v),
-                        generator);
+                    new TlsRsaPremasterSecretParameterSpec(maxVersion.v, currentVersion.v),
+                    generator);
 
                 // The provider selection can be delayed, please don't call
                 // any Cipher method before the call to Cipher.init().
-                needFailover = !KeyUtil.isOracleJCEProvider(
-                        cipher.getProvider().getName());
+                needFailover = !KeyUtil.isOracleJCEProvider(cipher.getProvider().getName());
             } catch (InvalidKeyException | UnsupportedOperationException iue) {
                 if (debug != null && Debug.isOn("handshake")) {
-                    System.out.println("The Cipher provider "
-                            + safeProviderName(cipher)
-                            + " caused exception: " + iue.getMessage());
+                    System.out.println("The Cipher provider " + safeProviderName(cipher)
+                                       + " caused exception: " + iue.getMessage());
                 }
 
                 needFailover = true;
@@ -182,21 +172,18 @@ final class RSAClientKeyExchange extends HandshakeMessage {
                     // Note: encoded == null
                     failed = true;
                 }
-                encoded = KeyUtil.checkTlsPreMasterSecretKey(
-                                maxVersion.v, currentVersion.v,
-                                generator, encoded, failed);
-                preMaster = generatePreMasterSecret(
-                                maxVersion.v, currentVersion.v,
-                                encoded, generator);
+                encoded = KeyUtil.checkTlsPreMasterSecretKey(maxVersion.v, currentVersion.v,
+                    generator, encoded, failed);
+                preMaster = generatePreMasterSecret(maxVersion.v, currentVersion.v, encoded,
+                    generator);
             } else {
                 // the cipher should have been initialized
-                preMaster = (SecretKey)cipher.unwrap(encrypted,
-                        "TlsRsaPremasterSecret", Cipher.SECRET_KEY);
+                preMaster = (SecretKey) cipher.unwrap(encrypted, "TlsRsaPremasterSecret",
+                    Cipher.SECRET_KEY);
             }
         } catch (InvalidKeyException ibk) {
             // the message is too big to process with RSA
-            throw new SSLException(
-                "Unable to process PreMasterSecret", ibk);
+            throw new SSLException("Unable to process PreMasterSecret", ibk);
         } catch (Exception e) {
             // unlikely to happen, otherwise, must be a provider exception
             if (debug != null && Debug.isOn("handshake")) {
@@ -209,24 +196,22 @@ final class RSAClientKeyExchange extends HandshakeMessage {
 
     // generate a premaster secret with the specified version number
     @SuppressWarnings("deprecation")
-    private static SecretKey generatePreMasterSecret(
-            int clientVersion, int serverVersion,
-            byte[] encodedSecret, SecureRandom generator) {
+    private static SecretKey generatePreMasterSecret(int clientVersion, int serverVersion,
+                                                     byte[] encodedSecret, SecureRandom generator) {
 
         if (debug != null && Debug.isOn("handshake")) {
             System.out.println("Generating a premaster secret");
         }
 
         try {
-            String s = ((clientVersion >= ProtocolVersion.TLS12.v) ?
-                "SunTls12RsaPremasterSecret" : "SunTlsRsaPremasterSecret");
+            String s = ((clientVersion >= ProtocolVersion.TLS12.v) ? "SunTls12RsaPremasterSecret"
+                : "SunTlsRsaPremasterSecret");
             KeyGenerator kg = JsseJce.getKeyGenerator(s);
-            kg.init(new TlsRsaPremasterSecretParameterSpec(
-                    clientVersion, serverVersion, encodedSecret),
-                    generator);
+            kg.init(
+                new TlsRsaPremasterSecretParameterSpec(clientVersion, serverVersion, encodedSecret),
+                generator);
             return kg.generateKey();
-        } catch (InvalidAlgorithmParameterException |
-                NoSuchAlgorithmException iae) {
+        } catch (InvalidAlgorithmParameterException | NoSuchAlgorithmException iae) {
             // unlikely to happen, otherwise, must be a provider exception
             if (debug != null && Debug.isOn("handshake")) {
                 System.out.println("RSA premaster secret generation error:");

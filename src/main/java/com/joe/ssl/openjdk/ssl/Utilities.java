@@ -25,10 +25,15 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-import javax.net.ssl.*;
-import java.util.*;
-import sun.net.util.IPAddressUtil;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.StandardConstants;
+
+import sun.net.util.IPAddressUtil;
 
 /**
  * A utility class to share the static methods.
@@ -44,8 +49,8 @@ final class Utilities {
      *
      * @return a list of {@link SNIServerName}
      */
-    static List<SNIServerName> addToSNIServerNameList(
-            List<SNIServerName> serverNames, String hostname) {
+    static List<SNIServerName> addToSNIServerNameList(List<SNIServerName> serverNames,
+                                                      String hostname) {
 
         SNIHostName sniHostName = rawToSNIHostName(hostname);
         if (sniHostName == null) {
@@ -53,9 +58,8 @@ final class Utilities {
         }
 
         int size = serverNames.size();
-        List<SNIServerName> sniList = (size != 0) ?
-                new ArrayList<SNIServerName>(serverNames) :
-                new ArrayList<SNIServerName>(1);
+        List<SNIServerName> sniList = (size != 0) ? new ArrayList<SNIServerName>(serverNames)
+            : new ArrayList<SNIServerName>(1);
 
         boolean reset = false;
         for (int i = 0; i < size; i++) {
@@ -63,9 +67,9 @@ final class Utilities {
             if (serverName.getType() == StandardConstants.SNI_HOST_NAME) {
                 sniList.set(i, sniHostName);
                 if (Debug.isOn("ssl")) {
-                    System.out.println(Thread.currentThread().getName() +
-                        ", the previous server name in SNI (" + serverName +
-                        ") was replaced with (" + sniHostName + ")");
+                    System.out.println(
+                        Thread.currentThread().getName() + ", the previous server name in SNI ("
+                                       + serverName + ") was replaced with (" + sniHostName + ")");
                 }
                 reset = true;
                 break;
@@ -76,7 +80,7 @@ final class Utilities {
             sniList.add(sniHostName);
         }
 
-        return Collections.<SNIServerName>unmodifiableList(sniList);
+        return Collections.<SNIServerName> unmodifiableList(sniList);
     }
 
     /**
@@ -94,19 +98,17 @@ final class Utilities {
      */
     private static SNIHostName rawToSNIHostName(String hostname) {
         SNIHostName sniHostName = null;
-        if (hostname != null && hostname.indexOf('.') > 0 &&
-                !hostname.endsWith(".") &&
-                !IPAddressUtil.isIPv4LiteralAddress(hostname) &&
-                !IPAddressUtil.isIPv6LiteralAddress(hostname)) {
+        if (hostname != null && hostname.indexOf('.') > 0 && !hostname.endsWith(".")
+            && !IPAddressUtil.isIPv4LiteralAddress(hostname)
+            && !IPAddressUtil.isIPv6LiteralAddress(hostname)) {
 
             try {
                 sniHostName = new SNIHostName(hostname);
             } catch (IllegalArgumentException iae) {
                 // don't bother to handle illegal host_name
                 if (Debug.isOn("ssl")) {
-                    System.out.println(Thread.currentThread().getName() +
-                        ", \"" + hostname + "\" " +
-                        "is not a legal HostName for  server name indication");
+                    System.out.println(Thread.currentThread().getName() + ", \"" + hostname + "\" "
+                                       + "is not a legal HostName for  server name indication");
                 }
             }
         }

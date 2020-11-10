@@ -2,7 +2,7 @@ package com.joe.tls.msg.impl;
 
 import java.nio.ByteBuffer;
 
-import com.joe.ssl.crypto.PhashSpi;
+import com.joe.tls.crypto.PhashSpi;
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.util.ByteBufferUtil;

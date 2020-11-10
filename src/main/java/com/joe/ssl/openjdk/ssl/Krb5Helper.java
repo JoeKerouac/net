@@ -25,14 +25,8 @@
 
 package com.joe.ssl.openjdk.ssl;
 
+import java.security.*;
 
-
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.Permission;
-import java.security.Principal;
-import java.security.PrivilegedAction;
-import javax.crypto.SecretKey;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
@@ -41,27 +35,29 @@ import javax.security.auth.login.LoginException;
  */
 public final class Krb5Helper {
 
-    private Krb5Helper() { }
+    private Krb5Helper() {
+    }
 
     // loads Krb5Proxy implementation class if available
-    private static final String IMPL_CLASS =
-        "krb5.Krb5ProxyImpl";
+    private static final String    IMPL_CLASS = "krb5.Krb5ProxyImpl";
 
-    private static final Krb5Proxy proxy =
-        AccessController.doPrivileged(new PrivilegedAction<Krb5Proxy>() {
-            @Override
-            public Krb5Proxy run() {
-                try {
-                    Class<?> c = Class.forName(IMPL_CLASS, true, null);
-                    return (Krb5Proxy)c.newInstance();
-                } catch (ClassNotFoundException cnf) {
-                    return null;
-                } catch (InstantiationException e) {
-                    throw new AssertionError(e);
-                } catch (IllegalAccessException e) {
-                    throw new AssertionError(e);
-                }
-            }});
+    private static final Krb5Proxy proxy      = AccessController
+        .doPrivileged(new PrivilegedAction<Krb5Proxy>() {
+                                                      @Override
+                                                      public Krb5Proxy run() {
+                                                          try {
+                                                              Class<?> c = Class.forName(IMPL_CLASS,
+                                                                  true, null);
+                                                              return (Krb5Proxy) c.newInstance();
+                                                          } catch (ClassNotFoundException cnf) {
+                                                              return null;
+                                                          } catch (InstantiationException e) {
+                                                              throw new AssertionError(e);
+                                                          } catch (IllegalAccessException e) {
+                                                              throw new AssertionError(e);
+                                                          }
+                                                      }
+                                                  });
 
     /**
      * Returns true if Kerberos is available.
@@ -78,8 +74,7 @@ public final class Krb5Helper {
     /**
      * Returns the Subject associated with client-side of the SSL socket.
      */
-    public static Subject getClientSubject(AccessControlContext acc)
-            throws LoginException {
+    public static Subject getClientSubject(AccessControlContext acc) throws LoginException {
         ensureAvailable();
         return proxy.getClientSubject(acc);
     }
@@ -87,8 +82,7 @@ public final class Krb5Helper {
     /**
      * Returns the Subject associated with server-side of the SSL socket.
      */
-    public static Subject getServerSubject(AccessControlContext acc)
-            throws LoginException {
+    public static Subject getServerSubject(AccessControlContext acc) throws LoginException {
         ensureAvailable();
         return proxy.getServerSubject(acc);
     }
@@ -96,8 +90,7 @@ public final class Krb5Helper {
     /**
      * Returns the KerberosKeys for the default server-side principal.
      */
-    public static Object getServiceCreds(AccessControlContext acc)
-            throws LoginException {
+    public static Object getServiceCreds(AccessControlContext acc) throws LoginException {
         ensureAvailable();
         return proxy.getServiceCreds(acc);
     }
@@ -121,8 +114,7 @@ public final class Krb5Helper {
     /**
      * Returns a ServicePermission for the principal name and action.
      */
-    public static Permission getServicePermission(String principalName,
-            String action) {
+    public static Permission getServicePermission(String principalName, String action) {
         ensureAvailable();
         return proxy.getServicePermission(principalName, action);
     }

@@ -25,26 +25,31 @@
 
 package com.joe.ssl.openjdk.ssl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
-import java.io.*;
-import java.util.*;
+import java.security.AccessController;
+import java.security.KeyStore;
+import java.security.PrivilegedAction;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Objects;
+import java.util.Set;
 
-import java.security.*;
-import java.security.cert.*;
-import java.security.cert.Certificate;
-
-import sun.security.action.*;
-
+import sun.security.action.GetPropertyAction;
+import sun.security.action.OpenFileInputStreamAction;
 
 /**
  * Collection of static utility methods to manage the default trusted KeyStores
  * effectively.
  */
 final class TrustStoreManager {
-    private static final Debug debug = Debug.getInstance("ssl");
+    private static final Debug              debug = Debug.getInstance("ssl");
 
     // A singleton service to manage the default trusted KeyStores effectively.
-    private static final TrustAnchorManager tam = new TrustAnchorManager();
+    private static final TrustAnchorManager tam   = new TrustAnchorManager();
 
     // Restrict instantiation of this class.
     private TrustStoreManager() {
@@ -75,36 +80,32 @@ final class TrustStoreManager {
      *    cacerts
      */
     private static final class TrustStoreDescriptor {
-        private static final String fileSep = File.separator;
-        private static final String defaultStorePath =
-                GetPropertyAction.privilegedGetProperty("java.home") +
-                fileSep + "lib" + fileSep + "security";
-        private static final String defaultStore =
-                defaultStorePath + fileSep + "cacerts";
-        private static final String jsseDefaultStore =
-                defaultStorePath + fileSep + "jssecacerts";
+        private static final String fileSep          = File.separator;
+        private static final String defaultStorePath = GetPropertyAction
+            .privilegedGetProperty("java.home") + fileSep + "lib" + fileSep + "security";
+        private static final String defaultStore     = defaultStorePath + fileSep + "cacerts";
+        private static final String jsseDefaultStore = defaultStorePath + fileSep + "jssecacerts";
 
         // the trust store name
-        private final String storeName;
+        private final String        storeName;
 
         // the trust store type, JKS/PKCS12
-        private final String storeType;
+        private final String        storeType;
 
         // the provider of the trust store
-        private final String storeProvider;
+        private final String        storeProvider;
 
         // the password used for the trust store
-        private final String storePassword;
+        private final String        storePassword;
 
         // the File object of the trust store
-        private final File storeFile;
+        private final File          storeFile;
 
         // the last modified time of the store
-        private final long lastModified;
+        private final long          lastModified;
 
-        private TrustStoreDescriptor(String storeName, String storeType,
-                String storeProvider, String storePassword,
-                File storeFile, long lastModified) {
+        private TrustStoreDescriptor(String storeName, String storeType, String storeProvider,
+                                     String storePassword, File storeFile, long lastModified) {
             this.storeName = storeName;
             this.storeType = storeType;
             this.storeProvider = storeProvider;
@@ -113,11 +114,10 @@ final class TrustStoreManager {
             this.lastModified = lastModified;
 
             if (debug != null && Debug.isOn("trustmanager")) {
-                System.out.println(
-                    "trustStore is: " + storeName + "\n" +
-                    "trustStore type is: " + storeType + "\n" +
-                    "trustStore provider is: " + storeProvider + "\n" +
-                    "the last modified time is: " + (new Date(lastModified)));
+                System.out
+                    .println("trustStore is: " + storeName + "\n" + "trustStore type is: "
+                             + storeType + "\n" + "trustStore provider is: " + storeProvider + "\n"
+                             + "the last modified time is: " + (new Date(lastModified)));
             }
         }
 
@@ -126,31 +126,30 @@ final class TrustStoreManager {
          * trusted KeyStore.
          */
         static TrustStoreDescriptor createInstance() {
-             return AccessController.doPrivileged(new PrivilegedAction<TrustStoreDescriptor>() {
+            return AccessController.doPrivileged(new PrivilegedAction<TrustStoreDescriptor>() {
 
                 @Override
                 public TrustStoreDescriptor run() {
                     // Get the system properties for trust store.
-                    String storePropName = System.getProperty(
-                            "javax.net.ssl.trustStore", jsseDefaultStore);
-                    String storePropType = System.getProperty(
-                            "javax.net.ssl.trustStoreType",
-                            KeyStore.getDefaultType());
-                    String storePropProvider = System.getProperty(
-                            "javax.net.ssl.trustStoreProvider", "");
-                    String storePropPassword = System.getProperty(
-                            "javax.net.ssl.trustStorePassword", "");
+                    String storePropName = System.getProperty("javax.net.ssl.trustStore",
+                        jsseDefaultStore);
+                    String storePropType = System.getProperty("javax.net.ssl.trustStoreType",
+                        KeyStore.getDefaultType());
+                    String storePropProvider = System
+                        .getProperty("javax.net.ssl.trustStoreProvider", "");
+                    String storePropPassword = System
+                        .getProperty("javax.net.ssl.trustStorePassword", "");
 
                     String temporaryName = "";
                     File temporaryFile = null;
                     long temporaryTime = 0L;
                     if (!"NONE".equals(storePropName)) {
-                        String[] fileNames =
-                                new String[] {storePropName, defaultStore};
+                        String[] fileNames = new String[] { storePropName, defaultStore };
                         for (String fileName : fileNames) {
                             File f = new File(fileName);
                             if (f.isFile() && f.canRead()) {
-                                temporaryName = fileName;;
+                                temporaryName = fileName;
+                                ;
                                 temporaryFile = f;
                                 temporaryTime = f.lastModified();
 
@@ -158,20 +157,16 @@ final class TrustStoreManager {
                             }
 
                             // Not break, the file is inaccessible.
-                            if (debug != null &&
-                                    Debug.isOn("trustmanager")) {
-                                System.out.println(
-                                    "Inaccessible trust store: " +
-                                    storePropName);
+                            if (debug != null && Debug.isOn("trustmanager")) {
+                                System.out.println("Inaccessible trust store: " + storePropName);
                             }
                         }
                     } else {
                         temporaryName = storePropName;
                     }
 
-                    return new TrustStoreDescriptor(
-                            temporaryName, storePropType, storePropProvider,
-                            storePropPassword, temporaryFile, temporaryTime);
+                    return new TrustStoreDescriptor(temporaryName, storePropType, storePropProvider,
+                        storePropPassword, temporaryFile, temporaryTime);
                 }
             });
         }
@@ -183,16 +178,15 @@ final class TrustStoreManager {
             }
 
             if (obj instanceof TrustStoreDescriptor) {
-                TrustStoreDescriptor that = (TrustStoreDescriptor)obj;
-                return ((this.lastModified == that.lastModified) &&
-                    Objects.equals(this.storeName, that.storeName) &&
-                    Objects.equals(this.storeType, that.storeType) &&
-                    Objects.equals(this.storeProvider, that.storeProvider));
+                TrustStoreDescriptor that = (TrustStoreDescriptor) obj;
+                return ((this.lastModified == that.lastModified)
+                        && Objects.equals(this.storeName, that.storeName)
+                        && Objects.equals(this.storeType, that.storeType)
+                        && Objects.equals(this.storeProvider, that.storeProvider));
             }
 
             return false;
         }
-
 
         // Please be careful if computing security-sensitive attributes'
         // hash code.  For example the storePassword should not be computed.
@@ -217,7 +211,7 @@ final class TrustStoreManager {
             }
 
             if (lastModified != 0L) {
-                result = (int)(31 * result + lastModified);
+                result = (int) (31 * result + lastModified);
             }
 
             return result;
@@ -232,13 +226,13 @@ final class TrustStoreManager {
      */
     private static final class TrustAnchorManager {
         // Last trust store descriptor.
-        private TrustStoreDescriptor descriptor;
+        private TrustStoreDescriptor                descriptor;
 
         // The key store used for the trust anchors.
         //
         // Use weak reference so that the heavy loaded KeyStore object can
         // be atomically cleared, and reloaded if needed.
-        private WeakReference<KeyStore> ksRef;
+        private WeakReference<KeyStore>             ksRef;
 
         // The trusted X.509 certificates in the key store.
         //
@@ -257,8 +251,7 @@ final class TrustStoreManager {
          *
          * @return null if the underlying KeyStore is not available.
          */
-        synchronized KeyStore getKeyStore(
-                TrustStoreDescriptor descriptor) throws Exception {
+        synchronized KeyStore getKeyStore(TrustStoreDescriptor descriptor) throws Exception {
 
             TrustStoreDescriptor temporaryDesc = this.descriptor;
             KeyStore ks = ksRef.get();
@@ -284,8 +277,7 @@ final class TrustStoreManager {
          *
          * @return empty collection if the underlying KeyStore is not available.
          */
-        synchronized Set<X509Certificate> getTrustedCerts(
-                TrustStoreDescriptor descriptor) throws Exception {
+        synchronized Set<X509Certificate> getTrustedCerts(TrustStoreDescriptor descriptor) throws Exception {
 
             KeyStore ks = null;
             TrustStoreDescriptor temporaryDesc = this.descriptor;
@@ -335,10 +327,8 @@ final class TrustStoreManager {
         /**
          * Load the the KeyStore as described in the specified descriptor.
          */
-        private static KeyStore loadKeyStore(
-                TrustStoreDescriptor descriptor) throws Exception {
-            if (!"NONE".equals(descriptor.storeName) &&
-                    descriptor.storeFile == null) {
+        private static KeyStore loadKeyStore(TrustStoreDescriptor descriptor) throws Exception {
+            if (!"NONE".equals(descriptor.storeName) && descriptor.storeFile == null) {
 
                 // No file available, no KeyStore available.
                 if (debug != null && Debug.isOn("trustmanager")) {
@@ -352,8 +342,7 @@ final class TrustStoreManager {
             if (descriptor.storeProvider.isEmpty()) {
                 ks = KeyStore.getInstance(descriptor.storeType);
             } else {
-                ks = KeyStore.getInstance(
-                        descriptor.storeType, descriptor.storeProvider);
+                ks = KeyStore.getInstance(descriptor.storeType, descriptor.storeProvider);
             }
 
             char[] password = null;
@@ -362,14 +351,13 @@ final class TrustStoreManager {
             }
 
             if (!"NONE".equals(descriptor.storeName)) {
-                try (FileInputStream fis = AccessController.doPrivileged(
-                        new OpenFileInputStreamAction(descriptor.storeFile))) {
+                try (FileInputStream fis = AccessController
+                    .doPrivileged(new OpenFileInputStreamAction(descriptor.storeFile))) {
                     ks.load(fis, password);
                 } catch (FileNotFoundException fnfe) {
                     // No file available, no KeyStore available.
                     if (debug != null && Debug.isOn("trustmanager")) {
-                        System.out.println(
-                            "Not available key store: " + descriptor.storeName);
+                        System.out.println("Not available key store: " + descriptor.storeName);
                     }
 
                     return null;
@@ -386,10 +374,10 @@ final class TrustStoreManager {
          */
         private static Set<X509Certificate> loadTrustedCerts(KeyStore ks) {
             if (ks == null) {
-                return Collections.<X509Certificate>emptySet();
+                return Collections.<X509Certificate> emptySet();
             }
 
-//            return TrustStoreUtil.getTrustedCerts(ks);
+            //            return TrustStoreUtil.getTrustedCerts(ks);
             return Collections.emptySet();
         }
     }

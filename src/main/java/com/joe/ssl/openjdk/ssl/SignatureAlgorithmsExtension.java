@@ -25,12 +25,6 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,20 +56,17 @@ import javax.net.ssl.SSLProtocolException;
 final class SignatureAlgorithmsExtension extends HelloExtension {
 
     private Collection<SignatureAndHashAlgorithm> algorithms;
-    private int algorithmsLen;  // length of supported_signature_algorithms
+    private int                                   algorithmsLen; // length of supported_signature_algorithms
 
-    SignatureAlgorithmsExtension(
-            Collection<SignatureAndHashAlgorithm> signAlgs) {
+    SignatureAlgorithmsExtension(Collection<SignatureAndHashAlgorithm> signAlgs) {
 
         super(ExtensionType.EXT_SIGNATURE_ALGORITHMS);
 
         algorithms = new ArrayList<SignatureAndHashAlgorithm>(signAlgs);
-        algorithmsLen =
-            SignatureAndHashAlgorithm.sizeInRecord() * algorithms.size();
+        algorithmsLen = SignatureAndHashAlgorithm.sizeInRecord() * algorithms.size();
     }
 
-    SignatureAlgorithmsExtension(HandshakeInStream s, int len)
-                throws IOException {
+    SignatureAlgorithmsExtension(HandshakeInStream s, int len) throws IOException {
         super(ExtensionType.EXT_SIGNATURE_ALGORITHMS);
 
         algorithmsLen = s.getInt16();
@@ -86,14 +77,14 @@ final class SignatureAlgorithmsExtension extends HelloExtension {
         algorithms = new ArrayList<SignatureAndHashAlgorithm>();
         int remains = algorithmsLen;
         int sequence = 0;
-        while (remains > 1) {   // needs at least two bytes
-            int hash = s.getInt8();         // hash algorithm
-            int signature = s.getInt8();    // signature algorithm
+        while (remains > 1) { // needs at least two bytes
+            int hash = s.getInt8(); // hash algorithm
+            int signature = s.getInt8(); // signature algorithm
 
-            SignatureAndHashAlgorithm algorithm =
-                SignatureAndHashAlgorithm.valueOf(hash, signature, ++sequence);
+            SignatureAndHashAlgorithm algorithm = SignatureAndHashAlgorithm.valueOf(hash, signature,
+                ++sequence);
             algorithms.add(algorithm);
-            remains -= 2;  // one byte for hash, one byte for signature
+            remains -= 2; // one byte for hash, one byte for signature
         }
 
         if (remains != 0) {
@@ -117,7 +108,7 @@ final class SignatureAlgorithmsExtension extends HelloExtension {
         s.putInt16(algorithmsLen);
 
         for (SignatureAndHashAlgorithm algorithm : algorithms) {
-            s.putInt8(algorithm.getHashValue());      // HashAlgorithm
+            s.putInt8(algorithm.getHashValue()); // HashAlgorithm
             s.putInt8(algorithm.getSignatureValue()); // SignatureAlgorithm
         }
     }
@@ -138,4 +129,3 @@ final class SignatureAlgorithmsExtension extends HelloExtension {
         return "Extension " + type + ", signature_algorithms: " + buffer;
     }
 }
-

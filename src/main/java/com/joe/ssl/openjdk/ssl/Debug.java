@@ -38,21 +38,19 @@ import sun.security.action.GetPropertyAction;
  */
 public class Debug {
 
-    private String prefix;
+    private String        prefix;
 
     private static String args;
 
     static {
-        args = AccessController.doPrivileged(
-            new GetPropertyAction("javax.net.debug", ""));
+        args = AccessController.doPrivileged(new GetPropertyAction("javax.net.debug", ""));
         args = args.toLowerCase(Locale.ENGLISH);
         if (args.equals("help")) {
             Help();
         }
     }
 
-    public static void Help()
-    {
+    public static void Help() {
         System.err.println();
         System.err.println("all            turn on all debugging");
         System.err.println("ssl            turn on ssl debugging");
@@ -85,8 +83,7 @@ public class Debug {
      * option is set. Set the prefix to be the same as option.
      */
 
-    public static Debug getInstance(String option)
-    {
+    public static Debug getInstance(String option) {
         return getInstance(option, option);
     }
 
@@ -94,8 +91,7 @@ public class Debug {
      * Get a Debug object corresponding to whether or not the given
      * option is set. Set the prefix to be prefix.
      */
-    public static Debug getInstance(String option, String prefix)
-    {
+    public static Debug getInstance(String option, String prefix) {
         if (isOn(option)) {
             Debug d = new Debug();
             d.prefix = prefix;
@@ -109,8 +105,7 @@ public class Debug {
      * True if the property "javax.net.debug" contains the
      * string "option".
      */
-    public static boolean isOn(String option)
-    {
+    public static boolean isOn(String option) {
         if (args == null) {
             return false;
         } else {
@@ -122,9 +117,8 @@ public class Debug {
             } else if ((n = args.indexOf("ssl")) != -1) {
                 if (args.indexOf("sslctx", n) == -1) {
                     // don't enable data and plaintext options by default
-                    if (!(option.equals("data")
-                        || option.equals("packet")
-                        || option.equals("plaintext"))) {
+                    if (!(option.equals("data") || option.equals("packet")
+                          || option.equals("plaintext"))) {
                         return true;
                     }
                 }
@@ -138,17 +132,15 @@ public class Debug {
      * created from the call to getInstance.
      */
 
-    public void println(String message)
-    {
-        System.err.println(prefix + ": "+message);
+    public void println(String message) {
+        System.err.println(prefix + ": " + message);
     }
 
     /**
      * print a blank line to stderr that is prefixed with the prefix.
      */
 
-    public void println()
-    {
+    public void println() {
         System.err.println(prefix + ":");
     }
 
@@ -156,9 +148,8 @@ public class Debug {
      * print a message to stderr that is prefixed with the prefix.
      */
 
-    public static void println(String prefix, String message)
-    {
-        System.err.println(prefix + ": "+message);
+    public static void println(String prefix, String message) {
+        System.err.println(prefix + ": " + message);
     }
 
     public static void println(PrintStream s, String name, byte[] data) {
@@ -167,7 +158,8 @@ public class Debug {
             s.print("null");
         } else {
             for (int i = 0; i < data.length; i++) {
-                if (i != 0) s.print(", ");
+                if (i != 0)
+                    s.print(", ");
                 s.print(data[i] & 0x0ff);
             }
         }
@@ -181,8 +173,7 @@ public class Debug {
      */
     static boolean getBooleanProperty(String propName, boolean defaultValue) {
         // if set, require value of either true or false
-        String b = AccessController.doPrivileged(
-                new GetPropertyAction(propName));
+        String b = AccessController.doPrivileged(new GetPropertyAction(propName));
         if (b == null) {
             return defaultValue;
         } else if (b.equalsIgnoreCase("false")) {
@@ -190,8 +181,8 @@ public class Debug {
         } else if (b.equalsIgnoreCase("true")) {
             return true;
         } else {
-            throw new RuntimeException("Value of " + propName
-                + " must either be 'true' or 'false'");
+            throw new RuntimeException(
+                "Value of " + propName + " must either be 'true' or 'false'");
         }
     }
 

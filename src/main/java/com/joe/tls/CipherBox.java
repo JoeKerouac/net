@@ -3,9 +3,9 @@ package com.joe.tls;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.CipherSpi;
-import com.joe.ssl.crypto.impl.AesCipher;
+import com.joe.tls.cipher.CipherSuite;
+import com.joe.tls.crypto.CipherSpi;
+import com.joe.tls.crypto.impl.AesCipher;
 import com.sun.crypto.provider.SunJCE;
 
 /**

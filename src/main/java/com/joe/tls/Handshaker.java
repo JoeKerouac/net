@@ -5,12 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.*;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
-import com.joe.ssl.crypto.PhashSpi;
-import com.joe.ssl.crypto.impl.BCECDHKeyExchangeSpi;
-import com.joe.ssl.example.ECDHKeyPair;
-import com.joe.ssl.message.TlsVersion;
+import com.joe.tls.cipher.CipherSuite;
+import com.joe.tls.crypto.ECDHKeyExchangeSpi;
+import com.joe.tls.crypto.PhashSpi;
+import com.joe.tls.crypto.impl.BCECDHKeyExchangeSpi;
 import com.joe.tls.enums.ContentType;
 import com.joe.tls.impl.InputRecordStreamImpl;
 import com.joe.tls.impl.OutputRecordStreamImpl;

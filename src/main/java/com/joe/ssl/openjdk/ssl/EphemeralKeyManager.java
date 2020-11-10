@@ -25,9 +25,9 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-import java.security.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
 
 /**
  * The "KeyManager" for ephemeral RSA keys. Ephemeral DH and ECDH keys
@@ -38,17 +38,15 @@ import java.security.*;
 final class EphemeralKeyManager {
 
     // indices for the keys array below
-    private final static int INDEX_RSA512 = 0;
-    private final static int INDEX_RSA1024 = 1;
+    private final static int         INDEX_RSA512  = 0;
+    private final static int         INDEX_RSA1024 = 1;
 
     /*
      * Current cached RSA KeyPairs. Elements are never null.
      * Indexed via the the constants above.
      */
-    private final EphemeralKeyPair[] keys = new EphemeralKeyPair[] {
-        new EphemeralKeyPair(null),
-        new EphemeralKeyPair(null),
-    };
+    private final EphemeralKeyPair[] keys          = new EphemeralKeyPair[] { new EphemeralKeyPair(
+        null), new EphemeralKeyPair(null), };
 
     EphemeralKeyManager() {
         // empty
@@ -89,14 +87,14 @@ final class EphemeralKeyManager {
     private static class EphemeralKeyPair {
 
         // maximum number of times a KeyPair is used
-        private final static int MAX_USE = 200;
+        private final static int  MAX_USE      = 200;
 
         // maximum time interval in which the keypair is used (1 hour in ms)
-        private final static long USE_INTERVAL = 3600*1000;
+        private final static long USE_INTERVAL = 3600 * 1000;
 
-        private KeyPair keyPair;
-        private int uses;
-        private long expirationTime;
+        private KeyPair           keyPair;
+        private int               uses;
+        private long              expirationTime;
 
         private EphemeralKeyPair(KeyPair keyPair) {
             this.keyPair = keyPair;

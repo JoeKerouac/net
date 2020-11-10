@@ -25,11 +25,6 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,23 +33,21 @@ import javax.net.ssl.SSLProtocolException;
 
 final class EllipticPointFormatsExtension extends HelloExtension {
 
-    final static int FMT_UNCOMPRESSED = 0;
-    final static int FMT_ANSIX962_COMPRESSED_PRIME = 1;
-    final static int FMT_ANSIX962_COMPRESSED_CHAR2 = 2;
+    final static int            FMT_UNCOMPRESSED              = 0;
+    final static int            FMT_ANSIX962_COMPRESSED_PRIME = 1;
+    final static int            FMT_ANSIX962_COMPRESSED_CHAR2 = 2;
 
-    static final HelloExtension DEFAULT =
-        new EllipticPointFormatsExtension(
-            new byte[] {FMT_UNCOMPRESSED});
+    static final HelloExtension DEFAULT                       = new EllipticPointFormatsExtension(
+        new byte[] { FMT_UNCOMPRESSED });
 
-    private final byte[] formats;
+    private final byte[]        formats;
 
     private EllipticPointFormatsExtension(byte[] formats) {
         super(ExtensionType.EXT_EC_POINT_FORMATS);
         this.formats = formats;
     }
 
-    EllipticPointFormatsExtension(HandshakeInStream s, int len)
-            throws IOException {
+    EllipticPointFormatsExtension(HandshakeInStream s, int len) throws IOException {
         super(ExtensionType.EXT_EC_POINT_FORMATS);
         formats = s.getBytes8();
         // RFC 4492 says uncompressed points must always be supported.
@@ -67,8 +60,7 @@ final class EllipticPointFormatsExtension extends HelloExtension {
             }
         }
         if (uncompressed == false) {
-            throw new SSLProtocolException
-                ("Peer does not support uncompressed points");
+            throw new SSLProtocolException("Peer does not support uncompressed points");
         }
     }
 
@@ -87,14 +79,14 @@ final class EllipticPointFormatsExtension extends HelloExtension {
     private static String toString(byte format) {
         int f = format & 0xff;
         switch (f) {
-        case FMT_UNCOMPRESSED:
-            return "uncompressed";
-        case FMT_ANSIX962_COMPRESSED_PRIME:
-            return "ansiX962_compressed_prime";
-        case FMT_ANSIX962_COMPRESSED_CHAR2:
-            return "ansiX962_compressed_char2";
-        default:
-            return "unknown-" + f;
+            case FMT_UNCOMPRESSED:
+                return "uncompressed";
+            case FMT_ANSIX962_COMPRESSED_PRIME:
+                return "ansiX962_compressed_prime";
+            case FMT_ANSIX962_COMPRESSED_CHAR2:
+                return "ansiX962_compressed_char2";
+            default:
+                return "unknown-" + f;
         }
     }
 

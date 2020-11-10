@@ -25,18 +25,12 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
 import java.io.IOException;
 import java.io.PrintStream;
-
 import java.security.PublicKey;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.*;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
 
 /**
  * ClientKeyExchange message for all ECDH based key exchange methods. It
@@ -60,7 +54,7 @@ final class ECDHClientKeyExchange extends HandshakeMessage {
 
     // Called by the client with its ephemeral public key.
     ECDHClientKeyExchange(PublicKey publicKey) {
-        ECPublicKey ecKey = (ECPublicKey)publicKey;
+        ECPublicKey ecKey = (ECPublicKey) publicKey;
         ECPoint point = ecKey.getW();
         ECParameterSpec params = ecKey.getParams();
         encodedPoint = JsseJce.encodePoint(point, params.getCurve());

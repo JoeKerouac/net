@@ -25,13 +25,14 @@
 
 package com.joe.ssl.openjdk.ssl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 
-
-
-import java.io.*;
-import java.net.*;
 import javax.net.ssl.SSLSocketFactory;
-
 
 /**
  * Implementation of an SSL socket factory.  This provides the public
@@ -85,9 +86,7 @@ final public class SSLSocketFactoryImpl extends SSLSocketFactory {
      * @param port number of the server's port
      */
     @Override
-    public Socket createSocket(String host, int port)
-    throws IOException, UnknownHostException
-    {
+    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
         return new SSLSocketImpl(context, host, port);
     }
 
@@ -109,16 +108,15 @@ final public class SSLSocketFactoryImpl extends SSLSocketFactory {
      */
     @Override
     public Socket createSocket(Socket s, String host, int port,
-            boolean autoClose) throws IOException {
+                               boolean autoClose) throws IOException {
         return new SSLSocketImpl(context, s, host, port, autoClose);
     }
 
     @Override
     public Socket createSocket(Socket s, InputStream consumed,
-            boolean autoClose) throws IOException {
+                               boolean autoClose) throws IOException {
         if (s == null) {
-            throw new NullPointerException(
-                    "the existing socket cannot be null");
+            throw new NullPointerException("the existing socket cannot be null");
         }
 
         return new SSLSocketImpl(context, s, consumed, autoClose);
@@ -134,12 +132,9 @@ final public class SSLSocketFactoryImpl extends SSLSocketFactory {
      * @param port its port
      */
     @Override
-    public Socket createSocket(InetAddress address, int port)
-    throws IOException
-    {
+    public Socket createSocket(InetAddress address, int port) throws IOException {
         return new SSLSocketImpl(context, address, port);
     }
-
 
     /**
      * Constructs an SSL connection to a named host at a specified port.
@@ -149,12 +144,9 @@ final public class SSLSocketFactoryImpl extends SSLSocketFactory {
      * address and port supplied.
      */
     @Override
-    public Socket createSocket(String host, int port,
-        InetAddress clientAddress, int clientPort)
-    throws IOException
-    {
-        return new SSLSocketImpl(context, host, port,
-                clientAddress, clientPort);
+    public Socket createSocket(String host, int port, InetAddress clientAddress,
+                               int clientPort) throws IOException {
+        return new SSLSocketImpl(context, host, port, clientAddress, clientPort);
     }
 
     /**
@@ -165,14 +157,10 @@ final public class SSLSocketFactoryImpl extends SSLSocketFactory {
      * the local address and port supplied.
      */
     @Override
-    public Socket createSocket(InetAddress address, int port,
-        InetAddress clientAddress, int clientPort)
-    throws IOException
-    {
-        return new SSLSocketImpl(context, address, port,
-                clientAddress, clientPort);
+    public Socket createSocket(InetAddress address, int port, InetAddress clientAddress,
+                               int clientPort) throws IOException {
+        return new SSLSocketImpl(context, address, port, clientAddress, clientPort);
     }
-
 
     /**
      * Returns the subset of the supported cipher suites which are

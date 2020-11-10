@@ -23,23 +23,16 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
+import static com.joe.ssl.openjdk.ssl.CipherSuite.*;
+
+import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-import java.nio.ByteBuffer;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
-
-
-
-
-
-
-import static com.joe.ssl.openjdk.ssl.CipherSuite.*;
 
 /**
  * This class computes the "Message Authentication Code" (MAC) for each
@@ -53,16 +46,16 @@ import static com.joe.ssl.openjdk.ssl.CipherSuite.*;
  */
 final class MAC extends Authenticator {
 
-    final static MAC NULL = new MAC();
+    final static MAC          NULL      = new MAC();
 
     // Value of the null MAC is fixed
     private static final byte nullMAC[] = new byte[0];
 
     // internal identifier for the MAC algorithm
-    private final MacAlg        macAlg;
+    private final MacAlg      macAlg;
 
     // JCE Mac object
-    private final Mac mac;
+    private final Mac         mac;
 
     private MAC() {
         macAlg = M_NULL;
@@ -72,8 +65,8 @@ final class MAC extends Authenticator {
     /**
      * Set up, configured for the given SSL/TLS MAC type and version.
      */
-    MAC(MacAlg macAlg, ProtocolVersion protocolVersion, SecretKey key)
-            throws NoSuchAlgorithmException, InvalidKeyException {
+    MAC(MacAlg macAlg, ProtocolVersion protocolVersion,
+        SecretKey key) throws NoSuchAlgorithmException, InvalidKeyException {
         super(protocolVersion);
         this.macAlg = macAlg;
 
@@ -85,9 +78,9 @@ final class MAC extends Authenticator {
         } else if (macAlg == M_SHA) {
             algorithm = tls ? "HmacSHA1" : "SslMacSHA1";
         } else if (macAlg == M_SHA256) {
-            algorithm = "HmacSHA256";    // TLS 1.2+
+            algorithm = "HmacSHA256"; // TLS 1.2+
         } else if (macAlg == M_SHA384) {
-            algorithm = "HmacSHA384";    // TLS 1.2+
+            algorithm = "HmacSHA384"; // TLS 1.2+
         } else {
             throw new RuntimeException("Unknown Mac " + macAlg);
         }
@@ -126,8 +119,7 @@ final class MAC extends Authenticator {
      * @param len the size of the compressed record
      * @param isSimulated if true, simulate the the MAC computation
      */
-    final byte[] compute(byte type, byte buf[],
-            int offset, int len, boolean isSimulated) {
+    final byte[] compute(byte type, byte buf[], int offset, int len, boolean isSimulated) {
         if (macAlg.size == 0) {
             return nullMAC;
         }
@@ -159,8 +151,7 @@ final class MAC extends Authenticator {
         }
 
         if (!isSimulated) {
-            byte[] additional =
-                    acquireAuthenticationBytes(type, bb.remaining());
+            byte[] additional = acquireAuthenticationBytes(type, bb.remaining());
             mac.update(additional);
         }
         mac.update(bb);
@@ -169,4 +160,3 @@ final class MAC extends Authenticator {
     }
 
 }
-

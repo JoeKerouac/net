@@ -23,20 +23,16 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-import java.io.*;
-import java.nio.*;
-import javax.net.ssl.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+
 import javax.crypto.BadPaddingException;
+import javax.net.ssl.SSLException;
+
 import sun.misc.HexDumpEncoder;
-
-
-
-
-
-
 
 /**
  * Wrapper class around InputRecord.
@@ -49,7 +45,7 @@ import sun.misc.HexDumpEncoder;
  */
 final class EngineInputRecord extends InputRecord {
 
-    private SSLEngineImpl engine;
+    private SSLEngineImpl     engine;
 
     /*
      * A dummy ByteBuffer we'll pass back even when the data
@@ -62,7 +58,7 @@ final class EngineInputRecord extends InputRecord {
      * internal in the ByteArrayInputStream, or in the external
      * buffers.
      */
-    private boolean internalData;
+    private boolean           internalData;
 
     EngineInputRecord(SSLEngineImpl engine) {
         super();
@@ -105,14 +101,12 @@ final class EngineInputRecord extends InputRecord {
          * determination.  Otherwise, try one last hueristic to
          * see if it's SSL/TLS.
          */
-        if (formatVerified ||
-                (byteZero == ct_handshake) ||
-                (byteZero == ct_alert)) {
+        if (formatVerified || (byteZero == ct_handshake) || (byteZero == ct_alert)) {
             /*
              * Last sanity check that it's not a wild record
              */
-            ProtocolVersion recordVersion =
-                ProtocolVersion.valueOf(buf.get(pos + 1), buf.get(pos + 2));
+            ProtocolVersion recordVersion = ProtocolVersion.valueOf(buf.get(pos + 1),
+                buf.get(pos + 2));
 
             // check the record version
             checkRecordVersion(recordVersion, false);
@@ -127,8 +121,7 @@ final class EngineInputRecord extends InputRecord {
             /*
              * One of the SSLv3/TLS message types.
              */
-            len = ((buf.get(pos + 3) & 0xff) << 8) +
-                (buf.get(pos + 4) & 0xff) + headerSize;
+            len = ((buf.get(pos + 3) & 0xff) << 8) + (buf.get(pos + 4) & 0xff) + headerSize;
 
         } else {
             /*
@@ -140,11 +133,10 @@ final class EngineInputRecord extends InputRecord {
              */
             boolean isShort = ((byteZero & 0x80) != 0);
 
-            if (isShort &&
-                    ((buf.get(pos + 2) == 1) || buf.get(pos + 2) == 4)) {
+            if (isShort && ((buf.get(pos + 2) == 1) || buf.get(pos + 2) == 4)) {
 
-                ProtocolVersion recordVersion =
-                    ProtocolVersion.valueOf(buf.get(pos + 3), buf.get(pos + 4));
+                ProtocolVersion recordVersion = ProtocolVersion.valueOf(buf.get(pos + 3),
+                    buf.get(pos + 4));
 
                 // check the record version
                 checkRecordVersion(recordVersion, true);
@@ -153,13 +145,11 @@ final class EngineInputRecord extends InputRecord {
                  * Client or Server Hello
                  */
                 int mask = (isShort ? 0x7f : 0x3f);
-                len = ((byteZero & mask) << 8) + (buf.get(pos + 1) & 0xff) +
-                    (isShort ? 2 : 3);
+                len = ((byteZero & mask) << 8) + (buf.get(pos + 1) & 0xff) + (isShort ? 2 : 3);
 
             } else {
                 // Gobblygook!
-                throw new SSLException(
-                    "Unrecognized SSL message, plaintext connection?");
+                throw new SSLException("Unrecognized SSL message, plaintext connection?");
             }
         }
 
@@ -175,30 +165,28 @@ final class EngineInputRecord extends InputRecord {
      * If external data(app), return a new ByteBuffer with data to
      * process.
      */
-    ByteBuffer decrypt(Authenticator authenticator,
-                       CipherBox box, ByteBuffer bb) throws BadPaddingException {
+    ByteBuffer decrypt(Authenticator authenticator, CipherBox box,
+                       ByteBuffer bb) throws BadPaddingException {
 
         if (internalData) {
-            decrypt(authenticator, box);   // MAC is checked during decryption
+            decrypt(authenticator, box); // MAC is checked during decryption
             return tmpBB;
         }
 
         BadPaddingException reservedBPE = null;
-        int tagLen =
-            (authenticator instanceof MAC) ? ((MAC)authenticator).MAClen() : 0;
+        int tagLen = (authenticator instanceof MAC) ? ((MAC) authenticator).MAClen() : 0;
         int cipheredLength = bb.remaining();
 
         if (!box.isNullCipher()) {
             try {
                 // apply explicit nonce for AEAD/CBC cipher suites if needed
-                int nonceSize =
-                    box.applyExplicitNonce(authenticator, contentType(), bb);
+                int nonceSize = box.applyExplicitNonce(authenticator, contentType(), bb);
 
                 // decrypt the content
                 if (box.isAEADMode()) {
                     // DON'T encrypt the nonce_explicit for AEAD mode
                     bb.position(bb.position() + nonceSize);
-                }   // The explicit IV for CBC mode can be decrypted.
+                } // The explicit IV for CBC mode can be decrypted.
 
                 // Note that the CipherBox.decrypt() does not change
                 // the capacity of the buffer.
@@ -220,7 +208,7 @@ final class EngineInputRecord extends InputRecord {
         // Requires message authentication code for null, stream and block
         // cipher suites.
         if ((authenticator instanceof MAC) && (tagLen != 0)) {
-            MAC signer = (MAC)authenticator;
+            MAC signer = (MAC) authenticator;
             int macOffset = bb.limit() - tagLen;
 
             // Note that although it is not necessary, we run the same MAC
@@ -249,8 +237,7 @@ final class EngineInputRecord extends InputRecord {
             // It is only necessary for CBC block cipher.  It is used to get a
             // constant time of MAC computation and comparison on each record.
             if (box.isCBCMode()) {
-                int remainingLen = calculateRemainingLen(
-                                        signer, cipheredLength, macOffset);
+                int remainingLen = calculateRemainingLen(signer, cipheredLength, macOffset);
 
                 // NOTE: here we use the InputRecord.buf because I did not find
                 // an effective way to work on ByteBuffer when its capacity is
@@ -263,8 +250,7 @@ final class EngineInputRecord extends InputRecord {
                 // we use small buffer size in the future.
                 if (remainingLen > buf.length) {
                     // unlikely to happen, just a placehold
-                    throw new RuntimeException(
-                        "Internal buffer capacity error");
+                    throw new RuntimeException("Internal buffer capacity error");
                 }
 
                 // Won't need to worry about the result on the remainder. And
@@ -290,8 +276,8 @@ final class EngineInputRecord extends InputRecord {
      *
      * Please DON'T change the content of the ByteBuffer parameter!
      */
-    private static boolean checkMacTags(byte contentType, ByteBuffer bb,
-            MAC signer, boolean isSimulated) {
+    private static boolean checkMacTags(byte contentType, ByteBuffer bb, MAC signer,
+                                        boolean isSimulated) {
 
         int position = bb.position();
         int tagLen = signer.MAClen();
@@ -326,15 +312,15 @@ final class EngineInputRecord extends InputRecord {
 
         // An array of hits is used to prevent Hotspot optimization for
         // the purpose of a constant-time check.
-        int[] results = {0, 0};     // {missed #, matched #}
+        int[] results = { 0, 0 }; // {missed #, matched #}
 
         // The caller ensures there are enough bytes available in the buffer.
         // So we won't need to check the remaining of the buffer.
         for (int i = 0; i < tag.length; i++) {
             if (bb.get() != tag[i]) {
-                results[0]++;       // mismatched bytes
+                results[0]++; // mismatched bytes
             } else {
-                results[1]++;       // matched bytes
+                results[1]++; // matched bytes
             }
         }
 
@@ -349,13 +335,11 @@ final class EngineInputRecord extends InputRecord {
      * generated.
      */
     @Override
-    void writeBuffer(OutputStream s, byte [] buf, int off, int len)
-            throws IOException {
+    void writeBuffer(OutputStream s, byte[] buf, int off, int len) throws IOException {
         /*
          * Copy data out of buffer, it's ready to go.
          */
-        ByteBuffer netBB = (ByteBuffer)
-            (ByteBuffer.allocate(len).put(buf, 0, len).flip());
+        ByteBuffer netBB = (ByteBuffer) (ByteBuffer.allocate(len).put(buf, 0, len).flip());
         engine.writer.putOutboundDataSync(netBB);
     }
 
@@ -381,8 +365,7 @@ final class EngineInputRecord extends InputRecord {
          * we send this down to be processed by the underlying
          * internal cache.
          */
-        if (!formatVerified ||
-                (srcBB.get(srcBB.position()) != ct_application_data)) {
+        if (!formatVerified || (srcBB.get(srcBB.position()) != ct_application_data)) {
             internalData = true;
             read(new ByteBufferInputStream(srcBB), (OutputStream) null);
             return tmpBB;
@@ -393,8 +376,8 @@ final class EngineInputRecord extends InputRecord {
         int srcPos = srcBB.position();
         int srcLim = srcBB.limit();
 
-        ProtocolVersion recordVersion = ProtocolVersion.valueOf(
-                srcBB.get(srcPos + 1), srcBB.get(srcPos + 2));
+        ProtocolVersion recordVersion = ProtocolVersion.valueOf(srcBB.get(srcPos + 1),
+            srcBB.get(srcPos + 2));
 
         // check the record version
         checkRecordVersion(recordVersion, false);
@@ -404,17 +387,18 @@ final class EngineInputRecord extends InputRecord {
          * Jump over the header.
          */
         int len = bytesInCompletePacket(srcBB);
-        assert(len > 0);
+        assert (len > 0);
 
         if (debug != null && Debug.isOn("packet")) {
             try {
                 HexDumpEncoder hd = new HexDumpEncoder();
-                ByteBuffer bb = srcBB.duplicate();  // Use copy of BB
+                ByteBuffer bb = srcBB.duplicate(); // Use copy of BB
                 bb.limit(srcPos + len);
 
                 System.out.println("[Raw read (bb)]: length = " + len);
                 hd.encodeBuffer(bb, System.out);
-            } catch (IOException e) { }
+            } catch (IOException e) {
+            }
         }
 
         // Demarcate past header to end of packet.

@@ -1,7 +1,6 @@
 package com.joe.http.exception;
 
 import com.joe.utils.common.string.StringFormater;
-import com.joe.utils.common.string.StringUtils;
 
 import lombok.Getter;
 import lombok.Setter;

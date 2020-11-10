@@ -23,14 +23,11 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
-
-
-
 
 import java.security.SecureRandom;
 import java.util.Arrays;
+
 import javax.net.ssl.SSLProtocolException;
 
 /**
@@ -43,75 +40,69 @@ import javax.net.ssl.SSLProtocolException;
  * @author Satish Dharmaraj
  * @author David Brownell
  */
-final
-class SessionId
-{
-    static int MAX_LENGTH = 32;
-    private byte sessionId [];          // max 32 bytes
+final class SessionId {
+    static int   MAX_LENGTH = 32;
+    private byte sessionId[];    // max 32 bytes
 
     /** Constructs a new session ID ... perhaps for a rejoinable session */
-    SessionId (boolean isRejoinable, SecureRandom generator)
-    {
+    SessionId(boolean isRejoinable, SecureRandom generator) {
         if (isRejoinable)
             // this will be unique, it's a timestamp plus much randomness
             sessionId = new RandomCookie(generator).random_bytes;
         else
-            sessionId = new byte [0];
+            sessionId = new byte[0];
     }
 
     /** Constructs a session ID from a byte array (max size 32 bytes) */
-    SessionId (byte sessionId [])
-        { this.sessionId = sessionId; }
+    SessionId(byte sessionId[]) {
+        this.sessionId = sessionId;
+    }
 
     /** Returns the length of the ID, in bytes */
-    int length ()
-        { return sessionId.length; }
+    int length() {
+        return sessionId.length;
+    }
 
     /** Returns the bytes in the ID.  May be an empty array.  */
-    byte [] getId ()
-    {
-        return sessionId.clone ();
+    byte[] getId() {
+        return sessionId.clone();
     }
 
     /** Returns the ID as a string */
     @Override
-    public String toString ()
-    {
-        int             len = sessionId.length;
-        StringBuffer    s = new StringBuffer (10 + 2 * len);
+    public String toString() {
+        int len = sessionId.length;
+        StringBuffer s = new StringBuffer(10 + 2 * len);
 
-        s.append ("{");
+        s.append("{");
         for (int i = 0; i < len; i++) {
-            s.append (0x0ff & sessionId [i]);
+            s.append(0x0ff & sessionId[i]);
             if (i != (len - 1))
-                s.append (", ");
+                s.append(", ");
         }
-        s.append ("}");
-        return s.toString ();
+        s.append("}");
+        return s.toString();
     }
-
 
     /** Returns a value which is the same for session IDs which are equal */
     @Override
-    public int hashCode ()
-    {
+    public int hashCode() {
         return Arrays.hashCode(sessionId);
     }
 
     /** Returns true if the parameter is the same session ID */
     @Override
-    public boolean equals (Object obj)
-    {
+    public boolean equals(Object obj) {
         if (!(obj instanceof SessionId))
             return false;
 
         SessionId s = (SessionId) obj;
-        byte b [] = s.getId ();
+        byte b[] = s.getId();
 
         if (b.length != sessionId.length)
             return false;
         for (int i = 0; i < sessionId.length; i++) {
-            if (b [i] != sessionId [i])
+            if (b[i] != sessionId[i])
                 return false;
         }
         return true;
@@ -126,8 +117,8 @@ class SessionId
         // In the future we can do more here to support protocol versions
         // that may have longer max lengths.
         if (sessionId.length > MAX_LENGTH) {
-            throw new SSLProtocolException("Invalid session ID length (" +
-                    sessionId.length + " bytes)");
+            throw new SSLProtocolException(
+                "Invalid session ID length (" + sessionId.length + " bytes)");
         }
     }
 

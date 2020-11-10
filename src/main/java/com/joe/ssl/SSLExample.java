@@ -18,7 +18,7 @@ public class SSLExample {
     public static void main(String[] args) throws Exception {
         new Thread(SSLExample::startServer).start();
         Thread.sleep(1000);
-//        new Thread(SSLExample::startClient).start();
+        //        new Thread(SSLExample::startClient).start();
     }
 
     public static void startClient() {

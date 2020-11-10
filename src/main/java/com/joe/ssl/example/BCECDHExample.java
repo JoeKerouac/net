@@ -13,8 +13,6 @@ import java.util.Arrays;
 
 import javax.crypto.KeyAgreement;
 
-import com.joe.ssl.crypto.ECDHKeyExchangeSpi;
-import com.joe.ssl.crypto.impl.SunecECDHKeyExchangeSpi;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -29,8 +27,11 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.util.BigIntegers;
 
-import com.joe.tls.enums.NamedCurve;
 import com.joe.ssl.openjdk.ssl.EllipticCurvesExtension;
+import com.joe.tls.ECDHKeyPair;
+import com.joe.tls.crypto.ECDHKeyExchangeSpi;
+import com.joe.tls.crypto.impl.SunecECDHKeyExchangeSpi;
+import com.joe.tls.enums.NamedCurve;
 
 import sun.security.ec.SunEC;
 import sun.security.util.ECUtil;
@@ -46,19 +47,18 @@ public class BCECDHExample {
         int curveId = 9;
 
         ECDHKeyExchangeSpi exchangeSpi = new SunecECDHKeyExchangeSpi();
-//        ECDHKeyExchangeSpi exchangeSpi = new BCECDHKeyExchangeSpi();
+        //        ECDHKeyExchangeSpi exchangeSpi = new BCECDHKeyExchangeSpi();
 
-//        73 91(自带的，失败了)   584
-
+        //        73 91(自带的，失败了)   584
 
         ECDHKeyPair keyPair = exchangeSpi.generate(curveId);
 
         System.out.println(
             Arrays.toString(keyExchange(curveId, keyPair.getPublicKey(), keyPair.getPrivateKey())));
-        System.out.println(
-            Arrays.toString(keyExchangeByBC(curveId, keyPair.getPublicKey(), keyPair.getPrivateKey())));
         System.out.println(Arrays
-            .toString(exchangeSpi.keyExchange(keyPair.getPublicKey(), keyPair.getPrivateKey(), curveId)));
+            .toString(keyExchangeByBC(curveId, keyPair.getPublicKey(), keyPair.getPrivateKey())));
+        System.out.println(Arrays.toString(
+            exchangeSpi.keyExchange(keyPair.getPublicKey(), keyPair.getPrivateKey(), curveId)));
         //        testServer();
     }
 
@@ -69,7 +69,7 @@ public class BCECDHExample {
         System.out.println("\n\n\n\n");
         String curveOid = EllipticCurvesExtension.getCurveOid(curveId);
         java.security.spec.ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
-                curveOid);
+            curveOid);
         java.security.spec.ECPoint point = ECUtil.decodePoint(serverPublicKey,
             parameters.getCurve());
 

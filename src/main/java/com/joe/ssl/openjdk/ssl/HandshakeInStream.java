@@ -23,14 +23,10 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.net.ssl.SSLException;
 
@@ -67,7 +63,6 @@ public class HandshakeInStream extends InputStream {
         r.setHandshakeHash(handshakeHash);
     }
 
-
     // overridden InputStream methods
 
     /*
@@ -97,7 +92,7 @@ public class HandshakeInStream extends InputStream {
      * Get a bunch of bytes of handshake data.
      */
     @Override
-    public int read(byte b [], int off, int len) throws IOException {
+    public int read(byte b[], int off, int len) throws IOException {
         // we read from a ByteArrayInputStream, it always returns the
         // data in a single read if enough is available
         int n = r.read(b, off, len);
@@ -138,7 +133,6 @@ public class HandshakeInStream extends InputStream {
         return true;
     }
 
-
     // handshake management functions
 
     /*
@@ -168,7 +162,6 @@ public class HandshakeInStream extends InputStream {
         r.ignore(n);
     }
 
-
     // Message parsing methods
 
     /*
@@ -189,8 +182,7 @@ public class HandshakeInStream extends InputStream {
     }
 
     int getInt32() throws IOException {
-        return (getInt8() << 24) | (getInt8() << 16)
-             | (getInt8() << 8) | getInt8();
+        return (getInt8() << 24) | (getInt8() << 16) | (getInt8() << 8) | getInt8();
     }
 
     /*
@@ -227,8 +219,7 @@ public class HandshakeInStream extends InputStream {
     // Is a length greater than available bytes in the record?
     private void verifyLength(int len) throws SSLException {
         if (len > available()) {
-            throw new SSLException(
-                        "Not enough data to fill declared vector size");
+            throw new SSLException("Not enough data to fill declared vector size");
         }
     }
 

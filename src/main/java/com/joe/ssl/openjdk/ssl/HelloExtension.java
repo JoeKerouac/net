@@ -25,9 +25,6 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
 import java.io.IOException;
 
 abstract class HelloExtension {

@@ -23,14 +23,12 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
 import java.io.ByteArrayOutputStream;
-import java.security.*;
+import java.security.DigestException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
 /**
@@ -92,15 +90,15 @@ final class HandshakeHash {
     // -1:  unknown
     //  1:  <=TLS 1.1
     //  2:  TLS 1.2
-    private int version = -1;
-    private ByteArrayOutputStream data = new ByteArrayOutputStream();
+    private int                   version = -1;
+    private ByteArrayOutputStream data    = new ByteArrayOutputStream();
 
     // For TLS 1.1
-    private MessageDigest md5, sha;
-    private final int clonesNeeded;    // needs to be saved for later use
+    private MessageDigest         md5, sha;
+    private final int             clonesNeeded;                         // needs to be saved for later use
 
     // For TLS 1.2
-    private MessageDigest finMD;
+    private MessageDigest         finMD;
 
     /**
      * Create a new HandshakeHash. needCertificateVerify indicates whether
@@ -154,17 +152,16 @@ final class HandshakeHash {
      */
     void reset() {
         if (version != -1) {
-            throw new RuntimeException(
-                    "reset() can be only be called before protocolDetermined");
+            throw new RuntimeException("reset() can be only be called before protocolDetermined");
         }
         data.reset();
     }
 
-
     void protocolDetermined(ProtocolVersion pv) {
 
         // Do not set again, will ignore
-        if (version != -1) return;
+        if (version != -1)
+            return;
 
         version = pv.compareTo(ProtocolVersion.TLS12) >= 0 ? 2 : 1;
         switch (version) {
@@ -174,8 +171,7 @@ final class HandshakeHash {
                     md5 = CloneableDigest.getDigest("MD5", clonesNeeded);
                     sha = CloneableDigest.getDigest("SHA", clonesNeeded);
                 } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException
-                                ("Algorithm MD5 or SHA not available", e);
+                    throw new RuntimeException("Algorithm MD5 or SHA not available", e);
                 }
                 byte[] bytes = data.toByteArray();
                 update(bytes, 0, bytes.length);
@@ -194,8 +190,7 @@ final class HandshakeHash {
      */
     MessageDigest getMD5Clone() {
         if (version != 1) {
-            throw new RuntimeException(
-                    "getMD5Clone() can be only be called for TLS 1.1");
+            throw new RuntimeException("getMD5Clone() can be only be called for TLS 1.1");
         }
         return cloneDigest(md5);
     }
@@ -205,15 +200,14 @@ final class HandshakeHash {
      */
     MessageDigest getSHAClone() {
         if (version != 1) {
-            throw new RuntimeException(
-                    "getSHAClone() can be only be called for TLS 1.1");
+            throw new RuntimeException("getSHAClone() can be only be called for TLS 1.1");
         }
         return cloneDigest(sha);
     }
 
     private static MessageDigest cloneDigest(MessageDigest digest) {
         try {
-            return (MessageDigest)digest.clone();
+            return (MessageDigest) digest.clone();
         } catch (CloneNotSupportedException e) {
             // cannot occur for digests generated via CloneableDigest
             throw new RuntimeException("Could not clone digest", e);
@@ -236,6 +230,7 @@ final class HandshakeHash {
         }
         return alg;
     }
+
     /**
      * Specifies the hash algorithm used in Finished. This should be called
      * based in info in ServerHello.
@@ -243,12 +238,12 @@ final class HandshakeHash {
      */
     void setFinishedAlg(String s) {
         if (s == null) {
-            throw new RuntimeException(
-                    "setFinishedAlg's argument cannot be null");
+            throw new RuntimeException("setFinishedAlg's argument cannot be null");
         }
 
         // Can be called multiple times, but only set once
-        if (finMD != null) return;
+        if (finMD != null)
+            return;
 
         try {
             // See comment in the contructor.
@@ -315,8 +310,8 @@ final class CloneableDigest extends MessageDigest implements Cloneable {
      */
     private final MessageDigest[] digests;
 
-    private CloneableDigest(MessageDigest digest, int n, String algorithm)
-            throws NoSuchAlgorithmException {
+    private CloneableDigest(MessageDigest digest, int n,
+                            String algorithm) throws NoSuchAlgorithmException {
         super(algorithm);
         digests = new MessageDigest[n];
         digests[0] = digest;
@@ -331,8 +326,7 @@ final class CloneableDigest extends MessageDigest implements Cloneable {
      * cloning, it is returned. Otherwise, an instance of this class is
      * returned.
      */
-    static MessageDigest getDigest(String algorithm, int n)
-            throws NoSuchAlgorithmException {
+    static MessageDigest getDigest(String algorithm, int n) throws NoSuchAlgorithmException {
         MessageDigest digest = JsseJce.getMessageDigest(algorithm);
         try {
             digest.clone();
@@ -386,8 +380,7 @@ final class CloneableDigest extends MessageDigest implements Cloneable {
     }
 
     @Override
-    protected int engineDigest(byte[] buf, int offset, int len)
-            throws DigestException {
+    protected int engineDigest(byte[] buf, int offset, int len) throws DigestException {
         checkState();
         int n = digests[0].digest(buf, offset, len);
         digestReset();

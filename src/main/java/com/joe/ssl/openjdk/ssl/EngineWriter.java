@@ -28,13 +28,10 @@ package com.joe.ssl.openjdk.ssl;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
+
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+
 import sun.misc.HexDumpEncoder;
-
-
-
-
-
 
 /**
  * A class to help abstract away SSLEngine writing synchronization.
@@ -56,10 +53,10 @@ final class EngineWriter {
      */
     private LinkedList<Object> outboundList;
 
-    private boolean outboundClosed = false;
+    private boolean            outboundClosed = false;
 
     /* Class and subclass dynamic debugging support */
-    private static final Debug debug = Debug.getInstance("ssl");
+    private static final Debug debug          = Debug.getInstance("ssl");
 
     EngineWriter() {
         outboundList = new LinkedList<Object>();
@@ -73,10 +70,10 @@ final class EngineWriter {
     private HandshakeStatus getOutboundData(ByteBuffer dstBB) {
 
         Object msg = outboundList.removeFirst();
-        assert(msg instanceof ByteBuffer);
+        assert (msg instanceof ByteBuffer);
 
         ByteBuffer bbIn = (ByteBuffer) msg;
-        assert(dstBB.remaining() >= bbIn.remaining());
+        assert (dstBB.remaining() >= bbIn.remaining());
 
         dstBB.put(bbIn);
 
@@ -88,7 +85,7 @@ final class EngineWriter {
         if (hasOutboundDataInternal()) {
             msg = outboundList.getFirst();
             if (msg == HandshakeStatus.FINISHED) {
-                outboundList.removeFirst();     // consume the message
+                outboundList.removeFirst(); // consume the message
                 return HandshakeStatus.FINISHED;
             } else {
                 return HandshakeStatus.NEED_WRAP;
@@ -103,8 +100,7 @@ final class EngineWriter {
      * This is only handshake data, application data goes through the
      * other writeRecord.
      */
-    synchronized void writeRecord(EngineOutputRecord outputRecord,
-                                  Authenticator authenticator,
+    synchronized void writeRecord(EngineOutputRecord outputRecord, Authenticator authenticator,
                                   CipherBox writeCipher) throws IOException {
 
         /*
@@ -140,11 +136,11 @@ final class EngineWriter {
             bb.position(pos - ea.deltaNet());
             bb.limit(pos);
 
-            System.out.println("[Raw write" +
-                (hsData ? "" : " (bb)") + "]: length = " +
-                bb.remaining());
+            System.out
+                .println("[Raw write" + (hsData ? "" : " (bb)") + "]: length = " + bb.remaining());
             hd.encodeBuffer(bb, System.out);
-        } catch (IOException e) { }
+        } catch (IOException e) {
+        }
     }
 
     /*
@@ -156,10 +152,9 @@ final class EngineWriter {
      *
      * Return any determined status.
      */
-    synchronized HandshakeStatus writeRecord(
-            EngineOutputRecord outputRecord, EngineArgs ea,
-            Authenticator authenticator,
-            CipherBox writeCipher) throws IOException {
+    synchronized HandshakeStatus writeRecord(EngineOutputRecord outputRecord, EngineArgs ea,
+                                             Authenticator authenticator,
+                                             CipherBox writeCipher) throws IOException {
 
         /*
          * If we have data ready to go, output this first before
@@ -217,8 +212,7 @@ final class EngineWriter {
      * This is for the really rare case that someone is writing from
      * the *InputRecord* before we know what to do with it.
      */
-    synchronized void putOutboundDataSync(ByteBuffer bytes)
-            throws IOException {
+    synchronized void putOutboundDataSync(ByteBuffer bytes) throws IOException {
 
         if (outboundClosed) {
             throw new IOException("Write side already closed");

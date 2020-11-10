@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.TlsVersion;
 import com.joe.tls.*;
+import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.enums.ContentType;
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.Record;

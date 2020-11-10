@@ -25,9 +25,6 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -39,12 +36,9 @@ import javax.net.ssl.SSLServerSocketFactory;
  *
  * @author David Brownell
  */
-final
-public class SSLServerSocketFactoryImpl extends SSLServerSocketFactory
-{
+final public class SSLServerSocketFactoryImpl extends SSLServerSocketFactory {
     private static final int DEFAULT_BACKLOG = 50;
-    private SSLContextImpl context;
-
+    private SSLContextImpl   context;
 
     /**
      * Constructor used to instantiate the default factory. This method is
@@ -58,8 +52,7 @@ public class SSLServerSocketFactoryImpl extends SSLServerSocketFactory
     /**
      * Called from SSLContextImpl's getSSLServerSocketFactory().
      */
-    SSLServerSocketFactoryImpl (SSLContextImpl context)
-    {
+    SSLServerSocketFactoryImpl(SSLContextImpl context) {
         this.context = context;
     }
 
@@ -76,26 +69,19 @@ public class SSLServerSocketFactoryImpl extends SSLServerSocketFactory
     }
 
     @Override
-    public ServerSocket createServerSocket (int port)
-    throws IOException
-    {
-        return new SSLServerSocketImpl (port, DEFAULT_BACKLOG, context);
-    }
-
-
-    @Override
-    public ServerSocket createServerSocket (int port, int backlog)
-    throws IOException
-    {
-        return new SSLServerSocketImpl (port, backlog, context);
+    public ServerSocket createServerSocket(int port) throws IOException {
+        return new SSLServerSocketImpl(port, DEFAULT_BACKLOG, context);
     }
 
     @Override
-    public ServerSocket
-    createServerSocket (int port, int backlog, InetAddress ifAddress)
-    throws IOException
-    {
-        return new SSLServerSocketImpl (port, backlog, ifAddress, context);
+    public ServerSocket createServerSocket(int port, int backlog) throws IOException {
+        return new SSLServerSocketImpl(port, backlog, context);
+    }
+
+    @Override
+    public ServerSocket createServerSocket(int port, int backlog,
+                                           InetAddress ifAddress) throws IOException {
+        return new SSLServerSocketImpl(port, backlog, ifAddress, context);
     }
 
     /**

@@ -25,11 +25,11 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-import java.util.*;
 import java.security.CryptoPrimitive;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Type safe enum for an SSL/TLS protocol version. Instances are obtained
@@ -54,43 +54,42 @@ import java.security.CryptoPrimitive;
 public final class ProtocolVersion implements Comparable<ProtocolVersion> {
 
     // The limit of maximum protocol version
-    final static int LIMIT_MAX_VALUE = 0xFFFF;
+    final static int                  LIMIT_MAX_VALUE = 0xFFFF;
 
     // The limit of minimum protocol version
-    final static int LIMIT_MIN_VALUE = 0x0000;
+    final static int                  LIMIT_MIN_VALUE = 0x0000;
 
     // Dummy protocol version value for invalid SSLSession
-    final static ProtocolVersion NONE = new ProtocolVersion(-1, "NONE");
+    final static ProtocolVersion      NONE            = new ProtocolVersion(-1, "NONE");
 
     // If enabled, send/ accept SSLv2 hello messages
-    final static ProtocolVersion SSL20Hello = new ProtocolVersion(0x0002,
-                                                                "SSLv2Hello");
+    final static ProtocolVersion      SSL20Hello      = new ProtocolVersion(0x0002, "SSLv2Hello");
 
     // SSL 3.0
-    final static ProtocolVersion SSL30 = new ProtocolVersion(0x0300, "SSLv3");
+    final static ProtocolVersion      SSL30           = new ProtocolVersion(0x0300, "SSLv3");
 
     // TLS 1.0
-    final static ProtocolVersion TLS10 = new ProtocolVersion(0x0301, "TLSv1");
+    final static ProtocolVersion      TLS10           = new ProtocolVersion(0x0301, "TLSv1");
 
     // TLS 1.1
-    final static ProtocolVersion TLS11 = new ProtocolVersion(0x0302, "TLSv1.1");
+    final static ProtocolVersion      TLS11           = new ProtocolVersion(0x0302, "TLSv1.1");
 
     // TLS 1.2
-    final static ProtocolVersion TLS12 = new ProtocolVersion(0x0303, "TLSv1.2");
+    final static ProtocolVersion      TLS12           = new ProtocolVersion(0x0303, "TLSv1.2");
 
-    private static final boolean FIPS = SunJSSE.isFIPS();
+    private static final boolean      FIPS            = SunJSSE.isFIPS();
 
     // minimum version we implement (SSL 3.0)
-    final static ProtocolVersion MIN = FIPS ? TLS10 : SSL30;
+    final static ProtocolVersion      MIN             = FIPS ? TLS10 : SSL30;
 
     // maximum version we implement (TLS 1.2)
-    final static ProtocolVersion MAX = TLS12;
+    final static ProtocolVersion      MAX             = TLS12;
 
     // ProtocolVersion to use by default (TLS 1.2)
-    final static ProtocolVersion DEFAULT = TLS12;
+    final static ProtocolVersion      DEFAULT         = TLS12;
 
     // Default version for hello messages (SSLv2Hello)
-    final static ProtocolVersion DEFAULT_HELLO = FIPS ? TLS10 : SSL30;
+    final static ProtocolVersion      DEFAULT_HELLO   = FIPS ? TLS10 : SSL30;
 
     // Available protocols
     //
@@ -99,38 +98,35 @@ public final class ProtocolVersion implements Comparable<ProtocolVersion> {
 
     // version in 16 bit MSB format as it appears in records and
     // messages, i.e. 0x0301 for TLS 1.0
-    public final int v;
+    public final int                  v;
 
     // major and minor version
-    public final byte major, minor;
+    public final byte                 major, minor;
 
     // name used in JSSE (e.g. TLSv1 for TLS 1.0)
-    final String name;
+    final String                      name;
 
     // Initialize the available protocols.
     static {
         Set<ProtocolVersion> protocols = new HashSet<>(5);
 
-        ProtocolVersion[] pvs = new ProtocolVersion[] {
-                SSL20Hello, SSL30, TLS10, TLS11, TLS12};
+        ProtocolVersion[] pvs = new ProtocolVersion[] { SSL20Hello, SSL30, TLS10, TLS11, TLS12 };
         for (ProtocolVersion p : pvs) {
-            if (SSLAlgorithmConstraints.DEFAULT_SSL_ONLY.permits(
-                    EnumSet.of(CryptoPrimitive.KEY_AGREEMENT),
-                    p.name, null)) {
+            if (SSLAlgorithmConstraints.DEFAULT_SSL_ONLY
+                .permits(EnumSet.of(CryptoPrimitive.KEY_AGREEMENT), p.name, null)) {
                 protocols.add(p);
             }
         }
 
-        availableProtocols =
-                Collections.<ProtocolVersion>unmodifiableSet(protocols);
+        availableProtocols = Collections.<ProtocolVersion> unmodifiableSet(protocols);
     }
 
     // private
     private ProtocolVersion(int v, String name) {
         this.v = v;
         this.name = name;
-        major = (byte)(v >>> 8);
-        minor = (byte)(v & 0xFF);
+        major = (byte) (v >>> 8);
+        minor = (byte) (v & 0xFF);
     }
 
     // private
@@ -172,8 +168,7 @@ public final class ProtocolVersion implements Comparable<ProtocolVersion> {
         }
 
         if (FIPS && (name.equals(SSL30.name) || name.equals(SSL20Hello.name))) {
-            throw new IllegalArgumentException
-                ("Only TLS 1.0 or later allowed in FIPS mode");
+            throw new IllegalArgumentException("Only TLS 1.0 or later allowed in FIPS mode");
         }
 
         if (name.equals(SSL30.name)) {

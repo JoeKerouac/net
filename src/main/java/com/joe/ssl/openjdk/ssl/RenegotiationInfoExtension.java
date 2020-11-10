@@ -25,12 +25,6 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
 import java.io.IOException;
 
 import javax.net.ssl.SSLProtocolException;
@@ -49,19 +43,17 @@ import javax.net.ssl.SSLProtocolException;
 final class RenegotiationInfoExtension extends HelloExtension {
     private final byte[] renegotiated_connection;
 
-    RenegotiationInfoExtension(byte[] clientVerifyData,
-                byte[] serverVerifyData) {
+    RenegotiationInfoExtension(byte[] clientVerifyData, byte[] serverVerifyData) {
         super(ExtensionType.EXT_RENEGOTIATION_INFO);
 
         if (clientVerifyData.length != 0) {
-            renegotiated_connection =
-                    new byte[clientVerifyData.length + serverVerifyData.length];
-            System.arraycopy(clientVerifyData, 0, renegotiated_connection,
-                    0, clientVerifyData.length);
+            renegotiated_connection = new byte[clientVerifyData.length + serverVerifyData.length];
+            System.arraycopy(clientVerifyData, 0, renegotiated_connection, 0,
+                clientVerifyData.length);
 
             if (serverVerifyData.length != 0) {
                 System.arraycopy(serverVerifyData, 0, renegotiated_connection,
-                        clientVerifyData.length, serverVerifyData.length);
+                    clientVerifyData.length, serverVerifyData.length);
             }
         } else {
             // ignore both the client and server verify data.
@@ -69,8 +61,7 @@ final class RenegotiationInfoExtension extends HelloExtension {
         }
     }
 
-    RenegotiationInfoExtension(HandshakeInStream s, int len)
-                throws IOException {
+    RenegotiationInfoExtension(HandshakeInStream s, int len) throws IOException {
         super(ExtensionType.EXT_RENEGOTIATION_INFO);
 
         // check the extension length
@@ -79,7 +70,7 @@ final class RenegotiationInfoExtension extends HelloExtension {
         }
 
         int renegoInfoDataLen = s.getInt8();
-        if (renegoInfoDataLen + 1 != len) {  // + 1 = the byte we just read
+        if (renegoInfoDataLen + 1 != len) { // + 1 = the byte we just read
             throw new SSLProtocolException("Invalid " + type + " extension");
         }
 
@@ -88,7 +79,6 @@ final class RenegotiationInfoExtension extends HelloExtension {
             s.read(renegotiated_connection, 0, renegoInfoDataLen);
         }
     }
-
 
     // Length of the encoded extension, including the type and length fields
     @Override
@@ -113,9 +103,9 @@ final class RenegotiationInfoExtension extends HelloExtension {
 
     @Override
     public String toString() {
-        return "Extension " + type + ", renegotiated_connection: " +
-                    (renegotiated_connection.length == 0 ? "<empty>" :
-                    Debug.toString(renegotiated_connection));
+        return "Extension " + type + ", renegotiated_connection: "
+               + (renegotiated_connection.length == 0 ? "<empty>"
+                   : Debug.toString(renegotiated_connection));
     }
 
 }

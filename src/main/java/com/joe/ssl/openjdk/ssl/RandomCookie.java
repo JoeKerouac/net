@@ -23,13 +23,10 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.security.SecureRandom;
 
 /*
@@ -41,7 +38,7 @@ import java.security.SecureRandom;
  */
 final class RandomCookie {
 
-    byte random_bytes[];  // exactly 32 bytes
+    byte random_bytes[]; // exactly 32 bytes
 
     RandomCookie(SecureRandom generator) {
         long temp = System.currentTimeMillis() / 1000;
@@ -49,16 +46,16 @@ final class RandomCookie {
         if (temp < Integer.MAX_VALUE) {
             gmt_unix_time = (int) temp;
         } else {
-            gmt_unix_time = Integer.MAX_VALUE;          // Whoops!
+            gmt_unix_time = Integer.MAX_VALUE; // Whoops!
         }
 
         random_bytes = new byte[32];
         generator.nextBytes(random_bytes);
 
-        random_bytes[0] = (byte)(gmt_unix_time >> 24);
-        random_bytes[1] = (byte)(gmt_unix_time >> 16);
-        random_bytes[2] = (byte)(gmt_unix_time >>  8);
-        random_bytes[3] = (byte)gmt_unix_time;
+        random_bytes[0] = (byte) (gmt_unix_time >> 24);
+        random_bytes[1] = (byte) (gmt_unix_time >> 16);
+        random_bytes[2] = (byte) (gmt_unix_time >> 8);
+        random_bytes[3] = (byte) gmt_unix_time;
     }
 
     RandomCookie(HandshakeInStream m) throws IOException {

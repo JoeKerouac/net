@@ -1,10 +1,8 @@
 package com.joe.tls.msg.extensions;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import com.joe.ssl.message.WrapedOutputStream;
 import com.joe.tls.util.ByteBufferUtil;
 
 /**
@@ -32,16 +30,7 @@ public class UnknownExtension implements HelloExtension {
     }
 
     @Override
-    public void write(WrapedOutputStream outputStream) throws IOException {
-        outputStream.writeInt16(type);
-        outputStream.writeInt16(data.length);
-        if (data.length > 0) {
-            outputStream.write(data);
-        }
-    }
-
-    @Override
-    public void write(ByteBuffer buffer) throws IOException {
+    public void write(ByteBuffer buffer) {
         ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
         ByteBufferUtil.putBytes16(data, buffer);
     }

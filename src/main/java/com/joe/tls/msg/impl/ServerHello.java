@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.TlsVersion;
+import com.joe.tls.TlsVersion;
+import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.extensions.ExtensionReader;
@@ -72,7 +72,8 @@ public class ServerHello implements HandshakeProtocol {
         // 如果还有数据，说明还有扩展数据，读取扩展数据
         if (buffer.limit() != buffer.position()) {
             List<HelloExtension> extensionList = ExtensionReader.read(buffer);
-            extensionList.forEach(extension -> extensions.put(extension.getExtensionType(), extension));
+            extensionList
+                .forEach(extension -> extensions.put(extension.getExtensionType(), extension));
         }
     }
 

@@ -23,36 +23,32 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.Locale;
+import java.util.Vector;
 
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
 
 import sun.security.action.GetIntegerAction;
-
-
 import sun.security.util.Cache;
 
-
 final class SSLSessionContextImpl implements SSLSessionContext {
-    private final static int DEFAULT_MAX_CACHE_SIZE = 20480;
+    private final static int                 DEFAULT_MAX_CACHE_SIZE = 20480;
 
     private Cache<SessionId, SSLSessionImpl> sessionCache;
-                                        // session cache, session id as key
-    private Cache<String, SSLSessionImpl> sessionHostPortCache;
-                                        // session cache, "host:port" as key
-    private int cacheLimit;             // the max cache size
-    private int timeout;                // timeout in seconds
+    // session cache, session id as key
+    private Cache<String, SSLSessionImpl>    sessionHostPortCache;
+    // session cache, "host:port" as key
+    private int                              cacheLimit;                    // the max cache size
+    private int                              timeout;                       // timeout in seconds
 
     // package private
     SSLSessionContextImpl() {
-        cacheLimit = getDefaultCacheLimit();    // default cache size
-        timeout = 86400;                        // default, 24 hours
+        cacheLimit = getDefaultCacheLimit(); // default cache size
+        timeout = 86400; // default, 24 hours
 
         // use soft reference
         sessionCache = Cache.newSoftMemoryCache(cacheLimit, timeout);
@@ -95,8 +91,7 @@ final class SSLSessionContextImpl implements SSLSessionContext {
      * new timeout.
      */
     @Override
-    public void setSessionTimeout(int seconds)
-                 throws IllegalArgumentException {
+    public void setSessionTimeout(int seconds) throws IllegalArgumentException {
         if (seconds < 0) {
             throw new IllegalArgumentException();
         }
@@ -121,8 +116,7 @@ final class SSLSessionContextImpl implements SSLSessionContext {
      * <code>SSLSession</code> objects.
      */
     @Override
-    public void setSessionCacheSize(int size)
-                 throws IllegalArgumentException {
+    public void setSessionCacheSize(int size) throws IllegalArgumentException {
         if (size < 0)
             throw new IllegalArgumentException();
 
@@ -142,10 +136,9 @@ final class SSLSessionContextImpl implements SSLSessionContext {
         return cacheLimit;
     }
 
-
     // package-private method, used ONLY by ServerHandshaker
     SSLSessionImpl get(byte[] id) {
-        return (SSLSessionImpl)getSession(id);
+        return (SSLSessionImpl) getSession(id);
     }
 
     // package-private method, used ONLY by ClientHandshaker
@@ -167,8 +160,7 @@ final class SSLSessionContextImpl implements SSLSessionContext {
     }
 
     private String getKey(String hostname, int port) {
-        return (hostname + ":" +
-            String.valueOf(port)).toLowerCase(Locale.ENGLISH);
+        return (hostname + ":" + String.valueOf(port)).toLowerCase(Locale.ENGLISH);
     }
 
     // cache a SSLSession
@@ -184,8 +176,7 @@ final class SSLSessionContextImpl implements SSLSessionContext {
 
         // If no hostname/port info is available, don't add this one.
         if ((s.getPeerHost() != null) && (s.getPeerPort() != -1)) {
-            sessionHostPortCache.put(
-                getKey(s.getPeerHost(), s.getPeerPort()), s);
+            sessionHostPortCache.put(getKey(s.getPeerHost(), s.getPeerPort()), s);
         }
 
         s.setContext(this);
@@ -196,17 +187,16 @@ final class SSLSessionContextImpl implements SSLSessionContext {
         SSLSessionImpl s = sessionCache.get(key);
         if (s != null) {
             sessionCache.remove(key);
-            sessionHostPortCache.remove(
-                        getKey(s.getPeerHost(), s.getPeerPort()));
+            sessionHostPortCache.remove(getKey(s.getPeerHost(), s.getPeerPort()));
         }
     }
 
     private int getDefaultCacheLimit() {
         try {
-            int defaultCacheLimit =
-                java.security.AccessController.doPrivileged(
-                    new GetIntegerAction("javax.net.ssl.sessionCacheSize",
-                                         DEFAULT_MAX_CACHE_SIZE)).intValue();
+            int defaultCacheLimit = java.security.AccessController
+                .doPrivileged(
+                    new GetIntegerAction("javax.net.ssl.sessionCacheSize", DEFAULT_MAX_CACHE_SIZE))
+                .intValue();
 
             if (defaultCacheLimit >= 0) {
                 return defaultCacheLimit;
@@ -222,8 +212,8 @@ final class SSLSessionContextImpl implements SSLSessionContext {
             return false;
         }
 
-        if ((sess != null) && ((sess.getCreationTime() + timeout * 1000L)
-                                        <= (System.currentTimeMillis()))) {
+        if ((sess != null)
+            && ((sess.getCreationTime() + timeout * 1000L) <= (System.currentTimeMillis()))) {
             sess.invalidate();
             return true;
         }
@@ -231,8 +221,7 @@ final class SSLSessionContextImpl implements SSLSessionContext {
         return false;
     }
 
-    final class SessionCacheVisitor
-            implements Cache.CacheVisitor<SessionId, SSLSessionImpl> {
+    final class SessionCacheVisitor implements Cache.CacheVisitor<SessionId, SSLSessionImpl> {
         Vector<byte[]> ids = null;
 
         // public void visit(java.util.Map<K,V> map) {}
@@ -249,8 +238,7 @@ final class SSLSessionContextImpl implements SSLSessionContext {
         }
 
         public Enumeration<byte[]> getSessionIds() {
-            return  ids != null ? ids.elements() :
-                                  new Vector<byte[]>().elements();
+            return ids != null ? ids.elements() : new Vector<byte[]>().elements();
         }
     }
 

@@ -1,9 +1,7 @@
 package com.joe.tls.msg.extensions;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import com.joe.ssl.message.WrapedOutputStream;
 import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.common.Assert;
 
@@ -28,22 +26,12 @@ public class ServerNameExtension implements HelloExtension {
     }
 
     @Override
-    public void write(WrapedOutputStream outputStream) throws IOException {
-        outputStream.writeInt16(getExtensionType().id);
-        outputStream.writeInt16(2 + 1 + 2 + serverName.length);
-        outputStream.writeInt16(1 + 2 + serverName.length);
-        // type字段，这里先写死host_name类型
-        outputStream.writeInt8(type);
-        outputStream.putBytes16(serverName);
-    }
-
-    @Override
-    public void write(ByteBuffer buffer) throws IOException {
+    public void write(ByteBuffer buffer) {
         ByteBufferUtil.writeInt16(getExtensionType().id, buffer);
         ByteBufferUtil.writeInt16(2 + 1 + 2 + serverName.length, buffer);
         ByteBufferUtil.writeInt16(1 + 2 + serverName.length, buffer);
         ByteBufferUtil.writeInt8(type, buffer);
-        ByteBufferUtil.putBytes8(serverName, buffer);
+        ByteBufferUtil.putBytes16(serverName, buffer);
     }
 
     @Override

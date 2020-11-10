@@ -3,8 +3,8 @@ package com.joe.ssl.example;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.crypto.CipherSpi;
+import com.joe.tls.cipher.CipherSuite;
+import com.joe.tls.crypto.CipherSpi;
 
 /**
  * @author JoeKerouac

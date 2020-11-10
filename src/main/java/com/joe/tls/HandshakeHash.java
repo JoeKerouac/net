@@ -3,7 +3,7 @@ package com.joe.tls;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-import com.joe.ssl.crypto.DigestSpi;
+import com.joe.tls.crypto.DigestSpi;
 
 /**
  * 握手hash

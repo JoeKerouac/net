@@ -25,26 +25,11 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIMatcher;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLProtocolException;
-import javax.net.ssl.StandardConstants;
+import javax.net.ssl.*;
 
 /*
  * [RFC 4366/6066] To facilitate secure connections to servers that host
@@ -74,22 +59,21 @@ final class ServerNameExtension extends HelloExtension {
 
     // For backward compatibility, all future data structures associated with
     // new NameTypes MUST begin with a 16-bit length field.
-    final static int NAME_HEADER_LENGTH = 3;    // NameType: 1 byte
-                                                // Name length: 2 bytes
+    final static int                    NAME_HEADER_LENGTH = 3; // NameType: 1 byte
+    // Name length: 2 bytes
     private Map<Integer, SNIServerName> sniMap;
-    private int listLength;     // ServerNameList length
+    private int                         listLength;             // ServerNameList length
 
     // constructor for ServerHello
     ServerNameExtension() throws IOException {
         super(ExtensionType.EXT_SERVER_NAME);
 
         listLength = 0;
-        sniMap = Collections.<Integer, SNIServerName>emptyMap();
+        sniMap = Collections.<Integer, SNIServerName> emptyMap();
     }
 
     // constructor for ClientHello
-    ServerNameExtension(List<SNIServerName> serverNames)
-            throws IOException {
+    ServerNameExtension(List<SNIServerName> serverNames) throws IOException {
         super(ExtensionType.EXT_SERVER_NAME);
 
         listLength = 0;
@@ -113,22 +97,20 @@ final class ServerNameExtension extends HelloExtension {
     }
 
     // constructor for ServerHello for parsing SNI extension
-    ServerNameExtension(HandshakeInStream s, int len)
-            throws IOException {
+    ServerNameExtension(HandshakeInStream s, int len) throws IOException {
         super(ExtensionType.EXT_SERVER_NAME);
 
         int remains = len;
-        if (len >= 2) {    // "server_name" extension in ClientHello
-            listLength = s.getInt16();     // ServerNameList length
+        if (len >= 2) { // "server_name" extension in ClientHello
+            listLength = s.getInt16(); // ServerNameList length
             if (listLength == 0 || listLength + 2 != len) {
-                throw new SSLProtocolException(
-                        "Invalid " + type + " extension");
+                throw new SSLProtocolException("Invalid " + type + " extension");
             }
 
             remains -= 2;
             sniMap = new LinkedHashMap<>();
             while (remains > 0) {
-                int code = s.getInt8();       // NameType
+                int code = s.getInt8(); // NameType
 
                 // HostName (length read in getBytes16);
                 byte[] encoded = s.getBytes16();
@@ -143,10 +125,13 @@ final class ServerNameExtension extends HelloExtension {
                             serverName = new SNIHostName(encoded);
                         } catch (IllegalArgumentException iae) {
                             SSLProtocolException spe = new SSLProtocolException(
-                                "Illegal server name, type=host_name(" +
-                                code + "), name=" +
-                                (new String(encoded, StandardCharsets.UTF_8)) +
-                                ", value=" + Debug.toString(encoded));
+                                "Illegal server name, type=host_name(" + code + "), name="
+                                                                                + (new String(
+                                                                                    encoded,
+                                                                                    StandardCharsets.UTF_8))
+                                                                                + ", value="
+                                                                                + Debug.toString(
+                                                                                    encoded));
                             spe.initCause(iae);
                             throw spe;
                         }
@@ -156,8 +141,8 @@ final class ServerNameExtension extends HelloExtension {
                             serverName = new UnknownServerName(code, encoded);
                         } catch (IllegalArgumentException iae) {
                             SSLProtocolException spe = new SSLProtocolException(
-                                "Illegal server name, type=(" + code +
-                                "), value=" + Debug.toString(encoded));
+                                "Illegal server name, type=(" + code + "), value=" + Debug
+                                    .toString(encoded));
                             spe.initCause(iae);
                             throw spe;
                         }
@@ -165,15 +150,14 @@ final class ServerNameExtension extends HelloExtension {
                 // check for duplicated server name type
                 if (sniMap.put(serverName.getType(), serverName) != null) {
                     throw new SSLProtocolException(
-                            "Duplicated server name of type " +
-                            serverName.getType());
+                        "Duplicated server name of type " + serverName.getType());
                 }
 
                 remains -= encoded.length + NAME_HEADER_LENGTH;
             }
-        } else if (len == 0) {     // "server_name" extension in ServerHello
+        } else if (len == 0) { // "server_name" extension in ServerHello
             listLength = 0;
-            sniMap = Collections.<Integer, SNIServerName>emptyMap();
+            sniMap = Collections.<Integer, SNIServerName> emptyMap();
         }
 
         if (remains != 0) {
@@ -183,11 +167,10 @@ final class ServerNameExtension extends HelloExtension {
 
     List<SNIServerName> getServerNames() {
         if (sniMap != null && !sniMap.isEmpty()) {
-            return Collections.<SNIServerName>unmodifiableList(
-                                        new ArrayList<>(sniMap.values()));
+            return Collections.<SNIServerName> unmodifiableList(new ArrayList<>(sniMap.values()));
         }
 
-        return Collections.<SNIServerName>emptyList();
+        return Collections.<SNIServerName> emptyList();
     }
 
     /*
@@ -236,7 +219,7 @@ final class ServerNameExtension extends HelloExtension {
      */
     boolean isIdentical(List<SNIServerName> other) {
         if (other.size() == sniMap.size()) {
-            for(SNIServerName sniInOther : other) {
+            for (SNIServerName sniInOther : other) {
                 SNIServerName sniName = sniMap.get(sniInOther.getType());
                 if (sniName == null || !sniInOther.equals(sniName)) {
                     return false;
@@ -258,14 +241,14 @@ final class ServerNameExtension extends HelloExtension {
     void send(HandshakeOutStream s) throws IOException {
         s.putInt16(type.id);
         if (listLength == 0) {
-            s.putInt16(listLength);     // in ServerHello, empty extension_data
+            s.putInt16(listLength); // in ServerHello, empty extension_data
         } else {
             s.putInt16(listLength + 2); // length of extension_data
-            s.putInt16(listLength);     // length of ServerNameList
+            s.putInt16(listLength); // length of ServerNameList
 
             for (SNIServerName sniName : sniMap.values()) {
-                s.putInt8(sniName.getType());         // server name type
-                s.putBytes16(sniName.getEncoded());   // server name value
+                s.putInt8(sniName.getType()); // server name type
+                s.putBytes16(sniName.getEncoded()); // server name value
             }
         }
     }

@@ -27,12 +27,15 @@ package com.joe.ssl.openjdk.ssl;
 
 import java.security.*;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.*;
-
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.ECParameterSpec;
+import java.security.spec.ECPoint;
+import java.security.spec.ECPublicKeySpec;
 import java.util.Arrays;
 import java.util.EnumSet;
-import javax.crypto.SecretKey;
+
 import javax.crypto.KeyAgreement;
+import javax.crypto.SecretKey;
 import javax.net.ssl.SSLHandshakeException;
 
 /**

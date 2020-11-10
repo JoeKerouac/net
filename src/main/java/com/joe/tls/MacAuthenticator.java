@@ -1,7 +1,6 @@
 package com.joe.tls;
 
-import com.joe.ssl.crypto.HmacSpi;
-import com.joe.ssl.message.TlsVersion;
+import com.joe.tls.crypto.HmacSpi;
 
 /**
  * @author JoeKerouac

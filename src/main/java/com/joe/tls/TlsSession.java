@@ -6,6 +6,4 @@ package com.joe.tls;
  */
 public class TlsSession {
 
-
-
 }

@@ -25,9 +25,9 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * A list of ProtocolVersions. Also maintains the list of supported protocols.
@@ -42,13 +42,13 @@ final class ProtocolList {
     // the sorted protocol version list
     private final ArrayList<ProtocolVersion> protocols;
 
-    private String[] protocolNames;
+    private String[]                         protocolNames;
 
     // the minimum and maximum ProtocolVersions in this list
-    final ProtocolVersion min, max;
+    final ProtocolVersion                    min, max;
 
     // the format for the hello version to use
-    final ProtocolVersion helloVersion;
+    final ProtocolVersion                    helloVersion;
 
     ProtocolList(String[] names) {
         this(convert(names));
@@ -57,11 +57,10 @@ final class ProtocolList {
     ProtocolList(ArrayList<ProtocolVersion> versions) {
         this.protocols = versions;
 
-        if ((protocols.size() == 1) &&
-                protocols.contains(ProtocolVersion.SSL20Hello)) {
-            throw new IllegalArgumentException("SSLv2Hello cannot be " +
-                "enabled unless at least one other supported version " +
-                "is also enabled.");
+        if ((protocols.size() == 1) && protocols.contains(ProtocolVersion.SSL20Hello)) {
+            throw new IllegalArgumentException(
+                "SSLv2Hello cannot be " + "enabled unless at least one other supported version "
+                                               + "is also enabled.");
         }
 
         if (protocols.size() != 0) {
@@ -82,7 +81,7 @@ final class ProtocolList {
         }
 
         ArrayList<ProtocolVersion> versions = new ArrayList<>(names.length);
-        for (int i = 0; i < names.length; i++ ) {
+        for (int i = 0; i < names.length; i++) {
             ProtocolVersion version = ProtocolVersion.valueOf(names[i]);
             if (versions.contains(version) == false) {
                 versions.add(version);
@@ -127,7 +126,7 @@ final class ProtocolList {
         ProtocolVersion selectedVersion = null;
         for (ProtocolVersion pv : protocols) {
             if (pv.v > protocolVersion.v) {
-                break;  // Safe to break here as this.protocols is sorted
+                break; // Safe to break here as this.protocols is sorted
             }
             selectedVersion = pv;
         }

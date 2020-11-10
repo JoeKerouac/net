@@ -23,11 +23,10 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
 
-
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * InputStream for application data as returned by SSLSocket.getInputStream().
@@ -41,11 +40,11 @@ class AppInputStream extends InputStream {
     // static dummy array we use to implement skip()
     private final static byte[] SKIP_ARRAY = new byte[1024];
 
-    private SSLSocketImpl c;
-    InputRecord r;
+    private SSLSocketImpl       c;
+    InputRecord                 r;
 
     // One element array used to implement the single byte read() method
-    private final byte[] oneByte = new byte[1];
+    private final byte[]        oneByte    = new byte[1];
 
     AppInputStream(SSLSocketImpl conn) {
         r = new InputRecord();
@@ -83,8 +82,7 @@ class AppInputStream extends InputStream {
      * and returning "-1" on non-fault EOF status.
      */
     @Override
-    public synchronized int read(byte b[], int off, int len)
-            throws IOException {
+    public synchronized int read(byte b[], int off, int len) throws IOException {
         if (b == null) {
             throw new NullPointerException();
         } else if (off < 0 || len < 0 || len > b.length - off) {
@@ -120,7 +118,6 @@ class AppInputStream extends InputStream {
         }
     }
 
-
     /**
      * Skip n bytes. This implementation is somewhat less efficient
      * than possible, but not badly so (redundant copy). We reuse
@@ -132,7 +129,7 @@ class AppInputStream extends InputStream {
     public synchronized long skip(long n) throws IOException {
         long skipped = 0;
         while (n > 0) {
-            int len = (int)Math.min(n, SKIP_ARRAY.length);
+            int len = (int) Math.min(n, SKIP_ARRAY.length);
             int r = read(SKIP_ARRAY, 0, len);
             if (r <= 0) {
                 break;

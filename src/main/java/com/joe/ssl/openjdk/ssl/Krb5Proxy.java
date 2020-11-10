@@ -28,7 +28,7 @@ package com.joe.ssl.openjdk.ssl;
 import java.security.AccessControlContext;
 import java.security.Permission;
 import java.security.Principal;
-import javax.crypto.SecretKey;
+
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
@@ -47,7 +47,6 @@ public interface Krb5Proxy {
      * Returns the Subject associated with the server-side of the SSL socket.
      */
     Subject getServerSubject(AccessControlContext acc) throws LoginException;
-
 
     /**
      * Returns the Kerberos ServiceCreds for the default server-side principal.

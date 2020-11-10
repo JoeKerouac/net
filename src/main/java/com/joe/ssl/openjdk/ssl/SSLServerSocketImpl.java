@@ -23,29 +23,19 @@
  * questions.
  */
 
-
 package com.joe.ssl.openjdk.ssl;
-
-
-
-
-
-
-
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-
 import java.security.AlgorithmConstraints;
+import java.util.Collection;
+import java.util.Collections;
 
-import java.util.*;
-
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SNIMatcher;
-
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLServerSocket;
 
 /**
  * This class provides a simple way for servers to support conventional
@@ -69,41 +59,38 @@ import javax.net.ssl.SNIMatcher;
  *
  * @author David Brownell
  */
-final
-class SSLServerSocketImpl extends SSLServerSocket
-{
-    private SSLContextImpl sslContext;
+final class SSLServerSocketImpl extends SSLServerSocket {
+    private SSLContextImpl       sslContext;
 
     /* Do newly accepted connections require clients to authenticate? */
-    private byte                doClientAuth = SSLEngineImpl.clauth_none;
+    private byte                 doClientAuth            = SSLEngineImpl.clauth_none;
 
     /* Do new connections created here use the "server" mode of SSL? */
-    private boolean             useServerMode = true;
+    private boolean              useServerMode           = true;
 
     /* Can new connections created establish new sessions? */
-    private boolean             enableSessionCreation = true;
+    private boolean              enableSessionCreation   = true;
 
     /* what cipher suites to use by default */
-    private CipherSuiteList enabledCipherSuites = null;
+    private CipherSuiteList      enabledCipherSuites     = null;
 
     /* which protocol to use by default */
-    private ProtocolList enabledProtocols = null;
+    private ProtocolList         enabledProtocols        = null;
 
     // the endpoint identification protocol to use by default
-    private String              identificationProtocol = null;
+    private String               identificationProtocol  = null;
 
     // The cryptographic algorithm constraints
-    private AlgorithmConstraints    algorithmConstraints = null;
+    private AlgorithmConstraints algorithmConstraints    = null;
 
     // The server name indication
-    Collection<SNIMatcher>      sniMatchers =
-                                    Collections.<SNIMatcher>emptyList();
+    Collection<SNIMatcher>       sniMatchers             = Collections.<SNIMatcher> emptyList();
 
     /*
      * Whether local cipher suites preference in server side should be
      * honored during handshaking?
      */
-    private boolean             preferLocalCipherSuites = false;
+    private boolean              preferLocalCipherSuites = false;
 
     /**
      * Create an SSL server socket on a port, using a non-default
@@ -114,13 +101,11 @@ class SSLServerSocketImpl extends SSLServerSocket
      *          the system should start rejecting new requests
      * @param context authentication context for this server
      */
-    SSLServerSocketImpl(int port, int backlog, SSLContextImpl context)
-    throws IOException, SSLException
-    {
+    SSLServerSocketImpl(int port, int backlog, SSLContextImpl context) throws IOException,
+                                                                       SSLException {
         super(port, backlog);
         initServer(context);
     }
-
 
     /**
      * Create an SSL server socket on a port, using a specified
@@ -137,17 +122,11 @@ class SSLServerSocketImpl extends SSLServerSocket
      *          which connections will be accepted
      * @param context authentication context for this server
      */
-    SSLServerSocketImpl(
-        int             port,
-        int             backlog,
-        InetAddress     address,
-        SSLContextImpl context)
-        throws IOException
-    {
+    SSLServerSocketImpl(int port, int backlog, InetAddress address,
+                        SSLContextImpl context) throws IOException {
         super(port, backlog, address);
         initServer(context);
     }
-
 
     /**
      * Creates an unbound server socket.
@@ -156,7 +135,6 @@ class SSLServerSocketImpl extends SSLServerSocket
         super();
         initServer(context);
     }
-
 
     /**
      * Initializes the server socket.
@@ -237,8 +215,7 @@ class SSLServerSocketImpl extends SSLServerSocket
      */
     @Override
     public void setNeedClientAuth(boolean flag) {
-        doClientAuth = (flag ?
-            SSLEngineImpl.clauth_required : SSLEngineImpl.clauth_none);
+        doClientAuth = (flag ? SSLEngineImpl.clauth_required : SSLEngineImpl.clauth_none);
     }
 
     @Override
@@ -252,8 +229,7 @@ class SSLServerSocketImpl extends SSLServerSocket
      */
     @Override
     public void setWantClientAuth(boolean flag) {
-        doClientAuth = (flag ?
-            SSLEngineImpl.clauth_requested : SSLEngineImpl.clauth_none);
+        doClientAuth = (flag ? SSLEngineImpl.clauth_requested : SSLEngineImpl.clauth_none);
     }
 
     @Override
@@ -274,8 +250,7 @@ class SSLServerSocketImpl extends SSLServerSocket
          * protocols haven't specifically been set by the user,
          * change them to the corresponding default ones.
          */
-        if (useServerMode != (!flag) &&
-                sslContext.isDefaultProtocolList(enabledProtocols)) {
+        if (useServerMode != (!flag) && sslContext.isDefaultProtocolList(enabledProtocols)) {
             enabledProtocols = sslContext.getDefaultProtocolList(!flag);
         }
 
@@ -286,7 +261,6 @@ class SSLServerSocketImpl extends SSLServerSocket
     public boolean getUseClientMode() {
         return !useServerMode;
     }
-
 
     /**
      * Controls whether new connections may cause creation of new SSL
@@ -319,7 +293,6 @@ class SSLServerSocketImpl extends SSLServerSocket
         params.setSNIMatchers(sniMatchers);
         params.setUseCipherSuitesOrder(preferLocalCipherSuites);
 
-
         return params;
     }
 
@@ -347,10 +320,9 @@ class SSLServerSocketImpl extends SSLServerSocket
      */
     @Override
     public Socket accept() throws IOException {
-        SSLSocketImpl s = new SSLSocketImpl(sslContext, useServerMode,
-            enabledCipherSuites, doClientAuth, enableSessionCreation,
-            enabledProtocols, identificationProtocol, algorithmConstraints,
-            sniMatchers, preferLocalCipherSuites);
+        SSLSocketImpl s = new SSLSocketImpl(sslContext, useServerMode, enabledCipherSuites,
+            doClientAuth, enableSessionCreation, enabledProtocols, identificationProtocol,
+            algorithmConstraints, sniMatchers, preferLocalCipherSuites);
 
         implAccept(s);
         System.out.println("收到链接");
@@ -363,6 +335,6 @@ class SSLServerSocketImpl extends SSLServerSocket
      */
     @Override
     public String toString() {
-        return "[SSL: "+ super.toString() + "]";
+        return "[SSL: " + super.toString() + "]";
     }
 }

@@ -15,7 +15,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.joe.ssl.cipher.CipherSuite;
+import com.joe.tls.cipher.CipherSuite;
 import com.joe.utils.collection.CollectionUtil;
 import com.sun.crypto.provider.SunJCE;
 

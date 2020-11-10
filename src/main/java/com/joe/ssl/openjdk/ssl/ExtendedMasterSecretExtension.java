@@ -25,12 +25,8 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-
-
-
-
 import java.io.IOException;
+
 import javax.net.ssl.SSLProtocolException;
 
 /**
@@ -48,8 +44,7 @@ final class ExtendedMasterSecretExtension extends HelloExtension {
         super(ExtensionType.EXT_EXTENDED_MASTER_SECRET);
     }
 
-    ExtendedMasterSecretExtension(HandshakeInStream s,
-                                  int len) throws IOException {
+    ExtendedMasterSecretExtension(HandshakeInStream s, int len) throws IOException {
         super(ExtensionType.EXT_EXTENDED_MASTER_SECRET);
 
         if (len != 0) {
@@ -59,13 +54,13 @@ final class ExtendedMasterSecretExtension extends HelloExtension {
 
     @Override
     int length() {
-        return 4;       // 4: extension type and length fields
+        return 4; // 4: extension type and length fields
     }
 
     @Override
     void send(HandshakeOutStream s) throws IOException {
-        s.putInt16(type.id);    // ExtensionType extension_type;
-        s.putInt16(0);          // extension_data length
+        s.putInt16(type.id); // ExtensionType extension_type;
+        s.putInt16(0); // extension_data length
     }
 
     @Override
@@ -73,4 +68,3 @@ final class ExtendedMasterSecretExtension extends HelloExtension {
         return "Extension " + type;
     }
 }
-

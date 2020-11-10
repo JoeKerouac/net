@@ -25,8 +25,9 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-import java.io.*;
-import java.nio.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * A simple InputStream which uses ByteBuffers as it's backing store.
@@ -61,7 +62,7 @@ class ByteBufferInputStream extends InputStream {
             return -1;
         }
 
-        return (bb.get() & 0xFF);   // need to be in the range 0 to 255
+        return (bb.get() & 0xFF); // need to be in the range 0 to 255
     }
 
     /**
@@ -165,7 +166,8 @@ class ByteBufferInputStream extends InputStream {
      * Marks the current position in this input stream.
      */
     @Override
-    public synchronized void mark(int readlimit) {}
+    public synchronized void mark(int readlimit) {
+    }
 
     /**
      * Repositions this stream to the position at the time the

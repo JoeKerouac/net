@@ -25,9 +25,6 @@
 
 package com.joe.ssl.openjdk.ssl;
 
-
-import com.joe.ssl.openjdk.A;
-
 import java.util.Arrays;
 
 /**
@@ -49,7 +46,7 @@ class Authenticator {
 
     // byte array containing the additional authentication information for
     // each record
-    private final byte[] block;
+    private final byte[]     block;
 
     // the block size of SSL v3.0:
     // sequence number + record type + + record length
@@ -96,11 +93,9 @@ class Authenticator {
          * Conservatively, we don't allow more records to be generated
          * when there are only 2^8 sequence numbers left.
          */
-        return (block.length != 0 &&
-                block[0] == (byte) 0xFF && block[1] == (byte) 0xFF &&
-                block[2] == (byte) 0xFF && block[3] == (byte) 0xFF &&
-                block[4] == (byte) 0xFF && block[5] == (byte) 0xFF &&
-                block[6] == (byte) 0xFF);
+        return (block.length != 0 && block[0] == (byte) 0xFF && block[1] == (byte) 0xFF
+                && block[2] == (byte) 0xFF && block[3] == (byte) 0xFF && block[4] == (byte) 0xFF
+                && block[5] == (byte) 0xFF && block[6] == (byte) 0xFF);
     }
 
     /**
@@ -118,8 +113,7 @@ class Authenticator {
          * Conservatively, we should ask for renegotiation when there are
          * only 2^48 sequence numbers left.
          */
-        return (block.length != 0 &&
-                block[0] == (byte) 0xFF && block[1] == (byte) 0xFF);
+        return (block.length != 0 && block[0] == (byte) 0xFF && block[1] == (byte) 0xFF);
     }
 
     /**

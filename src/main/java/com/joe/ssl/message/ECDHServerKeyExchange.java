@@ -3,9 +3,10 @@ package com.joe.ssl.message;
 import java.io.IOException;
 import java.security.*;
 
-import com.joe.tls.enums.HandshakeType;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.JCEECPublicKey;
+
+import com.joe.tls.enums.HandshakeType;
 
 /**
  *
@@ -18,52 +19,47 @@ public class ECDHServerKeyExchange implements HandshakeMessage {
     /**
      * clientHello中的随机数
      */
-    private byte[]                                       clientRandom;
+    private byte[]         clientRandom;
 
     /**
      * 服务端生成的随机数
      */
-    private byte[]                                       serverRandom;
+    private byte[]         serverRandom;
 
     /**
      * 服务端私钥
      */
-    private PrivateKey                                   serverPrivateKey;
+    private PrivateKey     serverPrivateKey;
 
     /**
      * 签名器
      */
-    private Signature                                    signature;
-
-    /**
-     * 签名算法
-     */
-    private SignatureAndHashAlgorithm.SignatureAlgorithm signatureAlgorithm;
+    private Signature      signature;
 
     /**
      * 签名数据
      */
-    private byte[]                                       signData;
+    private byte[]         signData;
 
     /**
      * 服务端EC公钥
      */
-    private JCEECPublicKey                               serverPublicKey;
+    private JCEECPublicKey serverPublicKey;
 
     /**
      * 服务端证书私钥，签名用
      */
-    private PrivateKey                                   privateKey;
+    private PrivateKey     privateKey;
 
     /**
      * curve type，固定3
      */
-    private int                                          curveType  = 3;
+    private int            curveType  = 3;
 
     /**
      * named curve : 固定23，即secp256r1
      */
-    private int                                          namedCurve = 23;
+    private int            namedCurve = 23;
 
     @Override
     public void init(int bodyLen, WrapedInputStream inputStream) {

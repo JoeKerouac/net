@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import com.joe.ssl.crypto.DigestSpi;
+import com.joe.tls.HandshakeHash;
 import com.joe.tls.enums.ContentType;
 import com.joe.ssl.message.HandshakeMessage;
 import com.joe.ssl.message.TlsVersion;
@@ -17,6 +18,9 @@ public class OutputRecord extends WrapedOutputStream {
 
     @Setter
     private DigestSpi             digestSpi;
+
+    @Setter
+    private HandshakeHash         handshakeHash;
 
     @Getter
     @Setter
@@ -38,6 +42,8 @@ public class OutputRecord extends WrapedOutputStream {
         write(outputStream.toByteArray());
         // client_hello发送的时候还没有digestSpi
         if (digestSpi != null) {
+            byte[] data = outputStream.toByteArray();
+            handshakeHash.update(data, 0, data.length);
             digestSpi.update(outputStream.toByteArray());
         } else {
             stream.write(outputStream.toByteArray());

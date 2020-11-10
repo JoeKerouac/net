@@ -10,16 +10,17 @@ import java.util.Collections;
 import java.util.List;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.tls.enums.NamedCurve;
-import com.joe.ssl.message.SignatureAndHashAlgorithm;
 import com.joe.ssl.message.TlsVersion;
 import com.joe.ssl.message.WrapedOutputStream;
+import com.joe.tls.SignatureAndHashAlgorithm;
 import com.joe.tls.enums.HandshakeType;
+import com.joe.tls.enums.NamedCurve;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.extensions.*;
 import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.codec.Hex;
 import com.joe.utils.common.Assert;
+import com.joe.utils.common.string.StringUtils;
 
 /**
  * ClientHello
@@ -71,11 +72,17 @@ public class ClientHello implements HandshakeProtocol {
     private byte[]               data;
 
     /**
+     * 安全随机数
+     */
+    private SecureRandom         secureRandom;
+
+    /**
      * 构建一个client_hello
      * @param serverName 服务器名，可以为空
      */
-    public ClientHello(String serverName) {
-        this.serverName = serverName;
+    public ClientHello(String serverName, SecureRandom secureRandom) {
+        this.serverName = StringUtils.isEmpty(serverName) ? "" : serverName;
+        this.secureRandom = secureRandom;
         this.init();
     }
 
@@ -95,6 +102,14 @@ public class ClientHello implements HandshakeProtocol {
         } else {
             this.serverName = null;
         }
+    }
+
+    /**
+     * 获取客户端随机数
+     * @return 客户端随机数
+     */
+    public byte[] getClientRandom() {
+        return clientRandom;
     }
 
     public TlsVersion version() {
@@ -211,7 +226,7 @@ public class ClientHello implements HandshakeProtocol {
     private void init() {
         // 随机数，前4byte需要是当前时间
         {
-            new SecureRandom().nextBytes(clientRandom);
+            secureRandom.nextBytes(clientRandom);
 
             long temp = System.currentTimeMillis() / 1000;
             int gmt_unix_time;

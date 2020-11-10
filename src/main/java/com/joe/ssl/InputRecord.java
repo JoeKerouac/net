@@ -7,12 +7,16 @@ import java.io.InputStream;
 import com.joe.ssl.crypto.DigestSpi;
 import com.joe.ssl.message.WrapedInputStream;
 
+import com.joe.tls.HandshakeHash;
 import lombok.Setter;
 
 public class InputRecord extends WrapedInputStream {
 
     @Setter
     private DigestSpi             digestSpi;
+
+    @Setter
+    private HandshakeHash handshakeHash;
 
     private ByteArrayOutputStream stream;
 

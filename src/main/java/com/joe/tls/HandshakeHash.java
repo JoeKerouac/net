@@ -13,8 +13,14 @@ import com.joe.ssl.crypto.DigestSpi;
  */
 public class HandshakeHash {
 
+    /**
+     * 实际摘要生成器
+     */
     private DigestSpi             digest;
 
+    /**
+     * 缓冲区，在设置hash算法前数据先缓冲在这儿
+     */
     private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
     /**

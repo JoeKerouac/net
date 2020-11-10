@@ -5,6 +5,8 @@ import java.util.Arrays;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.crypto.CipherSpi;
+import com.joe.ssl.crypto.impl.AesCipher;
+import com.sun.crypto.provider.SunJCE;
 
 /**
  * 加密盒子
@@ -66,26 +68,18 @@ public class CipherBox {
             this.mode = CipherSpi.DECRYPT_MODE;
         }
 
+        //        this.cipherSpi = CipherSpi.getInstance(cipherDesc);
+        this.cipherSpi = new AesCipher(cipherDesc, new SunJCE());
         if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
             this.tagSize = 16;
-            this.cipherSpi = CipherSpi.getInstance(cipherDesc);
             this.fixedIv = iv;
             this.recordIvSize = cipherDesc.getIvLen() - cipherDesc.getFixedIvLen();
         } else {
             this.tagSize = 0;
-            this.cipherSpi = CipherSpi.getInstance(cipherDesc);
             this.cipherSpi.init(cipherKey, iv, mode, secureRandom);
             this.fixedIv = new byte[0];
             this.recordIvSize = 0;
         }
-    }
-
-    /**
-     * record中IV的长度
-     * @return record中IV的长度
-     */
-    public int getRecordIvSize() {
-        return recordIvSize;
     }
 
     /**

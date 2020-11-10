@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.joe.ssl.cipher.CipherSuite;
-import com.joe.ssl.message.ClientHello;
 import com.joe.ssl.message.TlsVersion;
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
@@ -16,7 +15,6 @@ import com.joe.tls.msg.extensions.HelloExtension;
 import com.joe.tls.util.ByteBufferUtil;
 
 import lombok.Getter;
-import sun.security.ssl.ProtocolVersion;
 
 /**
  *
@@ -37,25 +35,17 @@ import sun.security.ssl.ProtocolVersion;
  */
 public class ServerHello implements HandshakeProtocol {
 
-    private TlsVersion                         version;
+    @Getter
+    private TlsVersion                               version;
 
-    /**
-     * 消息长度
-     */
-    private int                                len;
+    private final byte[]                             serverRandom;
 
-    private byte[]                             serverRandom;
-
-    private byte[]                             sessionId;
-
-    private ProtocolVersion                    protocolVersion;
-
-    private ClientHello                        clientHello;
+    private final byte[]                             sessionId;
 
     @Getter
-    private CipherSuite                        cipherSuite;
+    private final CipherSuite                        cipherSuite;
 
-    private Map<ExtensionType, HelloExtension> extensions;
+    private final Map<ExtensionType, HelloExtension> extensions;
 
     /**
      * 从ByteBuffer中构造serverHello，buffer的起始位置应该是server_hello_protocol协议的起始位置
@@ -64,7 +54,7 @@ public class ServerHello implements HandshakeProtocol {
     public ServerHello(ByteBuffer buffer) {
         this.extensions = new HashMap<>();
         // 跳过类型和长度，刚好是4byte
-        ByteBufferUtil.mergeReadInt24(buffer);
+        ByteBufferUtil.mergeReadInt32(buffer);
         // 服务端实际选择的版本号
         this.version = TlsVersion.valueOf(ByteBufferUtil.mergeReadInt8(buffer),
             ByteBufferUtil.mergeReadInt8(buffer));
@@ -79,9 +69,19 @@ public class ServerHello implements HandshakeProtocol {
         if (compressionMethodLen > 0) {
             throw new RuntimeException("不支持压缩算法，该算法已经不安全了");
         }
-        // 读取扩展数据
-        List<HelloExtension> extensionList = ExtensionReader.read(buffer);
-        extensionList.forEach(extension -> extensions.put(extension.getExtensionType(), extension));
+        // 如果还有数据，说明还有扩展数据，读取扩展数据
+        if (buffer.limit() != buffer.position()) {
+            List<HelloExtension> extensionList = ExtensionReader.read(buffer);
+            extensionList.forEach(extension -> extensions.put(extension.getExtensionType(), extension));
+        }
+    }
+
+    /**
+     * 获取服务端随机数
+     * @return 服务端随机数
+     */
+    public byte[] getServerRandom() {
+        return serverRandom;
     }
 
     /**

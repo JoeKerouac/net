@@ -10,6 +10,8 @@ import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.common.Assert;
 
+import lombok.Getter;
+
 /**
  * 服务端ECDH密钥交换消息
  *
@@ -19,38 +21,40 @@ import com.joe.utils.common.Assert;
 public class ECDHServerKeyExchange implements HandshakeProtocol {
 
     /**
-     * 消息总长度，包含header
-     */
-    private int    msgLen;
-
-    /**
      * 曲线类型，目前必须时03
      */
-    private byte   curveType;
+    @Getter
+    private final byte   curveType;
 
     /**
      * 曲线ID
      */
-    private int    curveId;
+    @Getter
+    private final int    curveId;
 
     /**
      * 服务端ECDH公钥
      */
-    private byte[] publicKey;
+    @Getter
+    private final byte[] publicKey;
 
     /**
      * hash和签名算法
      */
-    private int    hashAndSigAlg;
+    @Getter
+    private final int    hashAndSigAlg;
 
     /**
-     * 签名
+     * 签名数据，对clientRandom + serverRandom + curveType（byte） + curveId（byte） + publicKeyLen（byte） + publicKey进行签名
+     * <br/>
+     * publicKey指的是本消息中的服务端ECDH公钥
      */
-    private byte[] sig;
+    @Getter
+    private final byte[] sig;
 
     public ECDHServerKeyExchange(ByteBuffer buffer) {
         // 先给type和len丢弃掉
-        ByteBufferUtil.mergeReadInt24(buffer);
+        ByteBufferUtil.mergeReadInt32(buffer);
         curveType = buffer.get();
         Assert.isTrue(curveType == 3);
         curveId = ByteBufferUtil.mergeReadInt16(buffer);

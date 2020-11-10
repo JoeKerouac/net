@@ -2,20 +2,18 @@ package com.joe.tls.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.EnumInterface;
 import com.joe.ssl.message.TlsVersion;
-import com.joe.tls.Authenticator;
-import com.joe.tls.CipherBox;
-import com.joe.tls.InputRecordStream;
-import com.joe.tls.MacAuthenticator;
+import com.joe.tls.*;
 import com.joe.tls.enums.ContentType;
-import com.joe.tls.msg.HandshakeMsgReaderUtil;
+import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.Record;
+import com.joe.tls.msg.impl.ChangeCipherSpace;
+import com.joe.tls.msg.reader.HandshakeMsgReaderUtil;
 
 /**
  * record读取
@@ -37,9 +35,9 @@ public class InputRecordStreamImpl implements InputRecordStream {
     private final TlsVersion       version;
 
     /**
-     * 缓冲区
+     * 摘要记录器
      */
-    private final ByteBuffer       headerBuffer;
+    private final HandshakeHash    handshakeHash;
 
     /**
      * 加密盒子
@@ -56,10 +54,11 @@ public class InputRecordStreamImpl implements InputRecordStream {
      */
     private Authenticator          authenticator;
 
-    public InputRecordStreamImpl(InputStream netStream, TlsVersion version) {
+    public InputRecordStreamImpl(InputStream netStream, HandshakeHash handshakeHash,
+                                 TlsVersion version) {
         this.netStream = netStream;
+        this.handshakeHash = handshakeHash;
         this.version = version;
-        this.headerBuffer = ByteBuffer.allocate(5);
     }
 
     @Override
@@ -77,20 +76,30 @@ public class InputRecordStreamImpl implements InputRecordStream {
                 .format("不支持的version，major version: %d, minor version: %d", header[1], header[2]));
         }
 
+        System.out.println(String.format("收到%s类型的消息", contentType));
+
         // 长度
         int contentLen = Byte.toUnsignedInt(header[3]) << 8 | Byte.toUnsignedInt(header[4]);
         byte[] content = read(contentLen);
 
-        if (cipherBox != null) {
+        if (cipherBox != null && contentType != ContentType.ALTER
+            && contentType != ContentType.CHANGE_CIPHER_SPEC) {
             content = decrypt(header[0], content);
         }
 
         switch (contentType) {
             case HANDSHAKE:
-            case CHANGE_CIPHER_SPEC:
+                // finished消息不进行hash
+                if (content[0] != HandshakeType.FINISHED.getCode()) {
+                    handshakeHash.update(content, 0, content.length);
+                }
+
                 HandshakeProtocol protocol = HandshakeMsgReaderUtil.read(content);
                 return new Record(contentType, version, protocol, content);
+            case CHANGE_CIPHER_SPEC:
+                return new Record(contentType, version, new ChangeCipherSpace(), content);
             case ALTER:
+                throw new RuntimeException("收到了alter信息：" + Arrays.toString(content));
             case APPLICATION_DATA:
             default:
                 throw new RuntimeException("暂不支持的contentType:" + header[0]);
@@ -108,9 +117,8 @@ public class InputRecordStreamImpl implements InputRecordStream {
         int tagLen = cipherBox.getTagSize();
 
         if (cipherDesc.getCipherType() == CipherSuite.CipherType.AEAD) {
-            // AEAD模式应该去除iv
-            return cipherBox.decrypt(data, cipherBox.getRecordIvSize(),
-                data.length - cipherBox.getRecordIvSize());
+            // AEAD模式应该去除iv和AEAD模式增加的认证信息
+            return cipherBox.decrypt(data, nonceLen, data.length - tagLen);
         } else if (cipherDesc.getCipherType() == CipherSuite.CipherType.BLOCK) {
             byte[] decryptResult = cipherBox.decrypt(data, 0, data.length);
             MacAuthenticator macAuthenticator = (MacAuthenticator) authenticator;

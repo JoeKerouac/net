@@ -8,8 +8,6 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.crypto.CipherSpi;
 import com.joe.utils.common.Assert;
@@ -46,7 +44,7 @@ public class AesCipher implements CipherSpi {
 
     public AesCipher(CipherSuite.CipherDesc cipherAlgorithm) {
         // 注意，BouncyCastleProvider目前还有问题，需要继续测试
-        this(cipherAlgorithm, new BouncyCastleProvider());
+        this(cipherAlgorithm, new SunJCE());
     }
 
     public AesCipher(CipherSuite.CipherDesc cipherAlgorithm, Provider provider) {

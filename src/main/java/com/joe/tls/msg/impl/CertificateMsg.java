@@ -2,6 +2,7 @@ package com.joe.tls.msg.impl;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
+import java.security.PublicKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -45,10 +46,9 @@ public class CertificateMsg implements HandshakeProtocol {
 
     public CertificateMsg(ByteBuffer buffer) {
         // 跳过类型和长度，刚好是4byte
+        ByteBufferUtil.mergeReadInt32(buffer);
+        // 跳过证书总长度
         ByteBufferUtil.mergeReadInt24(buffer);
-
-        int certificateLen = ByteBufferUtil.mergeReadInt24(buffer);
-        this.messageLength = certificateLen + 7;
 
         CertificateFactory cf;
         try {
@@ -58,17 +58,18 @@ public class CertificateMsg implements HandshakeProtocol {
         }
 
         List<Certificate> chain = new ArrayList<>();
-        while (certificateLen > 0) {
-            // 证书长度
+        // 只要还有数据就继续
+        while (buffer.position() < buffer.limit()) {
             byte[] data = ByteBufferUtil.getInt24(buffer);
             this.encodedChain.add(data);
-            certificateLen -= 3 + data.length;
+
             try {
                 chain.add(cf.generateCertificate(new ByteArrayInputStream(data)));
             } catch (CertificateException e) {
                 throw new RuntimeException(e);
             }
         }
+
         this.chain = chain.toArray(new Certificate[0]);
     }
 
@@ -91,6 +92,14 @@ public class CertificateMsg implements HandshakeProtocol {
             this.chain = null;
             throw new RuntimeException("Could not encode certificates", exception);
         }
+    }
+
+    /**
+     * 获取服务端证书公钥
+     * @return 服务端证书公钥
+     */
+    public PublicKey getPublicKey() {
+        return chain[0].getPublicKey();
     }
 
     @Override

@@ -1,4 +1,6 @@
-package com.joe.tls.msg;
+package com.joe.tls.msg.reader;
+
+import com.joe.tls.msg.HandshakeProtocol;
 
 /**
  * 握手消息读取器
@@ -12,9 +14,8 @@ public interface HandshakeMsgReader {
     /**
      * 读取握手消息
      * @param data 握手消息序列化数据
-     * @param <T> 握手消息实际类型
      * @return 握手消息
      */
-    <T extends HandshakeProtocol> T read(byte[] data);
+    HandshakeProtocol read(byte[] data);
 
 }

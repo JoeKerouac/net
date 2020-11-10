@@ -10,6 +10,8 @@ import java.security.Security;
 import java.security.Signature;
 import java.util.Arrays;
 
+import com.joe.tls.HandshakeHash;
+import com.joe.tls.SignatureAndHashAlgorithm;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.agreement.ECDHBasicAgreement;
 import org.bouncycastle.crypto.generators.ECKeyPairGenerator;
@@ -103,6 +105,8 @@ public class ClientHandshaker {
     private byte[]             clientReadIv;
     private byte[]             clientReadMac;
 
+    private HandshakeHash      handshakeHash  = new HandshakeHash();
+
     /**
      * ECDH密钥交换算法
      */
@@ -119,6 +123,7 @@ public class ClientHandshaker {
 
         if (digestSpi != null) {
             digestSpi.update(handshakeData);
+            handshakeHash.update(handshakeData, 0, handshakeData.length);
         }
 
         int typeId = inputStream.readInt8();
@@ -136,16 +141,22 @@ public class ClientHandshaker {
                 // 初始化摘要器
                 String hashAlgorithm = this.serverHello.getCipherSuite().getHashDesc().getHashAlg();
                 this.digestSpi = DigestSpi.getInstance(hashAlgorithm);
+                handshakeHash.setFinishedAlg(hashAlgorithm);
                 this.phashSpi = PhashSpi.getInstance(hashAlgorithm);
                 // 补上client_hello的摘要
                 System.out.println("补充上client_hello的数据");
                 this.digestSpi.update(outputRecord.getStream().toByteArray());
+                byte[] buffer = outputRecord.getStream().toByteArray();
+                this.handshakeHash.update(buffer, 0, buffer.length);
                 System.out.println("补充上server_hello的摘要");
                 // 补上本次server_hello的摘要
                 digestSpi.update(handshakeData);
+                handshakeHash.update(handshakeData, 0, handshakeData.length);
                 outputRecord.setStream(null);
                 inputRecord.setDigestSpi(digestSpi);
+                inputRecord.setHandshakeHash(handshakeHash);
                 outputRecord.setDigestSpi(digestSpi);
+                outputRecord.setHandshakeHash(handshakeHash);
                 break;
             case CERTIFICATE:
                 // 这里先不管证书，采用ECC相关算法时证书只用来签名
@@ -216,6 +227,8 @@ public class ClientHandshaker {
                 byte[] sessionHash = null;
                 if (serverHello.getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null) {
                     sessionHash = digestSpi.copy().digest();
+                    System.out.println("正确的hash：" + Arrays.toString(sessionHash));
+                    System.out.println("错误的hash：" + Arrays.toString(handshakeHash.getFinishedHash()));
                 }
 
                 masterSecret = calcMaster(phashSpi, preMasterKey, sessionHash, clientRandom,
@@ -258,7 +271,6 @@ public class ClientHandshaker {
 
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-                // TODO 现在应该就差数据可能是错误的了
                 new Finished(digestSpi, phashSpi, masterSecret, true)
                     .write(new WrapedOutputStream(outputStream));
                 byte[] data = outputStream.toByteArray();
@@ -336,8 +348,8 @@ public class ClientHandshaker {
         //        Socket socket = new Socket("192.168.1.111", 12345);
         Security.addProvider(new BouncyCastleProvider());
 
-        //        Socket socket = new Socket("39.156.66.14", 443);
-        Socket socket = new Socket("127.0.0.1", 12345);
+        Socket socket = new Socket("39.156.66.14", 443);
+        //        Socket socket = new Socket("127.0.0.1", 12345);
 
         OutputRecord outputStream = new OutputRecord(socket.getOutputStream());
 

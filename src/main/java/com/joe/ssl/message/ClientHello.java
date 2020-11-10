@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.joe.tls.SignatureAndHashAlgorithm;
 import com.joe.tls.enums.NamedCurve;
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.tls.enums.HandshakeType;

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.joe.ssl.message.SignatureAndHashAlgorithm;
+import com.joe.tls.SignatureAndHashAlgorithm;
 import com.joe.ssl.message.WrapedInputStream;
 import com.joe.tls.util.ByteBufferUtil;
 

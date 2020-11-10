@@ -80,7 +80,7 @@ public class ByteBufferUtil {
     public static int mergeReadInt24(ByteBuffer buffer) {
         byte[] data = new byte[3];
         buffer.get(data);
-        return Byte.toUnsignedInt(data[0]) << 3 | Byte.toUnsignedInt(data[1]) << 2
+        return Byte.toUnsignedInt(data[0]) << 16 | Byte.toUnsignedInt(data[1]) << 8
                | Byte.toUnsignedInt(data[2]);
     }
 

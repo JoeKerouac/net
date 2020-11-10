@@ -1,4 +1,4 @@
-package com.joe.ssl.message;
+package com.joe.tls;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
@@ -10,7 +10,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import lombok.Getter;
 
 /**
- * 签名算法那
+ * 签名算法
  *
  * @author JoeKerouac
  * @version 2020年06月14日 12:26

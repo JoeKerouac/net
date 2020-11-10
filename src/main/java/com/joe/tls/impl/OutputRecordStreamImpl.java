@@ -6,10 +6,9 @@ import java.util.Arrays;
 
 import com.joe.ssl.cipher.CipherSuite;
 import com.joe.ssl.message.TlsVersion;
-import com.joe.tls.Authenticator;
-import com.joe.tls.CipherBox;
-import com.joe.tls.MacAuthenticator;
-import com.joe.tls.OutputRecordStream;
+import com.joe.tls.*;
+import com.joe.tls.enums.ContentType;
+import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.Record;
 import com.joe.utils.common.Assert;
 
@@ -33,6 +32,11 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
     private final TlsVersion       version;
 
     /**
+     * 摘要记录器
+     */
+    private final HandshakeHash    handshakeHash;
+
+    /**
      * 加密盒子
      */
     private CipherBox              cipherBox;
@@ -47,16 +51,20 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
      */
     private Authenticator          authenticator;
 
-    public OutputRecordStreamImpl(OutputStream netStream, TlsVersion version) {
+    public OutputRecordStreamImpl(OutputStream netStream, HandshakeHash handshakeHash,
+                                  TlsVersion version) {
         this.netStream = netStream;
+        this.handshakeHash = handshakeHash;
         this.version = version;
     }
 
     @Override
     public void write(Record record) throws IOException {
+        // 消息头
         netStream.write(record.type().getCode());
         netStream.write(record.version().getMajorVersion());
         netStream.write(record.version().getMinorVersion());
+
         byte[] data = record.msg().serialize();
         Assert.isTrue(data.length == record.len());
 
@@ -65,12 +73,18 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
             data = encrypt((byte) record.type().getCode(), data);
         }
 
-        netStream.write(record.len() >> 8);
         // 这里要用data数组的实际长度，因为加密后长度会增加
+        netStream.write(data.length >> 8);
         netStream.write(data.length);
         netStream.write(data);
 
         netStream.flush();
+
+        // 这个放后边不会有问题，因为handshake消息肯定没加密，所以data这里肯定是明文
+        if (record.type() == ContentType.HANDSHAKE && data[0] != HandshakeType.FINISHED.getCode()) {
+            // finished消息不进行hash
+            handshakeHash.update(data, 0, data.length);
+        }
     }
 
     /**
@@ -94,7 +108,7 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
                 nonce.length + data.length + macAuthenticator.macLen());
             System.arraycopy(data, 0, waitEncryptData, nonce.length, data.length);
             // 计算出mac信息，并放入消息的末尾
-            byte[] mac = macAuthenticator.compute((byte) contentType, waitEncryptData, 0,
+            byte[] mac = macAuthenticator.compute(contentType, waitEncryptData, 0,
                 nonce.length + data.length, false);
             System.arraycopy(mac, 0, waitEncryptData, nonce.length + data.length, mac.length);
 

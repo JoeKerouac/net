@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import com.joe.ssl.message.SignatureAndHashAlgorithm;
+import com.joe.tls.SignatureAndHashAlgorithm;
 import com.joe.ssl.message.WrapedOutputStream;
 import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.common.Assert;

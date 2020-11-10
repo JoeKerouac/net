@@ -38,7 +38,7 @@ public class Finished implements HandshakeMessage {
 
     @Override
     public HandshakeType type() {
-        return HandshakeType.CLIENT_ENCRYPT;
+        return HandshakeType.FINISHED;
     }
 
     @Override

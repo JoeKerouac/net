@@ -20,7 +20,7 @@ public enum HandshakeType {
 
                            CLIENT_KEY_EXCHANGE(16),
 
-                           CLIENT_ENCRYPT(20),
+                           FINISHED(20),
 
     ;
 
@@ -40,7 +40,6 @@ public enum HandshakeType {
     }
 
     public static HandshakeType getByCode(int code) {
-        System.out.println("code 是：" + code);
         for (HandshakeType type : HandshakeType.values()) {
             if (code == type.code) {
                 return type;

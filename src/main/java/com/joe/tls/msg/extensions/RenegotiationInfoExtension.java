@@ -5,7 +5,8 @@ import java.nio.ByteBuffer;
 import com.joe.tls.util.ByteBufferUtil;
 
 /**
- * 暂时不知道该扩展是做什么的，先用空处理（目前抓包的正常的也是空）
+ * 安全重新协商时避免中间人攻击使用的，具体用法有时间再调研
+ *
  *
  * @author JoeKerouac
  * @version 1.0

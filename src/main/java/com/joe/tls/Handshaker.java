@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.crypto.ECDHKeyExchangeSpi;
@@ -16,6 +18,8 @@ import com.joe.tls.impl.OutputRecordStreamImpl;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.Record;
 import com.joe.tls.msg.extensions.ExtensionType;
+import com.joe.tls.msg.extensions.HelloExtension;
+import com.joe.tls.msg.extensions.RenegotiationInfoExtension;
 import com.joe.tls.msg.impl.*;
 import com.joe.utils.collection.CollectionUtil;
 
@@ -107,21 +111,73 @@ public class Handshaker {
      * @throws IOException IO异常
      */
     public void kickstart() throws IOException {
-        ClientHello clientHello = new ClientHello(serverName, secureRandom);
-        this.clientRandom = clientHello.getClientRandom();
-        Record clientHelloRecord = new Record(ContentType.HANDSHAKE, TlsVersion.TLS1_2,
-            clientHello);
-        outputRecordStream.write(clientHelloRecord);
+        // 如果是客户端，需要先发送clientHello消息
+        if (isClient) {
+            ClientHello clientHello = new ClientHello(serverName, secureRandom);
+            this.clientRandom = clientHello.getClientRandom();
+            Record clientHelloRecord = new Record(ContentType.HANDSHAKE, TlsVersion.TLS1_2,
+                clientHello);
+            outputRecordStream.write(clientHelloRecord);
+        }
 
         byte[] sessionHash;
+        ClientHello clientHello;
+        ServerHello serverHello;
+        CipherSuite cipherSuite;
+        CertificateMsg certificateMsg;
+        ECDHServerKeyExchange ecdhServerKeyExchange;
+        ServerHelloDone serverHelloDone;
+
         while (true) {
             Record readRecord = inputRecordStream.read();
             switch (readRecord.type()) {
                 case HANDSHAKE:
                     HandshakeProtocol protocol = (HandshakeProtocol) readRecord.msg();
                     switch (protocol.type()) {
+                        case CLIENT_HELLO:
+                            clientHello = (ClientHello) protocol;
+
+                            extExtendedMasterSecret = clientHello
+                                .getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null;
+
+                            cipherSuite = null;
+                            List<CipherSuite> supports = CipherSuite.getAllSupports();
+                            for (CipherSuite suite : clientHello.getCipherSuites()) {
+                                if (supports.contains(suite)) {
+                                    cipherSuite = suite;
+                                    break;
+                                }
+                            }
+
+                            if (cipherSuite == null) {
+                                throw new RuntimeException(
+                                    String.format("当前服务端支持的加密套件列表：%s，客户端支持的加密套件列表：%s，没有共同支持的加密套件",
+                                        supports, clientHello.getCipherSuites()));
+                            }
+                            this.cipherSuite = cipherSuite;
+                            this.serverRandom = new byte[32];
+                            secureRandom.nextBytes(serverRandom);
+                            this.tlsVersion = TlsVersion.TLS1_2;
+
+                            List<HelloExtension> extensions = new ArrayList<>();
+
+                            HelloExtension serverName = clientHello
+                                .getExtension(ExtensionType.EXT_SERVER_NAME);
+                            if (serverName != null) {
+                                extensions.add(serverName);
+                            }
+                            extensions.add(new RenegotiationInfoExtension());
+                            serverHello = new ServerHello(tlsVersion, serverRandom, new byte[0],
+                                cipherSuite, extensions);
+
+                            // 写出server hello消息
+                            outputRecordStream.write(new Record(ContentType.HANDSHAKE, tlsVersion, serverHello));
+
+//                            certificateMsg = new CertificateMsg()
+
+                            break;
                         case SERVER_HELLO:
-                            ServerHello serverHello = (ServerHello) protocol;
+                            serverHello = (ServerHello) protocol;
                             tlsVersion = serverHello.getVersion();
 
                             if (tlsVersion != TlsVersion.TLS1_2) {
@@ -129,7 +185,7 @@ public class Handshaker {
                             }
 
                             serverRandom = serverHello.getServerRandom();
-                            CipherSuite cipherSuite = serverHello.getCipherSuite();
+                            cipherSuite = serverHello.getCipherSuite();
                             initCipherSuite(cipherSuite);
 
                             // 判断是否包含EXT_EXTENDED_MASTER_SECRET这个扩展，如果包含masterKey计算方式将会改变
@@ -140,28 +196,30 @@ public class Handshaker {
 
                             break;
                         case CERTIFICATE:
-                            CertificateMsg certificateMsg = (CertificateMsg) protocol;
+                            certificateMsg = (CertificateMsg) protocol;
                             publicKey = certificateMsg.getPublicKey();
                             break;
                         case SERVER_KEY_EXCHANGE:
-                            ECDHServerKeyExchange keyExchange = (ECDHServerKeyExchange) protocol;
-                            ecdhKeyPair = keyExchangeSpi.generate(keyExchange.getCurveId());
+                            ecdhServerKeyExchange = (ECDHServerKeyExchange) protocol;
+                            ecdhKeyPair = keyExchangeSpi
+                                .generate(ecdhServerKeyExchange.getCurveId());
                             byte[] preMasterKey = keyExchangeSpi.keyExchange(
-                                keyExchange.getPublicKey(), ecdhKeyPair.getPrivateKey(),
-                                keyExchange.getCurveId());
+                                ecdhServerKeyExchange.getPublicKey(), ecdhKeyPair.getPrivateKey(),
+                                ecdhServerKeyExchange.getCurveId());
                             secretCollection.setPreMasterKey(preMasterKey);
                             Signature signature = SignatureAndHashAlgorithm
-                                .newSignatureAndHash(keyExchange.getHashAndSigAlg());
+                                .newSignatureAndHash(ecdhServerKeyExchange.getHashAndSigAlg());
                             try {
                                 signature.initVerify(publicKey);
                                 signature.update(clientRandom);
                                 signature.update(serverRandom);
-                                signature.update(keyExchange.getCurveType());
-                                signature.update((byte) (keyExchange.getCurveId() >> 8));
-                                signature.update((byte) keyExchange.getCurveId());
-                                signature.update((byte) keyExchange.getPublicKey().length);
-                                signature.update(keyExchange.getPublicKey());
-                                if (!signature.verify(keyExchange.getSig())) {
+                                signature.update(ecdhServerKeyExchange.getCurveType());
+                                signature.update((byte) (ecdhServerKeyExchange.getCurveId() >> 8));
+                                signature.update((byte) ecdhServerKeyExchange.getCurveId());
+                                signature
+                                    .update((byte) ecdhServerKeyExchange.getPublicKey().length);
+                                signature.update(ecdhServerKeyExchange.getPublicKey());
+                                if (!signature.verify(ecdhServerKeyExchange.getSig())) {
                                     throw new RuntimeException("签名验证失败");
                                 }
                             } catch (InvalidKeyException | SignatureException e) {

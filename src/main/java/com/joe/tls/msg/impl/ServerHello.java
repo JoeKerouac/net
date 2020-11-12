@@ -1,6 +1,7 @@
 package com.joe.tls.msg.impl;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ public class ServerHello implements HandshakeProtocol {
         this.sessionId = sessionId == null ? new byte[0] : sessionId;
         this.cipherSuite = cipherSuite;
         this.extensions = new HashMap<>();
+        extensions = extensions == null ? Collections.emptyList() : extensions;
         extensions
             .forEach(extension -> this.extensions.put(extension.getExtensionType(), extension));
     }

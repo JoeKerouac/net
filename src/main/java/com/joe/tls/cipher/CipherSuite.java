@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 /**
@@ -19,6 +20,7 @@ import lombok.Getter;
  * @author JoeKerouac
  * @version 2020年06月30日 20:10
  */
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class CipherSuite {
 
     private static final int                       TLS_NULL_WITH_NULL_NULL                 = 0x0000;
@@ -172,6 +174,7 @@ public class CipherSuite {
     /**
      * 加密套件id
      */
+    @EqualsAndHashCode.Include
     @Getter
     private final int         suite;
 

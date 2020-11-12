@@ -3,10 +3,13 @@ package com.joe.tls.msg.extensions;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * @author JoeKerouac
  * @version 2020年06月13日 16:46
  */
+@EqualsAndHashCode
 public class ExtensionType {
     final int    id;
     final String name;

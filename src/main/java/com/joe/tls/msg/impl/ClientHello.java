@@ -20,6 +20,8 @@ import com.joe.utils.codec.Hex;
 import com.joe.utils.common.Assert;
 import com.joe.utils.common.string.StringUtils;
 
+import lombok.Getter;
+
 /**
  * ClientHello
  * 
@@ -47,6 +49,7 @@ public class ClientHello implements HandshakeProtocol {
     /**
      * 加密套件
      */
+    @Getter
     private List<CipherSuite>    cipherSuites = Collections.emptyList();
 
     /**
@@ -100,6 +103,25 @@ public class ClientHello implements HandshakeProtocol {
         } else {
             this.serverName = null;
         }
+    }
+
+    /**
+     * 获取指定extension
+     * @param type extension类型
+     * @return 对应的extension，如果没有则返回null
+     */
+    public HelloExtension getExtension(ExtensionType type) {
+        if (type == null) {
+            return null;
+        }
+
+        for (HelloExtension extension : extensions) {
+            if (type.equals(extension.getExtensionType())) {
+                return extension;
+            }
+        }
+
+        return null;
     }
 
     /**

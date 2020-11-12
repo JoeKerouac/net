@@ -26,8 +26,8 @@ public class Test {
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         Security.addProvider(new BouncyCastleProvider());
 
-        Socket socket = new Socket("39.156.66.14", 443);
-        //        Socket socket = new Socket("127.0.0.1", 12345);
+//        Socket socket = new Socket("39.156.66.14", 443);
+                Socket socket = new Socket("127.0.0.1", 12345);
 
         String getData = "GET https://www.baidu.com/ HTTP/1.1\r\n" + "Host: www.user.com\r\n"
                          + "Connection: Keep-Alive\r\n" + "User-agent: Mozilla/5.0.\r\n\r\n";

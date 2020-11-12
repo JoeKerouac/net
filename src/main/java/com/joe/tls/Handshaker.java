@@ -330,6 +330,31 @@ public abstract class Handshaker {
     /**
      * 更改传输流的加密器
      */
-    protected abstract void changeCipher();
+    protected void changeCipher() {
+        byte[] writeKey = isClient ? secretCollection.getClientWriteKey()
+            : secretCollection.getServerWriteKey();
+        byte[] writeIv = isClient ? secretCollection.getClientWriteIv()
+            : secretCollection.getServerWriteIv();
+        byte[] readKey = isClient ? secretCollection.getServerWriteKey()
+            : secretCollection.getClientWriteKey();
+        byte[] readIv = isClient ? secretCollection.getServerWriteIv()
+            : secretCollection.getClientWriteIv();
+
+        // 客户端写出加密盒
+        CipherBox clientWrite = new CipherBox(secureRandom, cipherSuite.getCipher(), writeKey,
+            writeIv, true);
+        // 服务端读取加密盒
+        CipherBox serverRead = new CipherBox(secureRandom, cipherSuite.getCipher(), readKey, readIv,
+            false);
+
+        if (cipherSuite.getCipher().isGcm()) {
+            Authenticator readAuthenticator = new Authenticator(tlsVersion);
+            Authenticator writeAuthenticator = new Authenticator(tlsVersion);
+            inputRecordStream.changeCipher(serverRead, readAuthenticator);
+            outputRecordStream.changeCipher(clientWrite, writeAuthenticator);
+        } else {
+            throw new RuntimeException("暂不支持的算法：" + cipherSuite.getCipher());
+        }
+    }
 
 }

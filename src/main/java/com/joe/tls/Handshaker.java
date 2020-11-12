@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.*;
+import java.util.Arrays;
 
 import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.crypto.ECDHKeyExchangeSpi;
@@ -112,6 +113,7 @@ public abstract class Handshaker {
             clientHello);
         outputRecordStream.write(clientHelloRecord);
 
+        byte[] sessionHash;
         while (true) {
             Record readRecord = inputRecordStream.read();
             switch (readRecord.type()) {
@@ -178,7 +180,7 @@ public abstract class Handshaker {
                             outputRecordStream.write(new Record(ContentType.CHANGE_CIPHER_SPEC,
                                 tlsVersion, changeCipherSpace));
 
-                            byte[] sessionHash = handshakeHash.getFinishedHash();
+                            sessionHash = handshakeHash.getFinishedHash();
                             secretCollection.setSessionHash(sessionHash);
 
                             calcMaster();
@@ -198,16 +200,46 @@ public abstract class Handshaker {
                             break;
                         case FINISHED:
                             if (isClient) {
-                                // client收到这个消息说明已经握手完成
+                                // client收到这个消息说明已经握手完成，这里就不校验服务端的finished消息是否正确了
                                 return;
                             } else {
-                                throw new RuntimeException("当前还不支持Server端收到finished消息");
+                                // 服务端需要校验客户端的finished数据
+                                // 客户端实际的finished消息
+                                Finished remoteFinished = (Finished) protocol;
+                                sessionHash = handshakeHash.getFinishedHash();
+                                // 本地计算的客户端finished消息
+                                Finished clientFinished = new Finished(phashSpi,
+                                    secretCollection.getMasterKey(), sessionHash, true);
+
+                                // 对比本地计算的clientFinished数据和实际client发过来的finished数据是否一致，不一致说明有问题
+                                if (!Arrays.equals(clientFinished.getData(),
+                                    remoteFinished.getData())) {
+                                    throw new RuntimeException(
+                                        "本地计算finished消息和client发送的finished消息不一致");
+                                }
+
+                                // finished消息没问题，写出更改密钥空间消息
+                                outputRecordStream.write(new Record(ContentType.CHANGE_CIPHER_SPEC,
+                                    tlsVersion, new ChangeCipherSpace()));
+
+                                Finished serverFinished = new Finished(phashSpi,
+                                    secretCollection.getMasterKey(), sessionHash, false);
+                                // 写出服务端的finished消息
+                                outputRecordStream.write(
+                                    new Record(ContentType.HANDSHAKE, tlsVersion, serverFinished));
                             }
                     }
 
                     break;
                 case CHANGE_CIPHER_SPEC:
                     ChangeCipherSpace changeCipherSpace = (ChangeCipherSpace) readRecord.msg();
+                    // 服务端收到客户端的changeCipherSpace就开始更改cipher
+                    if (!isClient) {
+                        // 开始计算masterKey、连接相关key、changeCipher
+                        calcMaster();
+                        calcConnectionKeys();
+                        changeCipher();
+                    }
                     break;
                 case APPLICATION_DATA:
                 case ALTER:

@@ -7,15 +7,26 @@ import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.util.ByteBufferUtil;
 
 /**
+ * 客户端ECDH密钥交换消息
+ * 
  * @author JoeKerouac
  * @data 2020-11-03 12:41
  */
 public class ECDHClientKeyExchange implements HandshakeProtocol {
 
-    private byte[] publicKey;
+    /**
+     * 客户端密钥交换公钥数据
+     */
+    private final byte[] publicKey;
 
     public ECDHClientKeyExchange(byte[] publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public ECDHClientKeyExchange(ByteBuffer buffer) {
+        // 跳过4byte的header
+        ByteBufferUtil.mergeReadInt32(buffer);
+        this.publicKey = ByteBufferUtil.getInt8(buffer);
     }
 
     @Override

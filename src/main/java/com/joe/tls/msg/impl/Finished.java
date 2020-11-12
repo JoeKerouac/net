@@ -8,6 +8,8 @@ import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.util.ByteBufferUtil;
 import com.joe.utils.collection.CollectionUtil;
 
+import lombok.Getter;
+
 /**
  * 结束消息
  *
@@ -19,6 +21,7 @@ public class Finished implements HandshakeProtocol {
     /**
      * 要发送的明文数据
      */
+    @Getter
     private final byte[] data;
 
     public Finished(ByteBuffer buffer) {

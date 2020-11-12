@@ -23,7 +23,7 @@ import com.joe.utils.collection.CollectionUtil;
  * @author JoeKerouac
  * @data 2020-11-06 22:34
  */
-public abstract class Handshaker {
+public class Handshaker {
 
     protected HandshakeHash      handshakeHash;
 
@@ -91,7 +91,7 @@ public abstract class Handshaker {
     private final boolean        isClient;
 
     public Handshaker(InputStream netInputStream, OutputStream netOutputStream,
-                      SecureRandom secureRandom) {
+                      SecureRandom secureRandom, boolean isClient) {
         this.handshakeHash = new HandshakeHash();
         this.secretCollection = new SecretCollection();
         this.secureRandom = secureRandom;
@@ -99,7 +99,7 @@ public abstract class Handshaker {
             TlsVersion.TLS1_2);
         this.outputRecordStream = new OutputRecordStreamImpl(netOutputStream, handshakeHash,
             TlsVersion.TLS1_2);
-        isClient = this instanceof ClientHandshaker;
+        this.isClient = isClient;
     }
 
     /**
@@ -183,11 +183,6 @@ public abstract class Handshaker {
                             sessionHash = handshakeHash.getFinishedHash();
                             secretCollection.setSessionHash(sessionHash);
 
-                            calcMaster();
-
-                            // 算完masterKey开始算连接key，连接key依赖于masterKey
-                            calcConnectionKeys();
-
                             // 更改读写流的加密器
                             changeCipher();
 
@@ -236,8 +231,6 @@ public abstract class Handshaker {
                     // 服务端收到客户端的changeCipherSpace就开始更改cipher
                     if (!isClient) {
                         // 开始计算masterKey、连接相关key、changeCipher
-                        calcMaster();
-                        calcConnectionKeys();
                         changeCipher();
                     }
                     break;
@@ -331,6 +324,11 @@ public abstract class Handshaker {
      * 更改传输流的加密器
      */
     protected void changeCipher() {
+        // 先计算相关密钥
+        calcMaster();
+        calcConnectionKeys();
+
+        // 客户端和服务端使用的密钥不一致，这里做区分
         byte[] writeKey = isClient ? secretCollection.getClientWriteKey()
             : secretCollection.getServerWriteKey();
         byte[] writeIv = isClient ? secretCollection.getClientWriteIv()
@@ -341,17 +339,17 @@ public abstract class Handshaker {
             : secretCollection.getClientWriteIv();
 
         // 客户端写出加密盒
-        CipherBox clientWrite = new CipherBox(secureRandom, cipherSuite.getCipher(), writeKey,
+        CipherBox writeCipherBox = new CipherBox(secureRandom, cipherSuite.getCipher(), writeKey,
             writeIv, true);
         // 服务端读取加密盒
-        CipherBox serverRead = new CipherBox(secureRandom, cipherSuite.getCipher(), readKey, readIv,
-            false);
+        CipherBox readCipherBox = new CipherBox(secureRandom, cipherSuite.getCipher(), readKey,
+            readIv, false);
 
         if (cipherSuite.getCipher().isGcm()) {
             Authenticator readAuthenticator = new Authenticator(tlsVersion);
             Authenticator writeAuthenticator = new Authenticator(tlsVersion);
-            inputRecordStream.changeCipher(serverRead, readAuthenticator);
-            outputRecordStream.changeCipher(clientWrite, writeAuthenticator);
+            inputRecordStream.changeCipher(readCipherBox, readAuthenticator);
+            outputRecordStream.changeCipher(writeCipherBox, writeAuthenticator);
         } else {
             throw new RuntimeException("暂不支持的算法：" + cipherSuite.getCipher());
         }

@@ -28,6 +28,9 @@ public class HandshakeMsgReaderUtil {
         READER_MAP.put(HandshakeType.SERVER_HELLO, data -> new ServerHello(ByteBuffer.wrap(data)));
         READER_MAP.put(HandshakeType.SERVER_HELLO_DONE, data -> new ServerHelloDone());
         READER_MAP.put(HandshakeType.FINISHED, data -> new Finished(ByteBuffer.wrap(data)));
+        READER_MAP.put(HandshakeType.CLIENT_HELLO, data -> new ClientHello(ByteBuffer.wrap(data)));
+        READER_MAP.put(HandshakeType.CLIENT_KEY_EXCHANGE,
+            data -> new ECDHClientKeyExchange(ByteBuffer.wrap(data)));
     }
 
     /**

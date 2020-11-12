@@ -13,6 +13,7 @@ import com.joe.tls.msg.extensions.ExtensionReader;
 import com.joe.tls.msg.extensions.ExtensionType;
 import com.joe.tls.msg.extensions.HelloExtension;
 import com.joe.tls.util.ByteBufferUtil;
+import com.joe.tls.util.ExtensionUtil;
 
 import lombok.Getter;
 
@@ -46,6 +47,17 @@ public class ServerHello implements HandshakeProtocol {
     private final CipherSuite                        cipherSuite;
 
     private final Map<ExtensionType, HelloExtension> extensions;
+
+    public ServerHello(TlsVersion version, byte[] serverRandom, byte[] sessionId,
+                       CipherSuite cipherSuite, List<HelloExtension> extensions) {
+        this.version = version;
+        this.serverRandom = serverRandom;
+        this.sessionId = sessionId == null ? new byte[0] : sessionId;
+        this.cipherSuite = cipherSuite;
+        this.extensions = new HashMap<>();
+        extensions
+            .forEach(extension -> this.extensions.put(extension.getExtensionType(), extension));
+    }
 
     /**
      * 从ByteBuffer中构造serverHello，buffer的起始位置应该是server_hello_protocol协议的起始位置
@@ -104,12 +116,27 @@ public class ServerHello implements HandshakeProtocol {
 
     @Override
     public int len() {
-        throw new RuntimeException("暂不支持");
+        // 2byte version + random + 1byte sessionId len + sessionId + 2byte cipherSuite + 1byte compressionMethod
+        // + 2byte extension len + extension
+        return 2 + serverRandom.length + 1 + sessionId.length + 2 + 1 + 2
+               + extensions.values().stream().mapToInt(HelloExtension::size).sum();
     }
 
     @Override
     public byte[] serialize() {
-        throw new RuntimeException("暂不支持");
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[4 + len()]);
+        ByteBufferUtil.writeInt8(type().getCode(), buffer);
+        ByteBufferUtil.writeInt24(len(), buffer);
+        ByteBufferUtil.writeInt8(version.getMajorVersion(), buffer);
+        ByteBufferUtil.writeInt8(version.getMinorVersion(), buffer);
+        buffer.put(serverRandom);
+        ByteBufferUtil.putBytes8(sessionId, buffer);
+        ByteBufferUtil.writeInt16(cipherSuite.getSuite(), buffer);
+        // compression方法，不支持压缩，固定写出0
+        ByteBufferUtil.writeInt8(0, buffer);
+
+        ExtensionUtil.writeExtensions(extensions.values(), buffer);
+        return buffer.array();
     }
 
 }

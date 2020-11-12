@@ -41,7 +41,7 @@ public class ECDHClientKeyExchange implements HandshakeProtocol {
 
     @Override
     public byte[] serialize() {
-        ByteBuffer buffer = ByteBuffer.allocate(5 + publicKey.length);
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[4 + len()]);
         ByteBufferUtil.writeInt8(type().getCode(), buffer);
         ByteBufferUtil.writeInt24(publicKey.length + 1, buffer);
         ByteBufferUtil.putBytes8(publicKey, buffer);

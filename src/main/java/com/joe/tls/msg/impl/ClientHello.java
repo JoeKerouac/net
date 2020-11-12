@@ -15,6 +15,7 @@ import com.joe.tls.enums.NamedCurve;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.extensions.*;
 import com.joe.tls.util.ByteBufferUtil;
+import com.joe.tls.util.ExtensionUtil;
 import com.joe.utils.codec.Hex;
 import com.joe.utils.common.Assert;
 import com.joe.utils.common.string.StringUtils;
@@ -162,14 +163,7 @@ public class ClientHello implements HandshakeProtocol {
 
         // 写出extensions
         {
-            // 计算扩展总长度，单位byte
-            int size = extensions.stream().mapToInt(HelloExtension::size).sum();
-            // 写出扩展长度
-            ByteBufferUtil.writeInt16(size, heapBuffer);
-            // 写出各个扩展
-            for (HelloExtension helloExtension : extensions) {
-                helloExtension.write(heapBuffer);
-            }
+            ExtensionUtil.writeExtensions(extensions, heapBuffer);
         }
 
         // 最后记录数据

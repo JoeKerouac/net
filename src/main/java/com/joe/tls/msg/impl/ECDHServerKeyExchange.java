@@ -52,6 +52,15 @@ public class ECDHServerKeyExchange implements HandshakeProtocol {
     @Getter
     private final byte[] sig;
 
+    public ECDHServerKeyExchange(byte curveType, int curveId, byte[] publicKey, int hashAndSigAlg,
+                                 byte[] sig) {
+        this.curveType = curveType;
+        this.curveId = curveId;
+        this.publicKey = publicKey;
+        this.hashAndSigAlg = hashAndSigAlg;
+        this.sig = sig;
+    }
+
     public ECDHServerKeyExchange(ByteBuffer buffer) {
         // 先给type和len丢弃掉
         ByteBufferUtil.mergeReadInt32(buffer);
@@ -79,13 +88,20 @@ public class ECDHServerKeyExchange implements HandshakeProtocol {
 
     @Override
     public int len() {
-        // 4byte header + 1byte curve type + 2byte curve id + 1byte public key len + public key 
+        // 1byte curve type + 2byte curve id + 1byte public key len + public key
         // + 2byte sigAndHashAlg + 2byte sig len + sig
-        return 4 + 1 + 2 + 1 + publicKey.length + 2 + 2 + sig.length;
+        return 1 + 2 + 1 + publicKey.length + 2 + 2 + sig.length;
     }
 
     @Override
     public byte[] serialize() {
-        throw new RuntimeException("为实现");
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[4 + len()]);
+        ByteBufferUtil.writeInt8(type().getCode(), buffer);
+        ByteBufferUtil.writeInt8(curveType, buffer);
+        ByteBufferUtil.writeInt16(curveId, buffer);
+        ByteBufferUtil.putBytes8(publicKey, buffer);
+        ByteBufferUtil.writeInt16(hashAndSigAlg, buffer);
+        ByteBufferUtil.putBytes16(sig, buffer);
+        return buffer.array();
     }
 }

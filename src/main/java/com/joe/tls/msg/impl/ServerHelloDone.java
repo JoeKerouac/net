@@ -1,7 +1,10 @@
 package com.joe.tls.msg.impl;
 
+import java.nio.ByteBuffer;
+
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
+import com.joe.tls.util.ByteBufferUtil;
 
 /**
  * 服务端握手完成消息
@@ -23,6 +26,9 @@ public class ServerHelloDone implements HandshakeProtocol {
 
     @Override
     public byte[] serialize() {
-        return new byte[0];
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[4 + len()]);
+        ByteBufferUtil.writeInt8(type().getCode(), buffer);
+        ByteBufferUtil.writeInt24(len(), buffer);
+        return buffer.array();
     }
 }

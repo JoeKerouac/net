@@ -109,31 +109,16 @@ public class CertificateMsg implements HandshakeProtocol {
 
     @Override
     public int len() {
-        return messageLength;
+        return messageLength - 4;
     }
 
     @Override
     public byte[] serialize() {
-        byte[] data = new byte[messageLength];
-        data[0] = type().getCode();
-        // 消息总长度
-        data[1] = (byte) ((messageLength - 4) >>> 3);
-        data[2] = (byte) ((messageLength - 4) >>> 2);
-        data[3] = (byte) (messageLength - 4);
-        // certificate len
-        data[4] = (byte) ((messageLength - 7) >>> 3);
-        data[5] = (byte) ((messageLength - 7) >>> 2);
-        data[6] = (byte) (messageLength - 7);
-
-        int offset = 7;
-        for (byte[] certData : encodedChain) {
-            data[offset++] = (byte) ((certData.length) >>> 3);
-            data[offset++] = (byte) ((certData.length) >>> 2);
-            data[offset++] = (byte) (certData.length);
-            System.arraycopy(certData, 0, data, offset, certData.length);
-            offset += certData.length;
-        }
-
-        return data;
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[4 + len()]);
+        ByteBufferUtil.writeInt8(type().getCode(), buffer);
+        ByteBufferUtil.writeInt24(len(), buffer);
+        ByteBufferUtil.writeInt24(len() - 3, buffer);
+        encodedChain.forEach(cert -> ByteBufferUtil.putBytes24(cert, buffer));
+        return buffer.array();
     }
 }

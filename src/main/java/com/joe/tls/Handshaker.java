@@ -4,15 +4,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.net.ssl.X509KeyManager;
+import javax.swing.text.AbstractDocument;
 
 import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.crypto.ECDHKeyExchangeSpi;
 import com.joe.tls.crypto.PhashSpi;
 import com.joe.tls.crypto.impl.BCECDHKeyExchangeSpi;
 import com.joe.tls.enums.ContentType;
+import com.joe.tls.enums.NamedCurve;
 import com.joe.tls.impl.InputRecordStreamImpl;
 import com.joe.tls.impl.OutputRecordStreamImpl;
 import com.joe.tls.msg.HandshakeProtocol;
@@ -38,6 +44,11 @@ public class Handshaker {
     protected OutputRecordStream outputRecordStream;
 
     private String               serverName;
+
+    /**
+     * 密钥管理
+     */
+    private X509KeyManager       keyManager;
 
     /**
      * 安全随机数
@@ -94,6 +105,16 @@ public class Handshaker {
      */
     private final boolean        isClient;
 
+    /**
+     * 证书私钥，服务端有
+     */
+    private PrivateKey           privateKey;
+
+    /**
+     * 证书链，如果是服务端有
+     */
+    private Certificate[]        certChain;
+
     public Handshaker(InputStream netInputStream, OutputStream netOutputStream,
                       SecureRandom secureRandom, boolean isClient) {
         this.handshakeHash = new HandshakeHash();
@@ -140,21 +161,25 @@ public class Handshaker {
                             extExtendedMasterSecret = clientHello
                                 .getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null;
 
-                            cipherSuite = null;
+                            // 客户端发过来的算法套件与服务端支持的算法套件的交集
+                            List<CipherSuite> mixed = new ArrayList<>();
                             List<CipherSuite> supports = CipherSuite.getAllSupports();
                             for (CipherSuite suite : clientHello.getCipherSuites()) {
                                 if (supports.contains(suite)) {
-                                    cipherSuite = suite;
-                                    break;
+                                    mixed.add(suite);
                                 }
                             }
+
+                            cipherSuite = chooseCipherSuite(mixed);
 
                             if (cipherSuite == null) {
                                 throw new RuntimeException(
                                     String.format("当前服务端支持的加密套件列表：%s，客户端支持的加密套件列表：%s，没有共同支持的加密套件",
                                         supports, clientHello.getCipherSuites()));
                             }
-                            this.cipherSuite = cipherSuite;
+
+                            // 初始化加密套件
+                            initCipherSuite(cipherSuite);
                             this.serverRandom = new byte[32];
                             secureRandom.nextBytes(serverRandom);
                             this.tlsVersion = TlsVersion.TLS1_2;
@@ -171,10 +196,17 @@ public class Handshaker {
                                 cipherSuite, extensions);
 
                             // 写出server hello消息
-                            outputRecordStream.write(new Record(ContentType.HANDSHAKE, tlsVersion, serverHello));
+                            outputRecordStream
+                                .write(new Record(ContentType.HANDSHAKE, tlsVersion, serverHello));
 
-//                            certificateMsg = new CertificateMsg()
+                            certificateMsg = new CertificateMsg(certChain);
+                            outputRecordStream.write(new Record(ContentType.HANDSHAKE, tlsVersion, certificateMsg));
 
+                            int curveId = NamedCurve.getAllSupportCurve().get(0).getId();
+                            ecdhKeyPair = keyExchangeSpi.generate(curveId);
+
+                            // 这里选择合适的签名算法对公钥签名
+//                            ecdhServerKeyExchange = new ECDHServerKeyExchange(3, curveId, ecdhKeyPair.getPublicKey(), cipherSuite.getHashDesc())
                             break;
                         case SERVER_HELLO:
                             serverHello = (ServerHello) protocol;
@@ -298,6 +330,53 @@ public class Handshaker {
                     throw new RuntimeException("暂时不支持的类型：" + readRecord.type());
             }
         }
+    }
+
+    private CipherSuite chooseCipherSuite(List<CipherSuite> cipherSuites) {
+        for (CipherSuite suite : cipherSuites) {
+            switch (suite.getKeyExchange()) {
+                case ECDHE_RSA:
+                    if (setupPrivateKeyAndChain("RSA")) {
+                        return suite;
+                    }
+                    break;
+                default:
+                    throw new RuntimeException("不支持的密钥交换算法：" + suite.getKeyExchange());
+            }
+        }
+
+        return null;
+    }
+
+    private boolean setupPrivateKeyAndChain(String algorithm) {
+        String alias = keyManager.chooseServerAlias(algorithm, null, null);
+        // 如果别名为null，说明当前没有支持该算法的证书
+        if (alias == null) {
+            return false;
+        }
+
+        // 查找指定别名的私钥
+        PrivateKey privateKey = keyManager.getPrivateKey(alias);
+        if (privateKey == null) {
+            return false;
+        }
+
+        // 查找该别名的证书链
+        X509Certificate[] certChain = keyManager.getCertificateChain(alias);
+        if (certChain == null || certChain.length == 0) {
+            return false;
+        }
+
+        // 确保公私钥的算法符合指定算法
+        String keyAlg = algorithm.split("_")[0];
+        PublicKey publicKey = certChain[0].getPublicKey();
+        if (!privateKey.getAlgorithm().equals(keyAlg) || !publicKey.getAlgorithm().equals(keyAlg)) {
+            return false;
+        }
+
+        this.privateKey = privateKey;
+        this.certChain = certChain;
+        return true;
     }
 
     /**

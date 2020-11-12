@@ -157,11 +157,11 @@ public class CipherSuite {
         // 百度不支持AES256的，只能用AES128的
         ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
             new CipherSuite("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
-                TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
+                TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, MacDesc.NULL_MAC, KeyExchange.ECDHE_RSA,
                 CipherDesc.AES_128_GCM, HashDesc.SHA256, true));
         ALL_SUPPORTS.put(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
             new CipherSuite("TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
-                TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, MacDesc.NULL_MAC, KeyExchange.ECDH_RSA,
+                TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, MacDesc.NULL_MAC, KeyExchange.ECDHE_RSA,
                 CipherDesc.AES_256_GCM, HashDesc.SHA384, true));
     }
 
@@ -242,8 +242,8 @@ public class CipherSuite {
     /**
      * 密钥交换算法
      */
-    private enum KeyExchange {
-                              ECDH_RSA,
+    public enum KeyExchange {
+                              ECDHE_RSA,
     }
 
     /**

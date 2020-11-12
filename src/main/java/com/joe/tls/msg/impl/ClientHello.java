@@ -78,7 +78,7 @@ public class ClientHello implements HandshakeProtocol {
      * @param serverName 服务器名，可以为空
      */
     public ClientHello(String serverName, SecureRandom secureRandom) {
-        this.serverName = StringUtils.isEmpty(serverName) ? "" : serverName;
+        this.serverName = serverName;
         this.secureRandom = secureRandom;
         this.init();
     }
@@ -243,7 +243,6 @@ public class ClientHello implements HandshakeProtocol {
         this.extensions = new ArrayList<>();
 
         // 初始化扩展
-        // TODO 完善扩展
         {
             // 判断加密套件是否包含ECC算法
             boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst()
@@ -262,7 +261,9 @@ public class ClientHello implements HandshakeProtocol {
             extensions.add(new ExtendedMasterSecretExtension());
 
             // server name扩展，type暂时写死0
-            extensions.add(new ServerNameExtension((byte) 0, serverName.getBytes()));
+            if (!StringUtils.isEmpty(serverName)) {
+                extensions.add(new ServerNameExtension((byte) 0, serverName.getBytes()));
+            }
 
             // 暂时不知道是做什么的
             extensions.add(new RenegotiationInfoExtension());

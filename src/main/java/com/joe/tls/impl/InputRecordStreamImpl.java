@@ -2,6 +2,7 @@ package com.joe.tls.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import com.joe.tls.*;
@@ -10,6 +11,7 @@ import com.joe.tls.enums.ContentType;
 import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.Record;
+import com.joe.tls.msg.impl.ApplicationMsg;
 import com.joe.tls.msg.impl.ChangeCipherSpace;
 import com.joe.tls.msg.reader.HandshakeMsgReaderUtil;
 
@@ -78,8 +80,7 @@ public class InputRecordStreamImpl implements InputRecordStream {
         int contentLen = Byte.toUnsignedInt(header[3]) << 8 | Byte.toUnsignedInt(header[4]);
         byte[] content = read(contentLen);
 
-        if (cipherBox != null && contentType != ContentType.ALTER
-            && contentType != ContentType.CHANGE_CIPHER_SPEC) {
+        if (cipherBox != null && contentType != ContentType.CHANGE_CIPHER_SPEC) {
             content = decrypt(header[0], content);
         }
 
@@ -97,6 +98,8 @@ public class InputRecordStreamImpl implements InputRecordStream {
             case ALTER:
                 throw new RuntimeException("收到了alter信息：" + Arrays.toString(content));
             case APPLICATION_DATA:
+                return new Record(ContentType.APPLICATION_DATA, version,
+                    new ApplicationMsg(ByteBuffer.wrap(content)));
             default:
                 throw new RuntimeException("暂不支持的contentType:" + header[0]);
         }

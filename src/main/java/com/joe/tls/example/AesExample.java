@@ -1,4 +1,4 @@
-package com.joe.ssl.example;
+package com.joe.tls.example;
 
 import java.security.Provider;
 import java.security.SecureRandom;

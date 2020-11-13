@@ -50,7 +50,7 @@ public class JoeKeyManager implements X509KeyManager {
                 continue;
             }
 
-            X509Credentials cred = new X509Credentials((PrivateKey) key, (X509Certificate[]) certs);
+            X509Credentials cred = new X509Credentials((PrivateKey) key, tryConvert(certs));
             credentialsMap.put(alias, cred);
         }
     }
@@ -137,6 +137,24 @@ public class JoeKeyManager implements X509KeyManager {
         } else {
             return cred.privateKey;
         }
+    }
+
+    /**
+     * 尝试将Certificate转换为X509Certificate
+     * @param certificates Certificate
+     * @return X509Certificate
+     */
+    private X509Certificate[] tryConvert(Certificate[] certificates) {
+        X509Certificate[] certs = new X509Certificate[certificates.length];
+        for (int i = 0; i < certificates.length; i++) {
+            if (certificates[i] instanceof X509Certificate) {
+                certs[i] = (X509Certificate) certificates[i];
+            } else {
+                throw new RuntimeException("不支持的证书类型：" + certificates[i].getType());
+            }
+        }
+
+        return certs;
     }
 
     /**

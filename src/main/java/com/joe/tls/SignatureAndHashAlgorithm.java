@@ -117,7 +117,7 @@ public class SignatureAndHashAlgorithm {
         return algorithm;
     }
 
-    enum SignatureAlgorithm {
+    public enum SignatureAlgorithm {
                              UNDEFINED("undefined", -1),
 
                              ANONYMOUS("anonymous", 0),

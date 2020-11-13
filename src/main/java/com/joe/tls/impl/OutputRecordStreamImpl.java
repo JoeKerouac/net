@@ -68,7 +68,7 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
         Assert.isTrue(data.length == record.len());
 
         // 加密数据
-        if (cipherBox != null) {
+        if (cipherBox != null && record.type() != ContentType.CHANGE_CIPHER_SPEC) {
             data = encrypt((byte) record.type().getCode(), data);
         }
 

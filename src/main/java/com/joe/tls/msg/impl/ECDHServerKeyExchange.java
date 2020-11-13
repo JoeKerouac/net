@@ -97,6 +97,7 @@ public class ECDHServerKeyExchange implements HandshakeProtocol {
     public byte[] serialize() {
         ByteBuffer buffer = ByteBuffer.wrap(new byte[4 + len()]);
         ByteBufferUtil.writeInt8(type().getCode(), buffer);
+        ByteBufferUtil.writeInt24(len(), buffer);
         ByteBufferUtil.writeInt8(curveType, buffer);
         ByteBufferUtil.writeInt16(curveId, buffer);
         ByteBufferUtil.putBytes8(publicKey, buffer);

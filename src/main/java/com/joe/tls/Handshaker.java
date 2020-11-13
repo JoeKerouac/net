@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.net.ssl.X509KeyManager;
-import javax.swing.text.AbstractDocument;
 
 import com.joe.tls.cipher.CipherSuite;
 import com.joe.tls.crypto.ECDHKeyExchangeSpi;
@@ -23,11 +22,14 @@ import com.joe.tls.impl.InputRecordStreamImpl;
 import com.joe.tls.impl.OutputRecordStreamImpl;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.msg.Record;
+import com.joe.tls.msg.extensions.ExtendedMasterSecretExtension;
 import com.joe.tls.msg.extensions.ExtensionType;
 import com.joe.tls.msg.extensions.HelloExtension;
 import com.joe.tls.msg.extensions.RenegotiationInfoExtension;
 import com.joe.tls.msg.impl.*;
 import com.joe.utils.collection.CollectionUtil;
+
+import lombok.Getter;
 
 /**
  * @author JoeKerouac
@@ -35,88 +37,105 @@ import com.joe.utils.collection.CollectionUtil;
  */
 public class Handshaker {
 
-    protected HandshakeHash      handshakeHash;
+    protected HandshakeHash           handshakeHash;
 
-    protected SecretCollection   secretCollection;
+    protected SecretCollection        secretCollection;
 
-    protected InputRecordStream  inputRecordStream;
+    @Getter
+    protected InputRecordStream       inputRecordStream;
 
-    protected OutputRecordStream outputRecordStream;
+    @Getter
+    protected OutputRecordStream      outputRecordStream;
 
-    private String               serverName;
+    private String                    serverName;
 
     /**
      * 密钥管理
      */
-    private X509KeyManager       keyManager;
+    private X509KeyManager            keyManager;
 
     /**
      * 安全随机数
      */
-    protected SecureRandom       secureRandom;
+    protected SecureRandom            secureRandom;
 
     /**
      * 最终选择的加密套件
      */
-    protected CipherSuite        cipherSuite;
+    protected CipherSuite             cipherSuite;
 
     /**
      * phash算法
      */
-    private PhashSpi             phashSpi;
+    private PhashSpi                  phashSpi;
 
     /**
      * 服务端证书公钥
      */
-    private PublicKey            publicKey;
+    private PublicKey                 publicKey;
 
     /**
      * 客户端随机数
      */
-    private byte[]               clientRandom;
+    private byte[]                    clientRandom;
 
     /**
      * 服务端随机数
      */
-    private byte[]               serverRandom;
+    private byte[]                    serverRandom;
 
     /**
      * 客户端密钥交换使用密钥对
      */
-    private ECDHKeyPair          ecdhKeyPair;
+    private ECDHKeyPair               ecdhKeyPair;
 
     /**
      * 密钥交换SPI
      */
-    private ECDHKeyExchangeSpi   keyExchangeSpi;
+    private ECDHKeyExchangeSpi        keyExchangeSpi;
 
     /**
      * TLS版本号
      */
-    protected TlsVersion         tlsVersion;
+    protected TlsVersion              tlsVersion;
 
     /**
      * 如果serverHello中包含EXT_EXTENDED_MASTER_SECRET扩展则设置为true；
      */
-    private boolean              extExtendedMasterSecret = false;
+    private boolean                   extExtendedMasterSecret = false;
 
     /**
      * 当前是否是client
      */
-    private final boolean        isClient;
+    private final boolean             isClient;
+
+    /**
+     * ECDH秘钥签名算法
+     */
+    private SignatureAndHashAlgorithm signatureAndHashAlgorithm;
 
     /**
      * 证书私钥，服务端有
      */
-    private PrivateKey           privateKey;
+    private PrivateKey                privateKey;
 
     /**
      * 证书链，如果是服务端有
      */
-    private Certificate[]        certChain;
+    private Certificate[]             certChain;
+
+    /**
+     * curveId，服务端有
+     */
+    private int                       curveId;
 
     public Handshaker(InputStream netInputStream, OutputStream netOutputStream,
                       SecureRandom secureRandom, boolean isClient) {
+        this(netInputStream, netOutputStream, secureRandom, isClient, null);
+    }
+
+    public Handshaker(InputStream netInputStream, OutputStream netOutputStream,
+                      SecureRandom secureRandom, boolean isClient, X509KeyManager keyManager) {
         this.handshakeHash = new HandshakeHash();
         this.secretCollection = new SecretCollection();
         this.secureRandom = secureRandom;
@@ -125,6 +144,7 @@ public class Handshaker {
         this.outputRecordStream = new OutputRecordStreamImpl(netOutputStream, handshakeHash,
             TlsVersion.TLS1_2);
         this.isClient = isClient;
+        this.keyManager = keyManager;
     }
 
     /**
@@ -142,10 +162,13 @@ public class Handshaker {
         }
 
         byte[] sessionHash;
+        byte[] preMasterKey;
+        Signature signature;
         ClientHello clientHello;
         ServerHello serverHello;
         CipherSuite cipherSuite;
         CertificateMsg certificateMsg;
+        ECDHClientKeyExchange ecdhClientKeyExchange;
         ECDHServerKeyExchange ecdhServerKeyExchange;
         ServerHelloDone serverHelloDone;
 
@@ -157,9 +180,7 @@ public class Handshaker {
                     switch (protocol.type()) {
                         case CLIENT_HELLO:
                             clientHello = (ClientHello) protocol;
-
-                            extExtendedMasterSecret = clientHello
-                                .getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null;
+                            clientRandom = clientHello.getClientRandom();
 
                             // 客户端发过来的算法套件与服务端支持的算法套件的交集
                             List<CipherSuite> mixed = new ArrayList<>();
@@ -192,6 +213,13 @@ public class Handshaker {
                                 extensions.add(serverName);
                             }
                             extensions.add(new RenegotiationInfoExtension());
+
+                            if (clientHello
+                                .getExtension(ExtensionType.EXT_EXTENDED_MASTER_SECRET) != null) {
+                                extExtendedMasterSecret = true;
+                                extensions.add(new ExtendedMasterSecretExtension());
+                            }
+
                             serverHello = new ServerHello(tlsVersion, serverRandom, new byte[0],
                                 cipherSuite, extensions);
 
@@ -200,13 +228,51 @@ public class Handshaker {
                                 .write(new Record(ContentType.HANDSHAKE, tlsVersion, serverHello));
 
                             certificateMsg = new CertificateMsg(certChain);
-                            outputRecordStream.write(new Record(ContentType.HANDSHAKE, tlsVersion, certificateMsg));
+                            outputRecordStream.write(
+                                new Record(ContentType.HANDSHAKE, tlsVersion, certificateMsg));
 
-                            int curveId = NamedCurve.getAllSupportCurve().get(0).getId();
+                            curveId = NamedCurve.getAllSupportCurve().get(0).getId();
                             ecdhKeyPair = keyExchangeSpi.generate(curveId);
 
+                            // 对秘钥进行签名
+                            signature = SignatureAndHashAlgorithm
+                                .newSignatureAndHash(signatureAndHashAlgorithm.getId());
+                            byte[] signData;
+                            byte curveType = 3;
+                            byte[] ecdhPublicKey = ecdhKeyPair.getPublicKey();
+                            try {
+                                signature.initSign(privateKey, secureRandom);
+                                signature.update(clientRandom);
+                                signature.update(serverRandom);
+                                signature.update(curveType);
+                                signature.update((byte) (curveId >> 8));
+                                signature.update((byte) curveId);
+                                signature.update((byte) ecdhPublicKey.length);
+                                signature.update(ecdhPublicKey);
+                                signData = signature.sign();
+                            } catch (SignatureException | InvalidKeyException e) {
+                                throw new RuntimeException(e);
+                            }
+
                             // 这里选择合适的签名算法对公钥签名
-//                            ecdhServerKeyExchange = new ECDHServerKeyExchange(3, curveId, ecdhKeyPair.getPublicKey(), cipherSuite.getHashDesc())
+                            // curveType固定是3
+                            ecdhServerKeyExchange = new ECDHServerKeyExchange(curveType, curveId,
+                                ecdhPublicKey, signatureAndHashAlgorithm.getId(), signData);
+                            // 写出秘钥交换消息
+                            outputRecordStream.write(new Record(ContentType.HANDSHAKE, tlsVersion,
+                                ecdhServerKeyExchange));
+
+                            serverHelloDone = new ServerHelloDone();
+                            outputRecordStream.write(
+                                new Record(ContentType.HANDSHAKE, tlsVersion, serverHelloDone));
+                            break;
+                        case CLIENT_KEY_EXCHANGE:
+                            ecdhClientKeyExchange = (ECDHClientKeyExchange) protocol;
+                            // 计算服务端的preMasterKey
+                            preMasterKey = keyExchangeSpi.keyExchange(
+                                ecdhClientKeyExchange.getPublicKey(), ecdhKeyPair.getPrivateKey(),
+                                curveId);
+                            secretCollection.setPreMasterKey(preMasterKey);
                             break;
                         case SERVER_HELLO:
                             serverHello = (ServerHello) protocol;
@@ -235,11 +301,11 @@ public class Handshaker {
                             ecdhServerKeyExchange = (ECDHServerKeyExchange) protocol;
                             ecdhKeyPair = keyExchangeSpi
                                 .generate(ecdhServerKeyExchange.getCurveId());
-                            byte[] preMasterKey = keyExchangeSpi.keyExchange(
+                            preMasterKey = keyExchangeSpi.keyExchange(
                                 ecdhServerKeyExchange.getPublicKey(), ecdhKeyPair.getPrivateKey(),
                                 ecdhServerKeyExchange.getCurveId());
                             secretCollection.setPreMasterKey(preMasterKey);
-                            Signature signature = SignatureAndHashAlgorithm
+                            signature = SignatureAndHashAlgorithm
                                 .newSignatureAndHash(ecdhServerKeyExchange.getHashAndSigAlg());
                             try {
                                 signature.initVerify(publicKey);
@@ -312,6 +378,8 @@ public class Handshaker {
                                 // 写出服务端的finished消息
                                 outputRecordStream.write(
                                     new Record(ContentType.HANDSHAKE, tlsVersion, serverFinished));
+                                // 服务端握手完成
+                                return;
                             }
                     }
 
@@ -321,6 +389,8 @@ public class Handshaker {
                     // 服务端收到客户端的changeCipherSpace就开始更改cipher
                     if (!isClient) {
                         // 开始计算masterKey、连接相关key、changeCipher
+                        sessionHash = handshakeHash.getFinishedHash();
+                        secretCollection.setSessionHash(sessionHash);
                         changeCipher();
                     }
                     break;
@@ -332,14 +402,32 @@ public class Handshaker {
         }
     }
 
+    /**
+     * 从加密套件列表中选择一个合适的（支持的）套件出来
+     * @param cipherSuites 加密套件列表
+     * @return 合适的加密套件
+     */
     private CipherSuite chooseCipherSuite(List<CipherSuite> cipherSuites) {
         for (CipherSuite suite : cipherSuites) {
             switch (suite.getKeyExchange()) {
                 case ECDHE_RSA:
-                    if (setupPrivateKeyAndChain("RSA")) {
-                        return suite;
+                    if (!setupPrivateKeyAndChain("RSA")) {
+                        continue;
                     }
-                    break;
+
+                    // 如果算法有对应的证书，下面挑选合适的签名算法
+                    for (SignatureAndHashAlgorithm value : SignatureAndHashAlgorithm
+                        .getAllSupports().values()) {
+                        if (value.getSign() == SignatureAndHashAlgorithm.SignatureAlgorithm.RSA) {
+                            signatureAndHashAlgorithm = value;
+                            break;
+                        }
+                    }
+
+                    if (signatureAndHashAlgorithm == null) {
+                        continue;
+                    }
+                    return suite;
                 default:
                     throw new RuntimeException("不支持的密钥交换算法：" + suite.getKeyExchange());
             }
@@ -348,6 +436,11 @@ public class Handshaker {
         return null;
     }
 
+    /**
+     * 尝试设置指定算法的证书
+     * @param algorithm 算法
+     * @return 返回true表示该算法的证书设置成功，返回false表示失败
+     */
     private boolean setupPrivateKeyAndChain(String algorithm) {
         String alias = keyManager.chooseServerAlias(algorithm, null, null);
         // 如果别名为null，说明当前没有支持该算法的证书

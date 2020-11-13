@@ -6,6 +6,8 @@ import com.joe.tls.enums.HandshakeType;
 import com.joe.tls.msg.HandshakeProtocol;
 import com.joe.tls.util.ByteBufferUtil;
 
+import lombok.Getter;
+
 /**
  * 客户端ECDH密钥交换消息
  * 
@@ -17,6 +19,7 @@ public class ECDHClientKeyExchange implements HandshakeProtocol {
     /**
      * 客户端密钥交换公钥数据
      */
+    @Getter
     private final byte[] publicKey;
 
     public ECDHClientKeyExchange(byte[] publicKey) {

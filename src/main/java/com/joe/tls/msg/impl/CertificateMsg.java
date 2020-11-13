@@ -109,7 +109,8 @@ public class CertificateMsg implements HandshakeProtocol {
 
     @Override
     public int len() {
-        return messageLength - 4;
+        return 3 + 3 * encodedChain.size()
+               + encodedChain.stream().mapToInt(arr -> arr.length).sum();
     }
 
     @Override

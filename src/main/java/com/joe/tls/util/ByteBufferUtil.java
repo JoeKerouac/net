@@ -9,6 +9,11 @@ import java.nio.ByteBuffer;
  */
 public class ByteBufferUtil {
 
+    /**
+     * 将指定数据写入byteBuffer中，并且在写入数据前先写入1byte的数据长度信息（数据长度不能超过1byte的最大值）
+     * @param data 要写入的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void putBytes8(byte[] data, ByteBuffer buffer) {
         writeInt8(data.length, buffer);
         if (data.length > 0) {
@@ -16,6 +21,11 @@ public class ByteBufferUtil {
         }
     }
 
+    /**
+     * 将指定数据写入byteBuffer中，并且在写入数据前先写入2byte的数据长度信息（数据长度不能超过2byte的最大值）
+     * @param data 要写入的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void putBytes16(byte[] data, ByteBuffer buffer) {
         writeInt16(data.length, buffer);
         if (data.length > 0) {
@@ -23,6 +33,11 @@ public class ByteBufferUtil {
         }
     }
 
+    /**
+     * 将指定数据写入byteBuffer中，并且在写入数据前先写入3byte的数据长度信息（数据长度不能超过3byte的最大值）
+     * @param data 要写入的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void putBytes24(byte[] data, ByteBuffer buffer) {
         writeInt24(data.length, buffer);
         if (data.length > 0) {
@@ -30,6 +45,11 @@ public class ByteBufferUtil {
         }
     }
 
+    /**
+     * 将指定数据写入byteBuffer中，并且在写入数据前先写入4byte的数据长度信息（数据长度不能超过4byte的最大值）
+     * @param data 要写入的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void putBytes32(byte[] data, ByteBuffer buffer) {
         writeInt32(data.length, buffer);
         if (data.length > 0) {
@@ -37,21 +57,50 @@ public class ByteBufferUtil {
         }
     }
 
+    /**
+     * 写出int数据的低8bit
+     * @param data 要写出的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void writeInt8(int data, ByteBuffer buffer) {
         buffer.put((byte) data);
     }
 
+    /**
+     * 写出int数据的低16bit
+     * @param data 要写出的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void writeInt16(int data, ByteBuffer buffer) {
         buffer.putShort((short) data);
     }
 
+    /**
+     * 写出int数据的低24bit
+     * @param data 要写出的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void writeInt24(int data, ByteBuffer buffer) {
         buffer.put((byte) (data >>> 16));
         buffer.putShort((short) data);
     }
 
+    /**
+     * 写出int数据（4byte全写出）
+     * @param data 要写出的数据
+     * @param buffer 指定ByteBuffer
+     */
     public static void writeInt32(int data, ByteBuffer buffer) {
         buffer.putInt(data);
+    }
+
+    /**
+     * 写出long数据（8byte全写出）
+     * @param data 要写出的数据
+     * @param buffer 指定ByteBuffer
+     */
+    public static void writeLong(long data, ByteBuffer buffer) {
+        buffer.putLong(data);
     }
 
     /**
@@ -91,6 +140,15 @@ public class ByteBufferUtil {
      */
     public static int mergeReadInt32(ByteBuffer buffer) {
         return buffer.getInt();
+    }
+
+    /**
+     * 从ByteBuffer读取64字节数据，合并为一个long
+     * @param buffer ByteBuffer
+     * @return 从当前位置往后读取64字节数据，合并为long返回
+     */
+    public static long mergeReadLong(ByteBuffer buffer) {
+        return buffer.getLong();
     }
 
     /**

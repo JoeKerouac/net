@@ -1,5 +1,6 @@
 package com.joe.http.ws;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +10,8 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
-import com.joe.utils.collection.CollectionUtil;
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -24,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.joe.http.exception.ServerException;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.ws.core.ResourceType;
+import com.joe.utils.collection.CollectionUtil;
 import com.joe.utils.test.WebBaseTest;
 
 import lombok.AllArgsConstructor;
@@ -69,16 +67,15 @@ public class ResourceFactoryTest extends WebBaseTest {
         runCase(() -> doTestException(SPRING_RESOURCE_FACTORY_THREAD_LOCAL.get()));
     }
 
-
     @Override
     protected void init() {
         super.init();
         ResourceFactory jerseyResourceFactory = new ResourceFactory(getBaseUrl(), ResourceType.JERSEY);
-        Resource jerseyResource = jerseyResourceFactory.build(JerseyResource.class);
+        Resource jerseyResource = jerseyResourceFactory.build(JerseyResource.class, StandardCharsets.UTF_8.name());
         JERSEY_RESOURCE_FACTORY_THREAD_LOCAL.set(jerseyResource);
 
         ResourceFactory springResourceFactory = new ResourceFactory(getBaseUrl(), ResourceType.SPRING);
-        Resource springResource = springResourceFactory.build(SpringApi.class);
+        Resource springResource = springResourceFactory.build(SpringApi.class, StandardCharsets.UTF_8.name());
         SPRING_RESOURCE_FACTORY_THREAD_LOCAL.set(springResource);
     }
 
@@ -98,7 +95,9 @@ public class ResourceFactoryTest extends WebBaseTest {
 
     /**
      * 测试{@link Resource#hello(String)}方法
-     * @param resource Resource
+     * 
+     * @param resource
+     *            Resource
      */
     private void doTestHello(Resource resource) {
         String name = "joe";
@@ -108,7 +107,9 @@ public class ResourceFactoryTest extends WebBaseTest {
 
     /**
      * 测试{@link Resource#size(List)}和{@link Resource#size(Map)}方法
-     * @param resource Resource
+     * 
+     * @param resource
+     *            Resource
      */
     private void doTestSize(Resource resource) {
         Map<String, Object> map = new HashMap<>();
@@ -125,7 +126,9 @@ public class ResourceFactoryTest extends WebBaseTest {
 
     /**
      * 测试{@link Resource#user(User)}方法
-     * @param resource Resource
+     * 
+     * @param resource
+     *            Resource
      */
     private void doTestUser(Resource resource) {
         User user = new User();
@@ -137,7 +140,9 @@ public class ResourceFactoryTest extends WebBaseTest {
 
     /**
      * 测试{@link Resource#formUser(String, Integer, String)}方法
-     * @param resource Resource
+     * 
+     * @param resource
+     *            Resource
      */
     private void doTestFormUser(Resource resource) {
         User user = new User();
@@ -150,7 +155,9 @@ public class ResourceFactoryTest extends WebBaseTest {
 
     /**
      * 测试服务器异常场景
-     * @param resource Resource
+     * 
+     * @param resource
+     *            Resource
      */
     private void doTestException(Resource resource) {
         ServerException exception = null;
@@ -211,37 +218,49 @@ public class ResourceFactoryTest extends WebBaseTest {
     public interface Resource {
         /**
          * 简单类型测试
-         * @param name 传入参数
+         * 
+         * @param name
+         *            传入参数
          * @return 传入参数原路返回
          */
         String hello(String name);
 
         /**
          * 测试List
-         * @param data 传入参数
+         * 
+         * @param data
+         *            传入参数
          * @return 传入List的长度
          */
         int size(List<String> data);
 
         /**
          * 测试Map
-         * @param data 传入参数
+         * 
+         * @param data
+         *            传入参数
          * @return 传入Map的长度
          */
         int size(Map<String, Object> data);
 
         /**
          * 测试复杂类型
-         * @param user 传入user
+         * 
+         * @param user
+         *            传入user
          * @return 传入user原样返回
          */
         User user(User user);
 
         /**
          * 传入User的json数据返回User对象
-         * @param name 名字
-         * @param age 年龄
-         * @param sex 性别
+         * 
+         * @param name
+         *            名字
+         * @param age
+         *            年龄
+         * @param sex
+         *            性别
          * @return 构建的user对象
          */
         User formUser(String name, Integer age, String sex);
@@ -265,7 +284,7 @@ public class ResourceFactoryTest extends WebBaseTest {
     @NoArgsConstructor
     public static class User {
         private String name;
-        private int    age;
+        private int age;
         private String sex;
     }
 }

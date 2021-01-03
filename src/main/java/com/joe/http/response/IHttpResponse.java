@@ -44,37 +44,37 @@ public class IHttpResponse implements Closeable {
     /**
      * 请求状态
      */
-    private int                     status;
+    private int status;
 
     /**
      * 请求响应
      */
-    private CloseableHttpResponse   closeableHttpResponse;
+    private CloseableHttpResponse closeableHttpResponse;
 
     /**
      * 当前是否关闭
      */
-    private boolean                 closed      = false;
+    private boolean closed = false;
 
     /**
      * 响应数据
      */
-    private String                  data;
+    private String data;
 
     /**
      * 请求中的异常，如果没有异常那么该值为空
      */
-    private NetException            exception;
+    private NetException exception;
 
     /**
      * 响应header
      */
-    private List<Header>            headers;
+    private List<Header> headers;
 
     /**
      * 响应编码
      */
-    private String                  charset;
+    private String charset;
 
     public IHttpResponse(CloseableHttpResponse closeableHttpResponse) {
         this.closeableHttpResponse = closeableHttpResponse;
@@ -89,8 +89,8 @@ public class IHttpResponse implements Closeable {
                     try {
                         this.charset = Charset.forName(values[1]).name();
                     } catch (UnsupportedCharsetException e) {
-                        log.warn("服务器响应content_type为：[{}]，解析的编码字符集为：[{}]，该字符集不存在",
-                            element.getValue().trim(), values[1]);
+                        log.warn("服务器响应content_type为：[{}]，解析的编码字符集为：[{}]，该字符集不存在", element.getValue().trim(),
+                            values[1]);
                     }
                 }
                 break;
@@ -101,7 +101,8 @@ public class IHttpResponse implements Closeable {
     /**
      * 获取请求头
      *
-     * @param name 请求头的名字
+     * @param name
+     *            请求头的名字
      * @return 对应的值
      */
     public List<IHeader> getHeader(String name) {
@@ -116,7 +117,8 @@ public class IHttpResponse implements Closeable {
      * 将结果转换为字符串（调用此方法后input流将会关闭）
      *
      * @return 请求结果的字符串
-     * @throws IOException IO异常
+     * @throws IOException
+     *             IO异常
      */
     public String getResult() throws IOException {
         return getResult(null);
@@ -125,9 +127,11 @@ public class IHttpResponse implements Closeable {
     /**
      * 将结果转换为指定字符集字符串（调用此方法后input流将会关闭）
      *
-     * @param charset 结果字符集
+     * @param charset
+     *            结果字符集
      * @return 请求结果的字符串
-     * @throws IOException IO异常
+     * @throws IOException
+     *             IO异常
      */
     public String getResult(String charset) throws IOException {
         return getResult(charset, true);
@@ -136,12 +140,15 @@ public class IHttpResponse implements Closeable {
     /**
      * 将结果转换为指定字符集字符串，调用此方法后input流将会关闭，无论是否发生异常（有可能因为字符集异常）
      *
-     * @param charset 结果字符集
-     * @param force 是否强制使用指定字符集而忽略服务器响应字符集，true表示强制使用指定字符集，忽略服务器响应字符集
+     * @param defaultCharset
+     *            结果字符集
+     * @param force
+     *            是否强制使用指定字符集而忽略服务器响应字符集，true表示强制使用指定字符集，忽略服务器响应字符集
      * @return 请求结果的字符串
-     * @throws IOException IO异常
+     * @throws IOException
+     *             IO异常
      */
-    public String getResult(String charset, boolean force) throws IOException {
+    public String getResult(String defaultCharset, boolean force) throws IOException {
         if (this.closed) {
             if (exception != null) {
                 throw exception;
@@ -150,12 +157,18 @@ public class IHttpResponse implements Closeable {
         }
 
         try {
+            String charset = null;
+
             if (!force) {
                 charset = getCharset();
             }
 
             if (StringUtils.isEmpty(charset)) {
-                charset = Charset.defaultCharset().name();
+                if (StringUtils.isEmpty(defaultCharset)) {
+                    charset = Charset.defaultCharset().name();
+                } else {
+                    charset = defaultCharset;
+                }
             }
 
             HttpEntity entity = this.closeableHttpResponse.getEntity();
@@ -171,8 +184,8 @@ public class IHttpResponse implements Closeable {
                     resp.setPath("unknown");
                     resp.setException("unknown");
                 }
-                exception = new ServerException(resp.getPath(), resp.getException(),
-                    resp.getMessage(), resp.getError(), status);
+                exception = new ServerException(resp.getPath(), resp.getException(), resp.getMessage(), resp.getError(),
+                    status);
                 throw exception;
             }
 
@@ -184,8 +197,10 @@ public class IHttpResponse implements Closeable {
 
     /**
      * 以流的形式获取响应
+     * 
      * @return 响应流
-     * @throws IOException IOException
+     * @throws IOException
+     *             IOException
      */
     public InputStream getResultAsStream() throws IOException {
         byte[] data = EntityUtils.toByteArray(this.closeableHttpResponse.getEntity());
@@ -194,6 +209,7 @@ public class IHttpResponse implements Closeable {
 
     /**
      * 获取响应编码字符集
+     * 
      * @return 服务器响应编码字符集
      */
     public String getCharset() {
@@ -212,7 +228,8 @@ public class IHttpResponse implements Closeable {
     /**
      * 关闭响应流
      *
-     * @throws IOException IO异常
+     * @throws IOException
+     *             IO异常
      */
     public void close() throws IOException {
         if (!this.closed) {
@@ -225,7 +242,7 @@ public class IHttpResponse implements Closeable {
     @Data
     private static final class ErrorResp {
         private String timestamp;
-        private int    status;
+        private int status;
         private String error;
         private String exception;
         private String message;

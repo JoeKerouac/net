@@ -45,7 +45,6 @@ public class EllipticCurvesExtension implements HelloExtension {
 
     @Override
     public String toString() {
-        return String.format("%s :\t[supports curve : %s]", getExtensionType().name,
-            Arrays.toString(curve));
+        return String.format("%s :\t[supports curve : %s]", getExtensionType().name, Arrays.toString(curve));
     }
 }

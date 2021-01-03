@@ -10,5 +10,4 @@ import lombok.ToString;
  */
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class IHttpConfig extends HttpBaseConfig {
-}
+public class IHttpConfig extends HttpBaseConfig {}

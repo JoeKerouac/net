@@ -17,7 +17,7 @@ public class UnknownExtension implements HelloExtension {
     /**
      * 扩展类型
      */
-    private int    type;
+    private int type;
 
     /**
      * 扩展数据
@@ -47,7 +47,6 @@ public class UnknownExtension implements HelloExtension {
 
     @Override
     public String toString() {
-        return String.format("UnknownExtension : \t[type : %d]\t[data : %s]", type,
-            Arrays.toString(data));
+        return String.format("UnknownExtension : \t[type : %d]\t[data : %s]", type, Arrays.toString(data));
     }
 }

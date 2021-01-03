@@ -30,9 +30,9 @@ import com.joe.utils.common.string.StringUtils;
  */
 public class BCECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
 
-    private static final Map<String, X9ECParameters> CACHE       = new ConcurrentHashMap<>();
+    private static final Map<String, X9ECParameters> CACHE = new ConcurrentHashMap<>();
 
-    private static final Provider                    BC_PROVIDER = new BouncyCastleProvider();
+    private static final Provider BC_PROVIDER = new BouncyCastleProvider();
 
     @Override
     protected Provider provider() {
@@ -66,12 +66,14 @@ public class BCECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi implements 
         if (!(ecParamter instanceof ECParameterSpec)) {
             throw new RuntimeException("不支持的参数：" + ecParamter);
         }
-        return ((ECParameterSpec) ecParamter).getCurve().getFieldSize();
+        return ((ECParameterSpec)ecParamter).getCurve().getFieldSize();
     }
 
     /**
      * 根据curveId获取ECDomainParameters
-     * @param curveId curveId
+     * 
+     * @param curveId
+     *            curveId
      * @return ECDomainParameters
      */
     private static ECDomainParameters getECDomainParameters(int curveId) {
@@ -79,13 +81,14 @@ public class BCECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi implements 
 
         X9ECParameters ecP = getX9ECParameters(curveName);
 
-        return new ECDomainParameters(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(),
-            ecP.getSeed());
+        return new ECDomainParameters(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(), ecP.getSeed());
     }
 
     /**
      * 根据curveId获取ECDomainParameters
-     * @param curveId curveId
+     * 
+     * @param curveId
+     *            curveId
      * @return ECDomainParameters
      */
     private static ECParameterSpec internalGetECParameterSpec(int curveId) {
@@ -93,8 +96,8 @@ public class BCECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi implements 
 
         X9ECParameters ecP = getX9ECParameters(curveName);
 
-        return new ECNamedCurveParameterSpec(curveName, ecP.getCurve(), ecP.getG(), ecP.getN(),
-            ecP.getH(), ecP.getSeed());
+        return new ECNamedCurveParameterSpec(curveName, ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(),
+            ecP.getSeed());
     }
 
     private static String getCurveName(int curveId) {

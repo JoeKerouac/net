@@ -9,22 +9,27 @@ import com.joe.utils.proxy.ProxyClient;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * resource工厂，对于springresource，方法参数必须加上@RequestParam等注解声明参数从哪儿取得，否则框架没办法像spring那样读取class文件
- * 获取参数名
+ * resource工厂，对于springresource，方法参数必须加上@RequestParam等注解声明参数从哪儿取得，否则框架没办法像spring那样读取class文件 获取参数名
  *
  * @author joe
  * @version 2018.08.21 13:38
  */
 @Slf4j
 public class ResourceFactory {
-    private String       baseUrl;
-    private ResourceType resourceType;
-    private ProxyClient  client;
+
+    private final String baseUrl;
+
+    private final ResourceType resourceType;
+
+    private final ProxyClient client;
 
     /**
      * 构造器
-     * @param baseUrl 基础URL，例如http://localhost:8080
-     * @param resourceType 代理的resource类型
+     * 
+     * @param baseUrl
+     *            基础URL，例如http://localhost:8080
+     * @param resourceType
+     *            代理的resource类型
      */
     public ResourceFactory(String baseUrl, ResourceType resourceType) {
         Assert.notNull(baseUrl, "baseUrl不能为null");
@@ -36,26 +41,52 @@ public class ResourceFactory {
 
     /**
      * 构建指定resource的代理
-     * @param t resource的class对象
-     * @param <T> resource实际类型
+     * 
+     * @param t
+     *            resource的class对象
+     * @param <T>
+     *            resource实际类型
      * @return resource代理
-     * @throws NotResourceException 如果class对象不是一个resource那么抛出该异常
+     * @throws NotResourceException
+     *             如果class对象不是一个resource那么抛出该异常
      */
     public <T> T build(Class<T> t) throws NotResourceException {
-        return client.create(t, new HTTPProxy(baseUrl, resourceType, null, null));
+        return build(t, null);
     }
 
     /**
      * 构建指定resource的代理
-     * @param t resource的class对象
-     * @param responseCharset 服务器响应
-     * @param <T> resource实际类型
+     *
+     * @param t
+     *            resource的class对象
+     * @param charset
+     *            字符集
+     * @param <T>
+     *            resource实际类型
      * @return resource代理
-     * @throws NotResourceException 如果class对象不是一个resource那么抛出该异常
+     * @throws NotResourceException
+     *             如果class对象不是一个resource那么抛出该异常
      */
-    public <T> T build(Class<T> t, String responseCharset,
-                       String requestCharset) throws NotResourceException {
-        return client.create(t,
-            new HTTPProxy(baseUrl, resourceType, responseCharset, requestCharset));
+    public <T> T build(Class<T> t, String charset) throws NotResourceException {
+        return build(t, charset, charset);
+    }
+
+    /**
+     * 构建指定resource的代理
+     * 
+     * @param t
+     *            resource的class对象
+     * @param requestCharset
+     *            请求字符集
+     * @param responseCharset
+     *            服务器响应
+     * @param <T>
+     *            resource实际类型
+     * @return resource代理
+     * @throws NotResourceException
+     *             如果class对象不是一个resource那么抛出该异常
+     */
+    public <T> T build(Class<T> t, String requestCharset, String responseCharset) throws NotResourceException {
+        return client.create(t, new HTTPProxy(baseUrl, resourceType, responseCharset, requestCharset));
     }
 }

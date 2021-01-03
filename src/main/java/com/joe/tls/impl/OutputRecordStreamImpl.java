@@ -23,22 +23,22 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
     /**
      * 实际的网络输出流
      */
-    public final OutputStream      netStream;
+    public final OutputStream netStream;
 
     /**
      * 对应的版本号
      */
-    private final TlsVersion       version;
+    private final TlsVersion version;
 
     /**
      * 摘要记录器
      */
-    private final HandshakeHash    handshakeHash;
+    private final HandshakeHash handshakeHash;
 
     /**
      * 加密盒子
      */
-    private CipherBox              cipherBox;
+    private CipherBox cipherBox;
 
     /**
      * 加密套件说明
@@ -48,10 +48,9 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
     /**
      * 令牌生成器
      */
-    private Authenticator          authenticator;
+    private Authenticator authenticator;
 
-    public OutputRecordStreamImpl(OutputStream netStream, HandshakeHash handshakeHash,
-                                  TlsVersion version) {
+    public OutputRecordStreamImpl(OutputStream netStream, HandshakeHash handshakeHash, TlsVersion version) {
         this.netStream = netStream;
         this.handshakeHash = handshakeHash;
         this.version = version;
@@ -69,7 +68,7 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
 
         // 加密数据
         if (cipherBox != null && record.type() != ContentType.CHANGE_CIPHER_SPEC) {
-            data = encrypt((byte) record.type().getCode(), data);
+            data = encrypt((byte)record.type().getCode(), data);
         }
 
         // 这里要用data数组的实际长度，因为加密后长度会增加
@@ -88,8 +87,11 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
 
     /**
      * 加密数据
-     * @param contentType content type
-     * @param data 要加密的数据
+     * 
+     * @param contentType
+     *            content type
+     * @param data
+     *            要加密的数据
      * @return 加密后的数据
      */
     private byte[] encrypt(byte contentType, byte[] data) {
@@ -101,14 +103,12 @@ public class OutputRecordStreamImpl implements OutputRecordStream {
             System.arraycopy(encrypt, 0, result, nonce.length, encrypt.length);
             return result;
         } else if (cipherDesc.getCipherType() == CipherSuite.CipherType.BLOCK) {
-            MacAuthenticator macAuthenticator = (MacAuthenticator) authenticator;
+            MacAuthenticator macAuthenticator = (MacAuthenticator)authenticator;
             // BLOCK模式下，将nonce和真实数据拼接，全部加密写出
-            byte[] waitEncryptData = Arrays.copyOf(nonce,
-                nonce.length + data.length + macAuthenticator.macLen());
+            byte[] waitEncryptData = Arrays.copyOf(nonce, nonce.length + data.length + macAuthenticator.macLen());
             System.arraycopy(data, 0, waitEncryptData, nonce.length, data.length);
             // 计算出mac信息，并放入消息的末尾
-            byte[] mac = macAuthenticator.compute(contentType, waitEncryptData, 0,
-                nonce.length + data.length, false);
+            byte[] mac = macAuthenticator.compute(contentType, waitEncryptData, 0, nonce.length + data.length, false);
             System.arraycopy(mac, 0, waitEncryptData, nonce.length + data.length, mac.length);
 
             return cipherBox.encrypt(waitEncryptData, 0, waitEncryptData.length);

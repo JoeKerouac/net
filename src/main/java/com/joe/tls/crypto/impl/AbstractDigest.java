@@ -16,7 +16,7 @@ public class AbstractDigest implements DigestSpi {
 
     private MessageDigest digest;
 
-    private String        algorithm;
+    private String algorithm;
 
     public AbstractDigest(String algorithm) {
         init(algorithm);
@@ -64,8 +64,8 @@ public class AbstractDigest implements DigestSpi {
 
     @Override
     public AbstractDigest copy() throws CloneNotSupportedException {
-        AbstractDigest digest = (AbstractDigest) super.clone();
-        digest.digest = (MessageDigest) this.digest.clone();
+        AbstractDigest digest = (AbstractDigest)super.clone();
+        digest.digest = (MessageDigest)this.digest.clone();
         digest.algorithm = this.algorithm;
         return digest;
     }

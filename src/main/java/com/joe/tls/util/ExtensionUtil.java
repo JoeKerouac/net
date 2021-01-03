@@ -14,8 +14,11 @@ public class ExtensionUtil {
 
     /**
      * 写出扩展
-     * @param extensions 要写出的扩展
-     * @param buffer buffer
+     * 
+     * @param extensions
+     *            要写出的扩展
+     * @param buffer
+     *            buffer
      */
     public static void writeExtensions(Collection<HelloExtension> extensions, ByteBuffer buffer) {
         int size = extensions.stream().mapToInt(HelloExtension::size).sum();

@@ -18,8 +18,7 @@ import sun.security.util.ECUtil;
  * @version 1.0
  * @date 2020-10-31 14:56
  */
-public class SunecECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi
-                                     implements ECDHKeyExchangeSpi {
+public class SunecECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
 
     private static final Provider SUNEC_PROVIDER = new SunEC();
 
@@ -30,8 +29,7 @@ public class SunecECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi
 
     @Override
     protected KeySpec convertToPublicKeySpec(int curveId, byte[] publicKeyData) {
-        ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
-            NamedCurve.getCurveName(curveId));
+        ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(), NamedCurve.getCurveName(curveId));
         ECPoint point;
         try {
             point = ECUtil.decodePoint(publicKeyData, parameters.getCurve());
@@ -44,8 +42,7 @@ public class SunecECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi
 
     @Override
     protected KeySpec convertToPrivateKeySpec(int curveId, byte[] privateKeyData) {
-        ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(),
-            NamedCurve.getCurveName(curveId));
+        ECParameterSpec parameters = ECUtil.getECParameterSpec(new SunEC(), NamedCurve.getCurveName(curveId));
 
         return new ECPrivateKeySpec(new BigInteger(privateKeyData), parameters);
     }
@@ -60,6 +57,6 @@ public class SunecECDHKeyExchangeSpi extends AbstractECDHKeyExchangeSpi
         if (!(ecParamter instanceof ECParameterSpec)) {
             throw new RuntimeException("不支持的参数：" + ecParamter);
         }
-        return ((ECParameterSpec) ecParamter).getCurve().getField().getFieldSize();
+        return ((ECParameterSpec)ecParamter).getCurve().getField().getFieldSize();
     }
 }

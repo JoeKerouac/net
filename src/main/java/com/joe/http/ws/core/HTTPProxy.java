@@ -36,17 +36,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HTTPProxy implements Interception {
 
-    private static final JsonParser                JSON_PARSER = getInstance();
+    private static final JsonParser JSON_PARSER = getInstance();
 
     /**
      * 网站根URL，例如http://127.0.0.1，注意不能以/结尾
      */
-    private final String                           baseUrl;
+    private final String baseUrl;
 
     /**
      * 资源分析
      */
-    private volatile ResourceAnalyze               analyze;
+    private volatile ResourceAnalyze analyze;
 
     /**
      * 资源分析对应的构造器
@@ -56,33 +56,37 @@ public class HTTPProxy implements Interception {
     /**
      * http客户端
      */
-    private final IHttpClient                      client;
+    private final IHttpClient client;
 
     /**
      * 接收响应的默认编码集，如果响应指定的有编码集那么将优先使用服务器响应的编码集
      */
-    private final String                           responseCharset;
+    private final String responseCharset;
 
     /**
      * 请求服务器使用的字符集，请求服务器时使用该字符集
      */
-    private final String                           requestCharset;
+    private final String requestCharset;
 
     /**
      * 构造器
-     * @param baseUrl 服务器根URL
-     * @param resourceType 资源类型
-     * @param responseCharset 接收响应的默认编码集，如果响应指定的有编码集那么将优先使用服务器响应的编码集
-     * @param requestCharset 请求服务器使用的字符集，请求服务器时使用该字符集
+     * 
+     * @param baseUrl
+     *            服务器根URL
+     * @param resourceType
+     *            资源类型
+     * @param responseCharset
+     *            接收响应的默认编码集，如果响应指定的有编码集那么将优先使用服务器响应的编码集
+     * @param requestCharset
+     *            请求服务器使用的字符集，请求服务器时使用该字符集
      */
-    public HTTPProxy(String baseUrl, ResourceType resourceType, String responseCharset,
-                     String requestCharset) {
+    public HTTPProxy(String baseUrl, ResourceType resourceType, String responseCharset, String requestCharset) {
         Assert.notNull(baseUrl, "baseUrl不能为null");
         Assert.notNull(resourceType, "resourceType不能为null");
 
         try {
-            this.constructor = resourceType.getResourceAnalyzeClass()
-                .getDeclaredConstructor(Class.class, Method.class, Object[].class);
+            this.constructor = resourceType.getResourceAnalyzeClass().getDeclaredConstructor(Class.class, Method.class,
+                Object[].class);
             this.constructor.setAccessible(true);
         } catch (NoSuchMethodException e) {
             throw new NetException("系统异常", e);
@@ -90,16 +94,12 @@ public class HTTPProxy implements Interception {
 
         this.baseUrl = baseUrl;
         this.client = IHttpClient.builder().build();
-        this.responseCharset = StringUtils.isEmpty(responseCharset)
-            ? Charset.defaultCharset().name()
-            : responseCharset;
-        this.requestCharset = StringUtils.isEmpty(requestCharset) ? Charset.defaultCharset().name()
-            : requestCharset;
+        this.responseCharset = StringUtils.isEmpty(responseCharset) ? Charset.defaultCharset().name() : responseCharset;
+        this.requestCharset = StringUtils.isEmpty(requestCharset) ? Charset.defaultCharset().name() : requestCharset;
     }
 
     @Override
-    public Object invoke(Object target, Object[] params, Method method,
-                         Invoker invoker) throws Throwable {
+    public Object invoke(Object target, Object[] params, Method method, Invoker invoker) throws Throwable {
         analyze = constructor.newInstance(method.getDeclaringClass(), method, params);
 
         if (!analyze.isResource()) {
@@ -120,8 +120,11 @@ public class HTTPProxy implements Interception {
 
     /**
      * 解析响应
-     * @param result 响应结果
-     * @param returnType 响应类型
+     * 
+     * @param result
+     *            响应结果
+     * @param returnType
+     *            响应类型
      * @return 响应对象
      */
     private Object parseResponse(String result, Class<?> returnType) {
@@ -147,6 +150,7 @@ public class HTTPProxy implements Interception {
 
     /**
      * 构建http请求
+     * 
      * @return http请求
      */
     private IHttpRequestBase build() {

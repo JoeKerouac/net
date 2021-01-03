@@ -14,12 +14,12 @@ import com.joe.tls.util.ByteBufferUtil;
  */
 public class EllipticPointFormatsExtension implements HelloExtension {
 
-    final static int                                  FMT_UNCOMPRESSED = 0;
+    final static int FMT_UNCOMPRESSED = 0;
 
-    public static final EllipticPointFormatsExtension DEFAULT          = new EllipticPointFormatsExtension(
-        new byte[] { FMT_UNCOMPRESSED });
+    public static final EllipticPointFormatsExtension DEFAULT =
+        new EllipticPointFormatsExtension(new byte[] {FMT_UNCOMPRESSED});
 
-    private byte[]                                    format;
+    private byte[] format;
 
     public EllipticPointFormatsExtension(byte[] format) {
         this.format = format;
@@ -48,7 +48,6 @@ public class EllipticPointFormatsExtension implements HelloExtension {
 
     @Override
     public String toString() {
-        return String.format("%s :\t[supports format : %s]", getExtensionType().name,
-            Arrays.toString(format));
+        return String.format("%s :\t[supports format : %s]", getExtensionType().name, Arrays.toString(format));
     }
 }

@@ -114,10 +114,13 @@ public class AlgorithmRegistry {
     /**
      * 查找指定算法
      *
-     * @param algorithmName 算法名
-     * @param <T>           算法实际类型
+     * @param algorithmName
+     *            算法名
+     * @param <T>
+     *            算法实际类型
      * @return 对应的算法
-     * @throws NoSuchAlgorithmException 指定算法不存在时抛出异常
+     * @throws NoSuchAlgorithmException
+     *             指定算法不存在时抛出异常
      */
     @SuppressWarnings("unchecked")
     public static <T extends AlgorithmSpi<T>> T newInstance(String algorithmName) throws NoSuchAlgorithmException {
@@ -125,7 +128,7 @@ public class AlgorithmRegistry {
 
         // 先加载
         try {
-            T algorithmSpi = (T) REGISTRY.get(algorithmName);
+            T algorithmSpi = (T)REGISTRY.get(algorithmName);
 
             if (algorithmSpi == null) {
                 throw new NoSuchAlgorithmException(algorithmName);

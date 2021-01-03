@@ -36,7 +36,8 @@ public class AesExample {
     /**
      * 加解密测试，使用随机生成的密钥
      *
-     * @throws Exception Exception
+     * @throws Exception
+     *             Exception
      */
     private static void test1() throws Exception {
         // 测试所有加密可用
@@ -64,7 +65,8 @@ public class AesExample {
     /**
      * 加解密测试，使用固定密钥
      *
-     * @throws Exception Exception
+     * @throws Exception
+     *             Exception
      */
     private static void test2() throws Exception {
         // 测试所有加密可用
@@ -75,7 +77,7 @@ public class AesExample {
                 // 用指定密钥生成，对应秘钥已经交换完成，使用指定秘钥完成加密
                 byte[] key = new byte[value.getKeySize()];
                 // 这里不填充全用0也行，只是演示用，实际上这里是客户端和服务端协商的
-                Arrays.fill(key, (byte) 10);
+                Arrays.fill(key, (byte)10);
                 secretKey = new SecretKeySpec(key, "AES");
             }
 
@@ -94,15 +96,16 @@ public class AesExample {
     /**
      * 处理预期中的异常
      *
-     * @param value 当前加密算法
-     * @param e     异常
+     * @param value
+     *            当前加密算法
+     * @param e
+     *            异常
      */
     private static void handleException(CipherSuite.CipherDesc value, Exception e) {
         // GCM模式下，因为自带认证，所以解密的时候直接抛出了BadPaddingException异常，而普通模式下因为没有认证信息，所以解密的时候
         // 并不会对信息进行校验，可以解密成功，但是解密出来的结果跟源数据肯定是对不上的
         if (value.getCipherType() == CipherSuite.CipherType.AEAD) {
-            if (!(e instanceof BadPaddingException)
-                || !e.getMessage().equals("mac check in GCM failed")) {
+            if (!(e instanceof BadPaddingException) || !e.getMessage().equals("mac check in GCM failed")) {
                 throw new RuntimeException("预期不符合");
             }
         } else if (value.getCipherType() == CipherSuite.CipherType.BLOCK) {
@@ -115,38 +118,41 @@ public class AesExample {
     /**
      * 基础测试
      *
-     * @param algorithm 算法
-     * @param secretKey 密钥
-     * @param change    是否更改加密结果，主要为了验证AEAD模式（GCM）的认证信息是否生效
-     * @throws Exception Exception
+     * @param algorithm
+     *            算法
+     * @param secretKey
+     *            密钥
+     * @param change
+     *            是否更改加密结果，主要为了验证AEAD模式（GCM）的认证信息是否生效
+     * @throws Exception
+     *             Exception
      */
-    private static void baseTest(CipherSuite.CipherDesc algorithm, SecretKey secretKey,
-                                 boolean change) throws Exception {
+    private static void baseTest(CipherSuite.CipherDesc algorithm, SecretKey secretKey, boolean change)
+        throws Exception {
         // 模拟iv，如果是GCM模式，实际上这里的iv应该是 fixedIv + nonce，fixedIvLen + nonce = ivLen
         // 这里只是为了演示，所以也只是初始化为0
         byte[] iv = new byte[algorithm.getIvLen()];
 
         // 要加密的数据
         String data = "你好啊，这是一段加密测试文本，如果运行正确应该原样返回，随机数据：三六九等费卢卡斯极度分裂加上代理开发机阿杀戮空间发"
-                      + "拉萨极度分裂加锁离开房间沙龙课到件方收款加的夫拉设计费咯科技爱上了的放款加上了开的房间流口水极度分裂看加上了开的房间阿杀戮空"
-                      + "间发雷克萨机房了空间撒量放款加两颗到件方拉实际多发咯科技撒肥料空间撒了开的房间老和尚都顾杀了曼妮芬票数与adol侯三双链监控多in"
-                      + "没离开妈都是GFUI零食都能即佛看偶数难道官方";
+            + "拉萨极度分裂加锁离开房间沙龙课到件方收款加的夫拉设计费咯科技爱上了的放款加上了开的房间流口水极度分裂看加上了开的房间阿杀戮空"
+            + "间发雷克萨机房了空间撒量放款加两颗到件方拉实际多发咯科技撒肥料空间撒了开的房间老和尚都顾杀了曼妮芬票数与adol侯三双链监控多in" + "没离开妈都是GFUI零食都能即佛看偶数难道官方";
         byte[] encryptData = data.getBytes();
 
         // 使用JDK自带的JCE实现来加密，注意对于jce实现来说，这里是要区分加密模式的
         byte[] jceResult = null;
         if (algorithm.getCipherType() == CipherSuite.CipherType.AEAD) {
             // 这里16 * 8 是固定的，实际上加解密时也不会用到
-            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey,
-                new SunJCE(), new GCMParameterSpec(16 * 8, iv));
+            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, new SunJCE(),
+                new GCMParameterSpec(16 * 8, iv));
         } else if (algorithm.getCipherType() == CipherSuite.CipherType.BLOCK) {
-            jceResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey,
-                new SunJCE(), new IvParameterSpec(iv));
+            jceResult =
+                doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, new SunJCE(), new IvParameterSpec(iv));
         }
 
         // 使用BouncyCastle里边的实现来加密
-        byte[] bcResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey,
-            new BouncyCastleProvider(), new IvParameterSpec(iv));
+        byte[] bcResult = doCipher(encryptData, algorithm, Cipher.ENCRYPT_MODE, secretKey, new BouncyCastleProvider(),
+            new IvParameterSpec(iv));
         // 对比加密结果是否一致，应该是要一致的
         if (!Arrays.equals(jceResult, bcResult)) {
             throw new RuntimeException("加密结果不一致");
@@ -158,8 +164,8 @@ public class AesExample {
         }
 
         // 使用BouncyCastle解密数据
-        byte[] decryptData = doCipher(bcResult, algorithm, Cipher.DECRYPT_MODE, secretKey,
-            new BouncyCastleProvider(), new IvParameterSpec(iv));
+        byte[] decryptData = doCipher(bcResult, algorithm, Cipher.DECRYPT_MODE, secretKey, new BouncyCastleProvider(),
+            new IvParameterSpec(iv));
 
         if (!data.equals(new String(decryptData, 0, encryptData.length))) {
             throw new RuntimeException("解密失败，解密结果跟原数据不一致");
@@ -169,18 +175,24 @@ public class AesExample {
     /**
      * 进行加解密处理
      *
-     * @param data                   源数据
-     * @param algorithm              算法
-     * @param mode                   加密或者解密模式
-     * @param secretKey              密钥
-     * @param provider               提供器，为空时使用JCE实现
-     * @param algorithmParameterSpec IV，BC模式下无论什么模式的AES都是IvParameterSpec，而JCE模式下如果是AEAD模式的AES需要传入GCMParameterSpec
+     * @param data
+     *            源数据
+     * @param algorithm
+     *            算法
+     * @param mode
+     *            加密或者解密模式
+     * @param secretKey
+     *            密钥
+     * @param provider
+     *            提供器，为空时使用JCE实现
+     * @param algorithmParameterSpec
+     *            IV，BC模式下无论什么模式的AES都是IvParameterSpec，而JCE模式下如果是AEAD模式的AES需要传入GCMParameterSpec
      * @return 加/解密结果
-     * @throws Exception Exception
+     * @throws Exception
+     *             Exception
      */
-    private static byte[] doCipher(byte[] data, CipherSuite.CipherDesc algorithm, int mode,
-                                   SecretKey secretKey, Provider provider,
-                                   AlgorithmParameterSpec algorithmParameterSpec) throws Exception {
+    private static byte[] doCipher(byte[] data, CipherSuite.CipherDesc algorithm, int mode, SecretKey secretKey,
+        Provider provider, AlgorithmParameterSpec algorithmParameterSpec) throws Exception {
         // 算法实现
         Cipher cipher;
 
@@ -206,8 +218,10 @@ public class AesExample {
      * <p>
      * 注：为什么数据长度6，blockSize是8，只需要填充1？因为最后还会填充一个byte的长度信息，表示填充了多少byte的数据
      *
-     * @param src       源数据
-     * @param blockSize 块大小
+     * @param src
+     *            源数据
+     * @param blockSize
+     *            块大小
      * @return 填充后的数据
      */
     private static byte[] padding(byte[] src, int blockSize) {
@@ -219,7 +233,7 @@ public class AesExample {
 
         // 注意这里的操作，填充的内容就是paddingLen
         byte[] padding = new byte[paddingLen + 1];
-        Arrays.fill(padding, (byte) paddingLen);
+        Arrays.fill(padding, (byte)paddingLen);
 
         return CollectionUtil.merge(src, padding);
     }

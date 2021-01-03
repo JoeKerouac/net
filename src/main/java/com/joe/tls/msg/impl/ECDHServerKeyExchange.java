@@ -24,13 +24,13 @@ public class ECDHServerKeyExchange implements HandshakeProtocol {
      * 曲线类型，目前必须时03
      */
     @Getter
-    private final byte   curveType;
+    private final byte curveType;
 
     /**
      * 曲线ID
      */
     @Getter
-    private final int    curveId;
+    private final int curveId;
 
     /**
      * 服务端ECDH公钥
@@ -42,18 +42,16 @@ public class ECDHServerKeyExchange implements HandshakeProtocol {
      * hash和签名算法
      */
     @Getter
-    private final int    hashAndSigAlg;
+    private final int hashAndSigAlg;
 
     /**
-     * 签名数据，对clientRandom + serverRandom + curveType（byte） + curveId（byte） + publicKeyLen（byte） + publicKey进行签名
-     * <br/>
+     * 签名数据，对clientRandom + serverRandom + curveType（byte） + curveId（byte） + publicKeyLen（byte） + publicKey进行签名 <br/>
      * publicKey指的是本消息中的服务端ECDH公钥
      */
     @Getter
     private final byte[] sig;
 
-    public ECDHServerKeyExchange(byte curveType, int curveId, byte[] publicKey, int hashAndSigAlg,
-                                 byte[] sig) {
+    public ECDHServerKeyExchange(byte curveType, int curveId, byte[] publicKey, int hashAndSigAlg, byte[] sig) {
         this.curveType = curveType;
         this.curveId = curveId;
         this.publicKey = publicKey;

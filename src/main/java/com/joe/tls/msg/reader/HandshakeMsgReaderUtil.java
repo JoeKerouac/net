@@ -21,22 +21,22 @@ public class HandshakeMsgReaderUtil {
     private static final Map<HandshakeType, HandshakeMsgReader> READER_MAP = new HashMap<>();
 
     static {
-        READER_MAP.put(HandshakeType.CERTIFICATE,
-            data -> new CertificateMsg(ByteBuffer.wrap(data)));
-        READER_MAP.put(HandshakeType.SERVER_KEY_EXCHANGE,
-            data -> new ECDHServerKeyExchange(ByteBuffer.wrap(data)));
+        READER_MAP.put(HandshakeType.CERTIFICATE, data -> new CertificateMsg(ByteBuffer.wrap(data)));
+        READER_MAP.put(HandshakeType.SERVER_KEY_EXCHANGE, data -> new ECDHServerKeyExchange(ByteBuffer.wrap(data)));
         READER_MAP.put(HandshakeType.SERVER_HELLO, data -> new ServerHello(ByteBuffer.wrap(data)));
         READER_MAP.put(HandshakeType.SERVER_HELLO_DONE, data -> new ServerHelloDone());
         READER_MAP.put(HandshakeType.FINISHED, data -> new Finished(ByteBuffer.wrap(data)));
         READER_MAP.put(HandshakeType.CLIENT_HELLO, data -> new ClientHello(ByteBuffer.wrap(data)));
-        READER_MAP.put(HandshakeType.CLIENT_KEY_EXCHANGE,
-            data -> new ECDHClientKeyExchange(ByteBuffer.wrap(data)));
+        READER_MAP.put(HandshakeType.CLIENT_KEY_EXCHANGE, data -> new ECDHClientKeyExchange(ByteBuffer.wrap(data)));
     }
 
     /**
      * 读取握手数据
-     * @param data 握手数据
-     * @param <T> 握手数据实际类型
+     * 
+     * @param data
+     *            握手数据
+     * @param <T>
+     *            握手数据实际类型
      * @return 握手数据实体
      */
     @SuppressWarnings("unchecked")
@@ -46,7 +46,7 @@ public class HandshakeMsgReaderUtil {
         if (type == null || (reader = READER_MAP.get(type)) == null) {
             throw new RuntimeException("不支持读取的handshake类型：" + data[0]);
         }
-        return (T) reader.read(data);
+        return (T)reader.read(data);
     }
 
 }

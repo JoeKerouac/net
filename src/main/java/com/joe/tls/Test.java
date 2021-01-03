@@ -49,35 +49,32 @@ public class Test {
         OutputStream outputStream = socket.getOutputStream();
 
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keyStore.load(Test.class.getClassLoader().getResourceAsStream("sslserverkeys"),
-            "123456".toCharArray());
+        keyStore.load(Test.class.getClassLoader().getResourceAsStream("sslserverkeys"), "123456".toCharArray());
 
         X509KeyManager keyManager = new JoeKeyManager(keyStore, "123456".toCharArray());
 
-        Handshaker handshaker = new Handshaker(inputStream, outputStream, new SecureRandom(), false,
-            keyManager);
+        Handshaker handshaker = new Handshaker(inputStream, outputStream, new SecureRandom(), false, keyManager);
         handshaker.kickstart();
         System.out.println("服务端握手完成");
         InputRecordStream inputRecordStream = handshaker.getInputRecordStream();
         OutputRecordStream outputRecordStream = handshaker.getOutputRecordStream();
 
-        ApplicationMsg readMsg = (ApplicationMsg) inputRecordStream.read().msg();
+        ApplicationMsg readMsg = (ApplicationMsg)inputRecordStream.read().msg();
         System.out.println("服务端收到消息：\n-----------\n" + new String(readMsg.getData()));
         System.out.println("\n-----------------\n服务端收到消息打印完毕\n\n\n\n");
         ApplicationMsg writeMsg = new ApplicationMsg("hello world".getBytes());
-        outputRecordStream
-            .write(new Record(ContentType.APPLICATION_DATA, TlsVersion.TLS1_2, writeMsg));
+        outputRecordStream.write(new Record(ContentType.APPLICATION_DATA, TlsVersion.TLS1_2, writeMsg));
     }
 
     public static void testClient() throws Exception {
         // ip.src == 39.156.66.14 || ip.dst == 39.156.66.14
         Security.addProvider(new BouncyCastleProvider());
 
-        //        Socket socket = new Socket("39.156.66.14", 443);
+        // Socket socket = new Socket("39.156.66.14", 443);
         Socket socket = new Socket("127.0.0.1", 12345);
 
         String getData = "GET https://www.baidu.com/ HTTP/1.1\r\n" + "Host: www.user.com\r\n"
-                         + "Connection: Keep-Alive\r\n" + "User-agent: Mozilla/5.0.\r\n\r\n";
+            + "Connection: Keep-Alive\r\n" + "User-agent: Mozilla/5.0.\r\n\r\n";
         InputStream inputStream = socket.getInputStream();
         OutputStream outputStream = socket.getOutputStream();
 
@@ -87,10 +84,10 @@ public class Test {
 
         InputRecordStream inputRecordStream = handshaker.getInputRecordStream();
         OutputRecordStream outputRecordStream = handshaker.getOutputRecordStream();
-        outputRecordStream.write(new Record(ContentType.APPLICATION_DATA, TlsVersion.TLS1_2,
-            new ApplicationMsg(getData.getBytes())));
+        outputRecordStream
+            .write(new Record(ContentType.APPLICATION_DATA, TlsVersion.TLS1_2, new ApplicationMsg(getData.getBytes())));
         Record record = inputRecordStream.read();
-        ApplicationMsg msg = (ApplicationMsg) record.msg();
+        ApplicationMsg msg = (ApplicationMsg)record.msg();
         System.out.println("收到消息：" + new String(msg.getData()));
     }
 

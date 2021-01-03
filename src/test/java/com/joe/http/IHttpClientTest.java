@@ -23,7 +23,7 @@ import com.joe.utils.test.WebBaseTest;
  */
 public class IHttpClientTest extends WebBaseTest {
     private ThreadLocal<IHttpClient> clientHolder = new ThreadLocal<>();
-    private ThreadLocal<String>      url          = new ThreadLocal<>();
+    private ThreadLocal<String> url = new ThreadLocal<>();
 
     @Test
     public void executeGet() {
@@ -42,9 +42,8 @@ public class IHttpClientTest extends WebBaseTest {
     @Test
     public void executePost() {
         runCase(() -> {
-            IHttpPost post = IHttpPost.builder(url.get() + "helloName")
-                .contentType(IHttpRequestBase.CONTENT_TYPE_FORM).formParam("name", "123")
-                .charset("utf8").build();
+            IHttpPost post = IHttpPost.builder(url.get() + "helloName").contentType(IHttpRequestBase.CONTENT_TYPE_FORM)
+                .formParam("name", "123").charset("utf8").build();
             try {
                 doRequest(clientHolder.get(), post, "hello : 123");
             } catch (Exception e) {
@@ -53,8 +52,7 @@ public class IHttpClientTest extends WebBaseTest {
         });
     }
 
-    private void doRequest(IHttpClient client, IHttpRequestBase request,
-                           String result) throws Exception {
+    private void doRequest(IHttpClient client, IHttpRequestBase request, String result) throws Exception {
         IHttpResponse response = client.execute(request);
         String realResult = response.getResult();
         int status = response.getStatus();

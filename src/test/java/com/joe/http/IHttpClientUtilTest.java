@@ -16,7 +16,7 @@ import com.joe.utils.test.WebBaseTest;
  */
 public class IHttpClientUtilTest extends WebBaseTest {
     private ThreadLocal<IHttpClientUtil> clientHolder = new ThreadLocal<>();
-    private ThreadLocal<String>          url          = new ThreadLocal<>();
+    private ThreadLocal<String> url = new ThreadLocal<>();
 
     @Test
     public void executeGet() {
@@ -34,8 +34,8 @@ public class IHttpClientUtilTest extends WebBaseTest {
     public void executePost() {
         runCase(() -> {
             try {
-                String result = clientHolder.get().executePost(url.get() + "helloName", "name=123",
-                    "UTF8", "UTF8", IHttpRequestBase.CONTENT_TYPE_FORM);
+                String result = clientHolder.get().executePost(url.get() + "helloName", "name=123", "UTF8", "UTF8",
+                    IHttpRequestBase.CONTENT_TYPE_FORM);
                 Assert.assertEquals("hello : 123", result);
             } catch (Exception e) {
                 Assert.assertNull("请求异常", e);

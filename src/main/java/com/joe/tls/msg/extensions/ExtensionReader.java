@@ -18,9 +18,9 @@ import com.joe.tls.util.ByteBufferUtil;
  */
 public class ExtensionReader {
 
-    private static final Map<ExtensionType, HelloExtensionReader> READER_MAP     = new HashMap<>();
+    private static final Map<ExtensionType, HelloExtensionReader> READER_MAP = new HashMap<>();
 
-    private static final HelloExtensionReader                     UNKNOWN_READER = new UnknownExtensionReader();
+    private static final HelloExtensionReader UNKNOWN_READER = new UnknownExtensionReader();
 
     static {
         register(new EllipticCurvesExtensionReader());
@@ -34,7 +34,8 @@ public class ExtensionReader {
     /**
      * 从ByteBuffer读取扩展数据，此时ByteBuffer起始位置应该是扩展数据的总长度字段开始处
      *
-     * @param buffer ByteBuffer
+     * @param buffer
+     *            ByteBuffer
      * @return 读到的扩展数据
      */
     public static List<HelloExtension> read(ByteBuffer buffer) {
@@ -45,8 +46,7 @@ public class ExtensionReader {
             // 读取2byte类型
             int extensionType = ByteBufferUtil.mergeReadInt16(buffer);
             // 路由读取
-            HelloExtensionReader reader = READER_MAP.getOrDefault(ExtensionType.get(extensionType),
-                UNKNOWN_READER);
+            HelloExtensionReader reader = READER_MAP.getOrDefault(ExtensionType.get(extensionType), UNKNOWN_READER);
             HelloExtension extension = reader.read(extensionType, buffer);
             extensions.add(extension);
             len -= extension.size();
@@ -172,8 +172,7 @@ public class ExtensionReader {
         public HelloExtension read(int extensionType, ByteBuffer buffer) {
             buffer.getShort();
             int len = ByteBufferUtil.mergeReadInt16(buffer) / 2;
-            Map<Integer, SignatureAndHashAlgorithm> allSupports = SignatureAndHashAlgorithm
-                .getAllSupports();
+            Map<Integer, SignatureAndHashAlgorithm> allSupports = SignatureAndHashAlgorithm.getAllSupports();
             List<SignatureAndHashAlgorithm> supports = new ArrayList<>();
             for (int i = 0; i < len; i++) {
                 supports.add(allSupports.get(ByteBufferUtil.mergeReadInt16(buffer)));

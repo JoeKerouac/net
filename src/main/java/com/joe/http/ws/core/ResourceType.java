@@ -9,7 +9,7 @@ import com.joe.utils.reflect.clazz.ClassUtils;
  * @version 2018.08.21 14:24
  */
 public enum ResourceType {
-                          JERSEY("com.joe.http.ws.core.JerseyResourceAnalyze"), SPRING("com.joe.http.ws.core.SpringResourceAnalyze");
+    JERSEY("com.joe.http.ws.core.JerseyResourceAnalyze"), SPRING("com.joe.http.ws.core.SpringResourceAnalyze");
 
     private Class<? extends ResourceAnalyze> clazz;
 
@@ -20,6 +20,7 @@ public enum ResourceType {
 
     /**
      * 获取ResourceAnalyze的实际类型
+     * 
      * @return ResourceAnalyze的实际类型
      */
     public Class<? extends ResourceAnalyze> getResourceAnalyzeClass() {

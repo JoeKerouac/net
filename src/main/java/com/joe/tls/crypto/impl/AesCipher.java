@@ -25,12 +25,12 @@ public class AesCipher implements CipherSpi {
     /**
      * 实际的加密器
      */
-    public final Cipher                  cipher;
+    public final Cipher cipher;
 
     /**
      * 加密器提供者
      */
-    private final Provider               provider;
+    private final Provider provider;
 
     /**
      * 加密套件说明
@@ -40,7 +40,7 @@ public class AesCipher implements CipherSpi {
     /**
      * 加解密模式
      */
-    private int                          mode = -1;
+    private int mode = -1;
 
     public AesCipher(CipherSuite.CipherDesc cipherAlgorithm) {
         // 注意，BouncyCastleProvider目前还有问题，需要继续测试

@@ -8,22 +8,22 @@ package com.joe.tls;
  */
 public enum TlsVersion implements EnumInterface {
 
-                                                 TLS1_0(0x0301, 0x03, 0x01, "TLS 1.0"),
+    TLS1_0(0x0301, 0x03, 0x01, "TLS 1.0"),
 
-                                                 TLS1_1(0x0302, 0x03, 0x02, "TLS 1.1"),
+    TLS1_1(0x0302, 0x03, 0x02, "TLS 1.1"),
 
-                                                 TLS1_2(0x0303, 0x03, 0x03, "TLS 1.2"),
+    TLS1_2(0x0303, 0x03, 0x03, "TLS 1.2"),
 
     ;
 
     /**
      * 枚举code
      */
-    private final int    code;
+    private final int code;
 
-    private final int    majorVersion;
+    private final int majorVersion;
 
-    private final int    minorVersion;
+    private final int minorVersion;
 
     /**
      * 枚举英文名

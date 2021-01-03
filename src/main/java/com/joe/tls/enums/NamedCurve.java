@@ -51,7 +51,7 @@ public class NamedCurve {
     /**
      * 曲线ID
      */
-    private int    id;
+    private int id;
 
     /**
      * 曲线名
@@ -75,7 +75,8 @@ public class NamedCurve {
     /**
      * 根据曲线ID获取ECDomainParameters
      *
-     * @param curveId 曲线ID
+     * @param curveId
+     *            曲线ID
      * @return ECDomainParameters
      */
     public static ECDomainParameters getECParameters(int curveId) {
@@ -100,8 +101,7 @@ public class NamedCurve {
         }
 
         // It's a bit inefficient to do this conversion every time
-        return new ECDomainParameters(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(),
-            ecP.getSeed());
+        return new ECDomainParameters(ecP.getCurve(), ecP.getG(), ecP.getN(), ecP.getH(), ecP.getSeed());
     }
 
     /**

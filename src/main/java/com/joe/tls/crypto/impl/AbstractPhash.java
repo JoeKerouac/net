@@ -96,7 +96,7 @@ public abstract class AbstractPhash implements PhashSpi {
 
     @Override
     public PhashSpi copy() throws CloneNotSupportedException {
-        AbstractPhash phash = (AbstractPhash) super.clone();
+        AbstractPhash phash = (AbstractPhash)super.clone();
         phash.hmacSpi = hmacSpi.copy();
         phash.init = this.init;
         return phash;

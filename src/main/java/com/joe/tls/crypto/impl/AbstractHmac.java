@@ -10,7 +10,7 @@ import com.joe.tls.crypto.exception.InvalidKeyException;
  * 抽象Hmac算法，不同hmac的差异实际上就是摘要算法的差异，所以可以对其公共算法进行统一封装
  *
  * <p>
- *     一次初始化可以多次使用
+ * 一次初始化可以多次使用
  * </p>
  *
  * @author JoeKerouac
@@ -31,7 +31,7 @@ public abstract class AbstractHmac implements HmacSpi {
     /**
      * 初始化标志，true表示已经初始化
      */
-    private boolean   init;
+    private boolean init;
 
     /**
      * 摘要算法实现
@@ -41,17 +41,17 @@ public abstract class AbstractHmac implements HmacSpi {
     /**
      * 当前是否是第一次更新
      */
-    private boolean   first;
+    private boolean first;
 
     /**
      * 对应算法中的K XOR ipad
      */
-    private byte[]    k_ipad;
+    private byte[] k_ipad;
 
     /**
      * 对应算法中的K XOR opad
      */
-    private byte[]    k_opad;
+    private byte[] k_opad;
 
     protected AbstractHmac(DigestSpi digestSpi, int hashSize, int blockLen) {
         this.digestSpi = digestSpi;
@@ -76,19 +76,19 @@ public abstract class AbstractHmac implements HmacSpi {
         if (keyClone.length > this.blockLen) {
             byte[] digest = this.digestSpi.digest(keyClone);
             // 尽快将内存中的key清空，防止密钥泄漏
-            Arrays.fill(keyClone, (byte) 0);
+            Arrays.fill(keyClone, (byte)0);
             keyClone = digest;
         }
 
         // 根据rfc2104生成k_ipad和k_opad
         for (int i = 0; i < this.blockLen; ++i) {
             byte k = i < keyClone.length ? keyClone[i] : 0;
-            this.k_ipad[i] = (byte) (k ^ 0x36);
-            this.k_opad[i] = (byte) (k ^ 0x5C);
+            this.k_ipad[i] = (byte)(k ^ 0x36);
+            this.k_opad[i] = (byte)(k ^ 0x5C);
         }
 
         // 将内存中的数据尽快清空
-        Arrays.fill(keyClone, (byte) 0);
+        Arrays.fill(keyClone, (byte)0);
         this.init = true;
     }
 
@@ -145,8 +145,8 @@ public abstract class AbstractHmac implements HmacSpi {
 
     @Override
     public AbstractHmac copy() throws CloneNotSupportedException {
-        AbstractHmac hmac = (AbstractHmac) super.clone();
-        hmac.digestSpi = (DigestSpi) this.digestSpi.copy();
+        AbstractHmac hmac = (AbstractHmac)super.clone();
+        hmac.digestSpi = (DigestSpi)this.digestSpi.copy();
         hmac.init = this.init;
         hmac.k_ipad = this.k_ipad.clone();
         hmac.k_opad = this.k_opad.clone();

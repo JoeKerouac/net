@@ -13,7 +13,9 @@ public interface HandshakeMsgReader {
 
     /**
      * 读取握手消息
-     * @param data 握手消息序列化数据
+     * 
+     * @param data
+     *            握手消息序列化数据
      * @return 握手消息
      */
     HandshakeProtocol read(byte[] data);

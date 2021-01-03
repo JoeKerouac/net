@@ -8,7 +8,8 @@ public class IHttpGet extends IHttpRequestBase {
     /**
      * 构建GET构建器
      * 
-     * @param url url
+     * @param url
+     *            url
      * @return GET构建器
      */
     public static Builder builder(String url) {

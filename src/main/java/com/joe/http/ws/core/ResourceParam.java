@@ -17,7 +17,7 @@ public class ResourceParam {
     /**
      * 参数类型
      */
-    private Type   type;
+    private Type type;
     /**
      * 参数名
      */
@@ -25,9 +25,9 @@ public class ResourceParam {
     /**
      * 参数在method声明的下标，从0开始
      */
-    private int    index;
+    private int index;
 
     public enum Type {
-                      PATH, FORM, QUERY, HEADER, CONTEXT, JSON
+        PATH, FORM, QUERY, HEADER, CONTEXT, JSON
     }
 }

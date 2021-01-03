@@ -34,52 +34,54 @@ public class ClientHello implements HandshakeProtocol {
     /**
      * 客户端随机数，32byte
      */
-    private final byte[]         clientRandom = new byte[32];
+    private final byte[] clientRandom = new byte[32];
 
     /**
      * sessionId，最大256
      */
-    private byte[]               sessionId    = new byte[0];
+    private byte[] sessionId = new byte[0];
 
     /**
      * 版本号
      */
-    private TlsVersion           tlsVersion;
+    private TlsVersion tlsVersion;
 
     /**
      * 加密套件
      */
     @Getter
-    private List<CipherSuite>    cipherSuites = Collections.emptyList();
+    private List<CipherSuite> cipherSuites = Collections.emptyList();
 
     /**
      * 扩展
      */
-    private List<HelloExtension> extensions   = Collections.emptyList();
+    private List<HelloExtension> extensions = Collections.emptyList();
 
     /**
      * 服务器名，可能为null
      */
-    private final String         serverName;
+    private final String serverName;
 
     /**
      * toString，性能考虑，存储起来不用每次计算
      */
-    private String               toString     = "exception or incomplete";
+    private String toString = "exception or incomplete";
 
     /**
      * 协议消息完整数据
      */
-    private byte[]               data;
+    private byte[] data;
 
     /**
      * 安全随机数
      */
-    private SecureRandom         secureRandom;
+    private SecureRandom secureRandom;
 
     /**
      * 构建一个client_hello
-     * @param serverName 服务器名，可以为空
+     * 
+     * @param serverName
+     *            服务器名，可以为空
      */
     public ClientHello(String serverName, SecureRandom secureRandom) {
         this.serverName = serverName;
@@ -93,7 +95,7 @@ public class ClientHello implements HandshakeProtocol {
         ServerNameExtension serverNameExtension = null;
         for (HelloExtension extension : extensions) {
             if (extension instanceof ServerNameExtension) {
-                serverNameExtension = (ServerNameExtension) extension;
+                serverNameExtension = (ServerNameExtension)extension;
                 break;
             }
         }
@@ -107,7 +109,9 @@ public class ClientHello implements HandshakeProtocol {
 
     /**
      * 获取指定extension
-     * @param type extension类型
+     * 
+     * @param type
+     *            extension类型
      * @return 对应的extension，如果没有则返回null
      */
     public HelloExtension getExtension(ExtensionType type) {
@@ -126,6 +130,7 @@ public class ClientHello implements HandshakeProtocol {
 
     /**
      * 获取客户端随机数
+     * 
      * @return 客户端随机数
      */
     public byte[] getClientRandom() {
@@ -146,7 +151,7 @@ public class ClientHello implements HandshakeProtocol {
         // 2byte版本号 + 32byte随机数 + 1byte的sessionId长度字段 + sessionId的实际长度 + 2byte加密
         // 套件的长度字段 + 加密套件实际长度 + 2byte压缩算法长度+算法信息（写死不使用压缩算法） + 2byte扩展长度字段 + 扩展实际长度
         return 2 + 32 + 1 + sessionId.length + 2 + cipherSuites.size() * 2 + 2 + 2
-               + extensions.stream().mapToInt(HelloExtension::size).sum();
+            + extensions.stream().mapToInt(HelloExtension::size).sum();
     }
 
     @Override
@@ -195,7 +200,8 @@ public class ClientHello implements HandshakeProtocol {
     /**
      * 从ByteBuffer中读取ClientHello，输入流的起始位置应该是Handshake的handshakeType字段而不是record的content type
      *
-     * @param buffer 数据
+     * @param buffer
+     *            数据
      */
     private void init(ByteBuffer buffer) {
         // 1byte类型信息
@@ -222,8 +228,8 @@ public class ClientHello implements HandshakeProtocol {
 
         // compression_methods，不允许压缩
         byte compressionMethod = buffer.get();
-        Assert.assertEquals((byte) 1, compressionMethod);
-        Assert.assertEquals((byte) 0, buffer.get());
+        Assert.assertEquals((byte)1, compressionMethod);
+        Assert.assertEquals((byte)0, buffer.get());
 
         this.extensions = ExtensionReader.read(buffer);
 
@@ -242,15 +248,15 @@ public class ClientHello implements HandshakeProtocol {
             long temp = System.currentTimeMillis() / 1000;
             int gmt_unix_time;
             if (temp < Integer.MAX_VALUE) {
-                gmt_unix_time = (int) temp;
+                gmt_unix_time = (int)temp;
             } else {
                 gmt_unix_time = Integer.MAX_VALUE;
             }
 
-            clientRandom[0] = (byte) (gmt_unix_time >> 24);
-            clientRandom[1] = (byte) (gmt_unix_time >> 16);
-            clientRandom[2] = (byte) (gmt_unix_time >> 8);
-            clientRandom[3] = (byte) gmt_unix_time;
+            clientRandom[0] = (byte)(gmt_unix_time >> 24);
+            clientRandom[1] = (byte)(gmt_unix_time >> 16);
+            clientRandom[2] = (byte)(gmt_unix_time >> 8);
+            clientRandom[3] = (byte)gmt_unix_time;
         }
 
         this.tlsVersion = TlsVersion.TLS1_2;
@@ -261,11 +267,11 @@ public class ClientHello implements HandshakeProtocol {
         // 初始化扩展
         {
             // 判断加密套件是否包含ECC算法
-            boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst()
-                .map(CipherSuite::isEc).orElse(Boolean.FALSE);
+            boolean containEc = this.cipherSuites.stream().filter(CipherSuite::isEc).findFirst().map(CipherSuite::isEc)
+                .orElse(Boolean.FALSE);
             if (containEc) {
-                extensions.add(new EllipticCurvesExtension(NamedCurve.getAllSupportCurve().stream()
-                    .mapToInt(NamedCurve::getId).toArray()));
+                extensions.add(new EllipticCurvesExtension(
+                    NamedCurve.getAllSupportCurve().stream().mapToInt(NamedCurve::getId).toArray()));
                 extensions.add(EllipticPointFormatsExtension.DEFAULT);
             }
 
@@ -278,7 +284,7 @@ public class ClientHello implements HandshakeProtocol {
 
             // server name扩展，type暂时写死0
             if (!StringUtils.isEmpty(serverName)) {
-                extensions.add(new ServerNameExtension((byte) 0, serverName.getBytes()));
+                extensions.add(new ServerNameExtension((byte)0, serverName.getBytes()));
             }
 
             // 暂时不知道是做什么的
@@ -291,11 +297,11 @@ public class ClientHello implements HandshakeProtocol {
     }
 
     public void calcToString() {
-        this.toString = String
-            .format("Handshake Type : %s\n" + "Len : %d\n" + "version: %s\n" + "random : %s\n"
-                    + "sessionId : %s\n" + "cipherSuites: %s\n" + "extension : %s",
-                type(), len(), tlsVersion, new String(Hex.encodeHex(clientRandom, false)),
-                Arrays.toString(sessionId), cipherSuites, arrayToString(extensions));
+        this.toString = String.format(
+            "Handshake Type : %s\n" + "Len : %d\n" + "version: %s\n" + "random : %s\n" + "sessionId : %s\n"
+                + "cipherSuites: %s\n" + "extension : %s",
+            type(), len(), tlsVersion, new String(Hex.encodeHex(clientRandom, false)), Arrays.toString(sessionId),
+            cipherSuites, arrayToString(extensions));
     }
 
     private String arrayToString(List<?> list) {

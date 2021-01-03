@@ -16,7 +16,7 @@ public class HandshakeHash {
     /**
      * 实际摘要生成器
      */
-    private DigestSpi             digest;
+    private DigestSpi digest;
 
     /**
      * 缓冲区，在设置hash算法前数据先缓冲在这儿
@@ -25,9 +25,13 @@ public class HandshakeHash {
 
     /**
      * 更新数据到摘要中
-     * @param data 数据
-     * @param offset 起始位置
-     * @param len 长度
+     * 
+     * @param data
+     *            数据
+     * @param offset
+     *            起始位置
+     * @param len
+     *            长度
      */
     public void update(byte[] data, int offset, int len) {
         if (digest == null) {
@@ -39,7 +43,9 @@ public class HandshakeHash {
 
     /**
      * 设置hash算法
-     * @param alg hash算法
+     * 
+     * @param alg
+     *            hash算法
      */
     public void setFinishedAlg(String alg) {
         if (digest != null) {
@@ -52,6 +58,7 @@ public class HandshakeHash {
 
     /**
      * 获取当前摘要
+     * 
      * @return 当前摘要
      */
     public byte[] getFinishedHash() {

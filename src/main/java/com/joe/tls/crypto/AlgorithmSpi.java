@@ -21,12 +21,12 @@ public interface AlgorithmSpi<T extends AlgorithmSpi> extends Cloneable {
     /**
      * Hmac算法类型
      */
-    int HMAC   = 2;
+    int HMAC = 2;
 
     /**
      * Phash算法类型
      */
-    int PHASH  = 3;
+    int PHASH = 3;
 
     /**
      * 算法名
@@ -46,7 +46,8 @@ public interface AlgorithmSpi<T extends AlgorithmSpi> extends Cloneable {
      * 克隆，默认不支持，请自行实现
      * 
      * @return 克隆结果
-     * @throws CloneNotSupportedException 异常
+     * @throws CloneNotSupportedException
+     *             异常
      */
     default T copy() throws CloneNotSupportedException {
         throw new CloneNotSupportedException("不支持copy");

@@ -27,39 +27,39 @@ import lombok.ToString;
 public abstract class IHttpRequestBase {
     public static final String CONTENT_TYPE_JSON = "application/json";
     public static final String CONTENT_TYPE_FORM = "application/x-www-form-urlencoded";
-    public static final String CHARSET           = "UTF8";
+    public static final String CHARSET = "UTF8";
     /**
      * 发起请求的客户端
      */
-    IHttpClient                client;
+    IHttpClient client;
     /**
-     *  Http配置
+     * Http配置
      */
-    IHttpConfig                httpConfig;
+    IHttpConfig httpConfig;
     /**
      * contentType，默认json
      */
-    String                     contentType;
+    String contentType;
     /**
      * 请求URL
      */
-    String                     url;
+    String url;
     /**
      * 请求头
      */
-    Map<String, String>        headers;
+    Map<String, String> headers;
     /**
      * URL参数
      */
-    Map<String, String>        queryParams;
+    Map<String, String> queryParams;
     /**
      * 请求
      */
-    String                     charset;
+    String charset;
     /**
      * 请求body，如果请求方法是get的话自动忽略该字段
      */
-    String                     entity;
+    String entity;
 
     IHttpRequestBase(String url) {
         Assert.notNull(url, "url不能为空");
@@ -79,8 +79,10 @@ public abstract class IHttpRequestBase {
     /**
      * 添加请求头
      *
-     * @param key   键
-     * @param value 值
+     * @param key
+     *            键
+     * @param value
+     *            值
      */
     protected void addHeader(String key, String value) {
         headers.put(key, value);
@@ -88,8 +90,11 @@ public abstract class IHttpRequestBase {
 
     /**
      * 添加path param
-     * @param key key（不包含{})
-     * @param value value
+     * 
+     * @param key
+     *            key（不包含{})
+     * @param value
+     *            value
      */
     protected void addPathParam(String key, String value) {
         this.url = url.replace("{" + key + "}", value);
@@ -98,8 +103,10 @@ public abstract class IHttpRequestBase {
     /**
      * 添加URL参数
      *
-     * @param key   参数键
-     * @param value 参数值
+     * @param key
+     *            参数键
+     * @param value
+     *            参数值
      */
     protected void addQueryParam(String key, String value) {
         if (key == null) {
@@ -111,8 +118,10 @@ public abstract class IHttpRequestBase {
     /**
      * 添加form数据，如果使用该方法，那么请求的content-type将自动设置为application/x-www-form-urlencoded
      *
-     * @param key   key
-     * @param value value
+     * @param key
+     *            key
+     * @param value
+     *            value
      * @return 请求本身
      */
     public IHttpRequestBase addFormParam(String key, String value) {
@@ -129,7 +138,8 @@ public abstract class IHttpRequestBase {
     /**
      * 解析URL，从URL中解析参数
      *
-     * @param url url
+     * @param url
+     *            url
      * @return 解析出来的参数列表
      */
     public static Map<String, String> parse(String url) {
@@ -153,8 +163,10 @@ public abstract class IHttpRequestBase {
 
     /**
      * 执行网络请求
+     * 
      * @return 请求结果
-     * @throws IOException 网络IO异常
+     * @throws IOException
+     *             网络IO异常
      */
     public IHttpResponse exec() throws IOException {
         return client.execute(this);
@@ -168,17 +180,17 @@ public abstract class IHttpRequestBase {
         /**
          * Http配置
          */
-        IHttpConfig         httpConfig;
+        IHttpConfig httpConfig;
 
         /**
          * contentType，默认json
          */
-        String              contentType;
+        String contentType;
 
         /**
          * 请求URL
          */
-        String              url;
+        String url;
 
         /**
          * 请求头
@@ -198,17 +210,17 @@ public abstract class IHttpRequestBase {
         /**
          * 请求
          */
-        String              charset;
+        String charset;
 
         /**
          * 请求body，如果请求方法是get的话自动忽略该字段
          */
-        String              entity;
+        String entity;
 
         /**
          * 请求client
          */
-        IHttpClient         client;
+        IHttpClient client;
 
         protected Builder(String url) {
             Assert.notNull(url, "url不能为null");
@@ -221,7 +233,8 @@ public abstract class IHttpRequestBase {
         /**
          * 设置请求配置
          *
-         * @param config 请求配置
+         * @param config
+         *            请求配置
          * @return builder
          */
         public Builder<T> config(IHttpConfig config) {
@@ -232,7 +245,8 @@ public abstract class IHttpRequestBase {
         /**
          * 设置content-type
          *
-         * @param contentType content-type
+         * @param contentType
+         *            content-type
          * @return builder
          */
         public Builder<T> contentType(String contentType) {
@@ -242,8 +256,11 @@ public abstract class IHttpRequestBase {
 
         /**
          * 添加path param
-         * @param key 要替换的key
-         * @param value 对应的value
+         * 
+         * @param key
+         *            要替换的key
+         * @param value
+         *            对应的value
          */
         public void pathParam(String key, String value) {
             this.url = url.replace("{" + key + "}", value);
@@ -252,8 +269,10 @@ public abstract class IHttpRequestBase {
         /**
          * 增加header
          *
-         * @param key   key
-         * @param value value
+         * @param key
+         *            key
+         * @param value
+         *            value
          * @return builder
          */
         public Builder<T> header(String key, String value) {
@@ -264,8 +283,10 @@ public abstract class IHttpRequestBase {
         /**
          * 增加query param
          *
-         * @param key   key
-         * @param value value
+         * @param key
+         *            key
+         * @param value
+         *            value
          * @return builder
          */
         public Builder<T> queryParam(String key, String value) {
@@ -276,8 +297,10 @@ public abstract class IHttpRequestBase {
         /**
          * 设置form param
          *
-         * @param key   key
-         * @param value value
+         * @param key
+         *            key
+         * @param value
+         *            value
          * @return builder
          */
         public Builder<T> formParam(String key, String value) {
@@ -289,7 +312,8 @@ public abstract class IHttpRequestBase {
         /**
          * 设置编码
          *
-         * @param charset 编码
+         * @param charset
+         *            编码
          * @return builder
          */
         public Builder<T> charset(String charset) {
@@ -301,7 +325,8 @@ public abstract class IHttpRequestBase {
         /**
          * 设置请求body
          *
-         * @param entity body
+         * @param entity
+         *            body
          * @return builder
          */
         public Builder<T> entity(String entity) {
@@ -324,14 +349,14 @@ public abstract class IHttpRequestBase {
         /**
          * 配置request
          *
-         * @param request request
+         * @param request
+         *            request
          * @return 配置好后的request
          */
         protected T configure(T request) {
             request.client = client == null ? IHttpClient.DEFAULT_CLIENT : client;
             request.httpConfig = httpConfig;
-            request.contentType = StringUtils.isEmpty(contentType) ? CONTENT_TYPE_JSON
-                : contentType;
+            request.contentType = StringUtils.isEmpty(contentType) ? CONTENT_TYPE_JSON : contentType;
             headers.forEach(request::addHeader);
             queryParams.forEach(request::addQueryParam);
 
@@ -344,8 +369,7 @@ public abstract class IHttpRequestBase {
                 formParam.forEach(request::addFormParam);
             }
 
-            request.charset = StringUtils.isEmpty(charset) ? Charset.defaultCharset().name()
-                : charset;
+            request.charset = StringUtils.isEmpty(charset) ? Charset.defaultCharset().name() : charset;
             return request;
         }
     }

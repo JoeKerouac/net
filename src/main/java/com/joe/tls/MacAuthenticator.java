@@ -9,7 +9,7 @@ import com.joe.tls.crypto.HmacSpi;
  */
 public class MacAuthenticator extends Authenticator {
 
-    private HmacSpi       hmacSpi;
+    private HmacSpi hmacSpi;
 
     private Authenticator authenticator;
 
@@ -29,12 +29,17 @@ public class MacAuthenticator extends Authenticator {
 
     /**
      * 计算认证信息
-     * @param type content type
-     * @param data 要写出的数据
-     * @param offset 数据起始位置
-     * @param len 要写出的数据长度
-     * @param isSimulated 是否是模拟计算，写出数据时不时模拟计算，读取数据时是模拟计算，区别就是如果是false，表示不是模拟计算，则会从令牌生
-     *                    成器中获取一个令牌，同时将当前的sequenceNumber+1
+     * 
+     * @param type
+     *            content type
+     * @param data
+     *            要写出的数据
+     * @param offset
+     *            数据起始位置
+     * @param len
+     *            要写出的数据长度
+     * @param isSimulated
+     *            是否是模拟计算，写出数据时不时模拟计算，读取数据时是模拟计算，区别就是如果是false，表示不是模拟计算，则会从令牌生 成器中获取一个令牌，同时将当前的sequenceNumber+1
      * @return 认证信息
      */
     public byte[] compute(byte type, byte[] data, int offset, int len, boolean isSimulated) {

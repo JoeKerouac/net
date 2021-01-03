@@ -14,7 +14,7 @@ import lombok.Getter;
  */
 public class ServerNameExtension implements HelloExtension {
 
-    private final byte   type;
+    private final byte type;
 
     @Getter
     private final byte[] serverName;
@@ -46,7 +46,7 @@ public class ServerNameExtension implements HelloExtension {
 
     @Override
     public String toString() {
-        return String.format("%s :\t[server name : %s]\t[server type : %d]",
-            getExtensionType().name, new String(serverName), type);
+        return String.format("%s :\t[server name : %s]\t[server type : %d]", getExtensionType().name,
+            new String(serverName), type);
     }
 }

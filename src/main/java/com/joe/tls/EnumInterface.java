@@ -12,24 +12,28 @@ public interface EnumInterface {
 
     /**
      * 枚举code，必须唯一
+     * 
      * @return 枚举code
      */
     int getCode();
 
     /**
      * 枚举英文名
+     * 
      * @return 英文名
      */
     String englishName();
 
     /**
      * 枚举中文名
+     * 
      * @return 中文名
      */
     String chinesName();
 
     /**
      * 枚举说明
+     * 
      * @return 枚举说明
      */
     default String description() {
@@ -38,9 +42,13 @@ public interface EnumInterface {
 
     /**
      * 根据code获取指定枚举
-     * @param code 枚举code
-     * @param clazz 枚举类型
-     * @param <T> 枚举实际类型
+     * 
+     * @param code
+     *            枚举code
+     * @param clazz
+     *            枚举类型
+     * @param <T>
+     *            枚举实际类型
      * @return 对应的枚举
      */
     static <T extends EnumInterface> T getByCode(int code, Class<T> clazz) {

@@ -8,7 +8,8 @@ public class IHttpPost extends IHttpRequestBase {
     /**
      * 构建POST构建器
      *
-     * @param url 请求url
+     * @param url
+     *            请求url
      * @return POST构建器
      */
     public static Builder builder(String url) {

@@ -23,36 +23,47 @@ public abstract class AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
 
     /**
      * 根据AlgorithmParameterSpec获取fieldSize
-     * @param ecParamter AlgorithmParameterSpec
+     * 
+     * @param ecParamter
+     *            AlgorithmParameterSpec
      * @return fieldSize
      */
     protected abstract int fieldSize(AlgorithmParameterSpec ecParamter);
 
     /**
      * 获取ECParameterSpec
-     * @param curveId curveId
+     * 
+     * @param curveId
+     *            curveId
      * @return ECParameterSpec
      */
     protected abstract AlgorithmParameterSpec getECParameterSpec(int curveId);
 
     /**
      * 算法提供厂商
+     * 
      * @return 算法提供厂商
      */
     protected abstract Provider provider();
 
     /**
      * 将公钥数据转换为KeySpec
-     * @param curveId curveId
-     * @param publicKeyData publicKeyData
+     * 
+     * @param curveId
+     *            curveId
+     * @param publicKeyData
+     *            publicKeyData
      * @return KeySpec
      */
     protected abstract KeySpec convertToPublicKeySpec(int curveId, byte[] publicKeyData);
 
     /**
      * 将私钥数据转换为KeySpec
-     * @param curveId curveId
-     * @param privateKeyData privateKeyData
+     * 
+     * @param curveId
+     *            curveId
+     * @param privateKeyData
+     *            privateKeyData
      * @return KeySpec
      */
     protected abstract KeySpec convertToPrivateKeySpec(int curveId, byte[] privateKeyData);
@@ -61,10 +72,8 @@ public abstract class AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
     public byte[] keyExchange(byte[] publicKeyData, byte[] privateKeyData, int curveId) {
         try {
             KeyFactory factory = KeyFactory.getInstance("EC", provider());
-            PublicKey publicKey = factory
-                .generatePublic(convertToPublicKeySpec(curveId, publicKeyData));
-            PrivateKey privateKey = factory
-                .generatePrivate(convertToPrivateKeySpec(curveId, privateKeyData));
+            PublicKey publicKey = factory.generatePublic(convertToPublicKeySpec(curveId, publicKeyData));
+            PrivateKey privateKey = factory.generatePrivate(convertToPrivateKeySpec(curveId, privateKeyData));
             KeyAgreement keyAgreement = KeyAgreement.getInstance("ECDH", provider());
             keyAgreement.init(privateKey);
             keyAgreement.doPhase(publicKey, true);
@@ -83,8 +92,8 @@ public abstract class AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
             factory.initialize(parameters);
             KeyPair keyPair = factory.genKeyPair();
             ECDHKeyPair ecdhKeyPair = new ECDHKeyPair();
-            ECPrivateKey ecPrivateKey = (ECPrivateKey) keyPair.getPrivate();
-            ECPublicKey ecPublicKey = (ECPublicKey) keyPair.getPublic();
+            ECPrivateKey ecPrivateKey = (ECPrivateKey)keyPair.getPrivate();
+            ECPublicKey ecPublicKey = (ECPublicKey)keyPair.getPublic();
 
             ecdhKeyPair.setPublicKey(encodePoint(ecPublicKey.getW(), fieldSize(parameters)));
             ecdhKeyPair.setPrivateKey(ecPrivateKey.getS().toByteArray());
@@ -96,8 +105,11 @@ public abstract class AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
 
     /**
      * 对point进行编码
-     * @param point point
-     * @param fieldSize fieldSize
+     * 
+     * @param point
+     *            point
+     * @param fieldSize
+     *            fieldSize
      * @return 编码结果
      */
     private byte[] encodePoint(ECPoint point, int fieldSize) {
@@ -117,7 +129,9 @@ public abstract class AbstractECDHKeyExchangeSpi implements ECDHKeyExchangeSpi {
 
     /**
      * 将指定数组中开头位置的0去除
-     * @param array 数组
+     * 
+     * @param array
+     *            数组
      * @return 去除开头0后的数组
      */
     private byte[] trimZeroes(byte[] array) {

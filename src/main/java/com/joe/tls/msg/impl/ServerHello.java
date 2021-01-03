@@ -38,40 +38,40 @@ import lombok.Getter;
 public class ServerHello implements HandshakeProtocol {
 
     @Getter
-    private TlsVersion                               version;
+    private TlsVersion version;
 
-    private final byte[]                             serverRandom;
+    private final byte[] serverRandom;
 
-    private final byte[]                             sessionId;
+    private final byte[] sessionId;
 
     @Getter
-    private final CipherSuite                        cipherSuite;
+    private final CipherSuite cipherSuite;
 
     private final Map<ExtensionType, HelloExtension> extensions;
 
-    public ServerHello(TlsVersion version, byte[] serverRandom, byte[] sessionId,
-                       CipherSuite cipherSuite, List<HelloExtension> extensions) {
+    public ServerHello(TlsVersion version, byte[] serverRandom, byte[] sessionId, CipherSuite cipherSuite,
+        List<HelloExtension> extensions) {
         this.version = version;
         this.serverRandom = serverRandom;
         this.sessionId = sessionId == null ? new byte[0] : sessionId;
         this.cipherSuite = cipherSuite;
         this.extensions = new HashMap<>();
         extensions = extensions == null ? Collections.emptyList() : extensions;
-        extensions
-            .forEach(extension -> this.extensions.put(extension.getExtensionType(), extension));
+        extensions.forEach(extension -> this.extensions.put(extension.getExtensionType(), extension));
     }
 
     /**
      * 从ByteBuffer中构造serverHello，buffer的起始位置应该是server_hello_protocol协议的起始位置
-     * @param buffer buffer
+     * 
+     * @param buffer
+     *            buffer
      */
     public ServerHello(ByteBuffer buffer) {
         this.extensions = new HashMap<>();
         // 跳过类型和长度，刚好是4byte
         ByteBufferUtil.mergeReadInt32(buffer);
         // 服务端实际选择的版本号
-        this.version = TlsVersion.valueOf(ByteBufferUtil.mergeReadInt8(buffer),
-            ByteBufferUtil.mergeReadInt8(buffer));
+        this.version = TlsVersion.valueOf(ByteBufferUtil.mergeReadInt8(buffer), ByteBufferUtil.mergeReadInt8(buffer));
         this.serverRandom = ByteBufferUtil.get(buffer, 32);
         this.sessionId = ByteBufferUtil.getInt8(buffer);
 
@@ -86,13 +86,13 @@ public class ServerHello implements HandshakeProtocol {
         // 如果还有数据，说明还有扩展数据，读取扩展数据
         if (buffer.limit() != buffer.position()) {
             List<HelloExtension> extensionList = ExtensionReader.read(buffer);
-            extensionList
-                .forEach(extension -> extensions.put(extension.getExtensionType(), extension));
+            extensionList.forEach(extension -> extensions.put(extension.getExtensionType(), extension));
         }
     }
 
     /**
      * 获取服务端随机数
+     * 
      * @return 服务端随机数
      */
     public byte[] getServerRandom() {
@@ -101,7 +101,9 @@ public class ServerHello implements HandshakeProtocol {
 
     /**
      * 获取指定extension
-     * @param type extension类型
+     * 
+     * @param type
+     *            extension类型
      * @return 对应的extension，如果没有则返回null
      */
     public HelloExtension getExtension(ExtensionType type) {
@@ -121,7 +123,7 @@ public class ServerHello implements HandshakeProtocol {
         // 2byte version + random + 1byte sessionId len + sessionId + 2byte cipherSuite + 1byte compressionMethod
         // + 2byte extension len + extension
         return 2 + serverRandom.length + 1 + sessionId.length + 2 + 1 + 2
-               + extensions.values().stream().mapToInt(HelloExtension::size).sum();
+            + extensions.values().stream().mapToInt(HelloExtension::size).sum();
     }
 
     @Override

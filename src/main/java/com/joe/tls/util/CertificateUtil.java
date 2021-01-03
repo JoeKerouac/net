@@ -13,10 +13,9 @@ import java.security.cert.CertificateFactory;
  */
 public class CertificateUtil {
 
-    public static Certificate[] readCert(X509ExtendedKeyManager keyManager,String algorithm,InputStream inputStream) {
+    public static Certificate[] readCert(X509ExtendedKeyManager keyManager, String algorithm, InputStream inputStream) {
         try {
             String alias = keyManager.chooseServerAlias(algorithm, null, null);
-
 
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             Certificate certificate = cf.generateCertificate(inputStream);

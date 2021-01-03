@@ -6,10 +6,10 @@ package com.joe.http.config;
  */
 public enum HeaderEnum {
 
-                        /**
-                         * Content_Type
-                         */
-                        CONTENT_TYPE("Content_Type");
+    /**
+     * Content_Type
+     */
+    CONTENT_TYPE("Content_Type");
 
     private String contentType;
 
@@ -19,6 +19,7 @@ public enum HeaderEnum {
 
     /**
      * 获取header
+     * 
      * @return header
      */
     public String getHeader() {

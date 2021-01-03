@@ -16,7 +16,8 @@ public interface HelloExtension {
     /**
      * 写出扩展到指定ByteBuffer
      *
-     * @param buffer ByteBuffer
+     * @param buffer
+     *            ByteBuffer
      */
     void write(ByteBuffer buffer);
 

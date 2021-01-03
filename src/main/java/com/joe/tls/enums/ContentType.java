@@ -8,22 +8,20 @@ import com.joe.tls.EnumInterface;
  */
 public enum ContentType implements EnumInterface {
 
-                                                  CHANGE_CIPHER_SPEC(0x14, "CHANGE_CIPHER_SPEC",
-                                                                     "变更到加密通道消息"),
+    CHANGE_CIPHER_SPEC(0x14, "CHANGE_CIPHER_SPEC", "变更到加密通道消息"),
 
-                                                  ALTER(0x15, "ALTER", "警告信息"),
+    ALTER(0x15, "ALTER", "警告信息"),
 
-                                                  HANDSHAKE(0x16, "HANDSHAKE", "握手类型"),
+    HANDSHAKE(0x16, "HANDSHAKE", "握手类型"),
 
-                                                  APPLICATION_DATA(0x17, "APPLICATION_DATA",
-                                                                   "应用数据"),
+    APPLICATION_DATA(0x17, "APPLICATION_DATA", "应用数据"),
 
     ;
 
     /**
      * 枚举code
      */
-    private int    code;
+    private int code;
 
     /**
      * 枚举英文名

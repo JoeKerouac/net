@@ -8,6 +8,7 @@ import lombok.Getter;
 
 /**
  * 应用层消息
+ * 
  * @author JoeKerouac
  * @version 1.0
  * @date 2020-11-12 14:22

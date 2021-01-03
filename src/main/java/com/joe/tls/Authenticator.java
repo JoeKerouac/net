@@ -16,14 +16,15 @@ public class Authenticator {
     private final byte[] block;
 
     public Authenticator(TlsVersion version) {
-        //sequence number + record type + protocol version + record length
+        // sequence number + record type + protocol version + record length
         block = new byte[8 + 1 + 2 + 2];
-        block[9] = (byte) version.getMajorVersion();
-        block[10] = (byte) version.getMinorVersion();
+        block[9] = (byte)version.getMajorVersion();
+        block[10] = (byte)version.getMinorVersion();
     }
 
     /**
      * 获取sequence number数据，总共8byte
+     * 
      * @return sequence number数据，数组长度8
      */
     public final byte[] sequenceNumber() {
@@ -32,8 +33,11 @@ public class Authenticator {
 
     /**
      * 获取一个认证数据，在数据做mac/认证（AEAD模式）的时候需要用
-     * @param type content type
-     * @param length 要写出record数据的长度，加密前的的，不是加密后的，同时不包括record的header部分
+     * 
+     * @param type
+     *            content type
+     * @param length
+     *            要写出record数据的长度，加密前的的，不是加密后的，同时不包括record的header部分
      * @return
      */
     public final byte[] acquireAuthenticationBytes(byte type, int length) {
@@ -44,8 +48,8 @@ public class Authenticator {
         if (block.length != 0) {
             copy[8] = type;
             // 最后两位设置为长度字段
-            copy[copy.length - 2] = (byte) (length >> 8);
-            copy[copy.length - 1] = (byte) (length);
+            copy[copy.length - 2] = (byte)(length >> 8);
+            copy[copy.length - 1] = (byte)(length);
 
             int k = 7;
             // 这里就是将sequence number + 1，等于0的情况是需要进位了，所以需要再执行

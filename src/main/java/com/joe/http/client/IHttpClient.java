@@ -68,7 +68,7 @@ import lombok.Builder;
  * @author joe
  */
 public class IHttpClient implements AutoCloseable {
-    private static Logger                 log = LoggerFactory.getLogger(IHttpClient.class);
+    private static Logger log = LoggerFactory.getLogger(IHttpClient.class);
     /**
      * 不自动重定向
      */
@@ -76,19 +76,19 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 默认客户端
      */
-    public static final IHttpClient       DEFAULT_CLIENT;
+    public static final IHttpClient DEFAULT_CLIENT;
 
     static {
         NOREDIRECT = new RedirectStrategy() {
             @Override
-            public boolean isRedirected(HttpRequest request, HttpResponse response,
-                                        HttpContext context) throws ProtocolException {
+            public boolean isRedirected(HttpRequest request, HttpResponse response, HttpContext context)
+                throws ProtocolException {
                 return false;
             }
 
             @Override
-            public HttpUriRequest getRedirect(HttpRequest request, HttpResponse response,
-                                              HttpContext context) throws ProtocolException {
+            public HttpUriRequest getRedirect(HttpRequest request, HttpResponse response, HttpContext context)
+                throws ProtocolException {
                 return null;
             }
         };
@@ -98,7 +98,7 @@ public class IHttpClient implements AutoCloseable {
     /**
      * client ID，用来唯一区分HttpClient
      */
-    private String              id;
+    private String id;
     /**
      * HttpClient
      */
@@ -106,23 +106,26 @@ public class IHttpClient implements AutoCloseable {
     /**
      * cookie store ，存储cookie
      */
-    private CookieStore         cookieStore;
+    private CookieStore cookieStore;
     /**
      * 配置
      */
-    private IHttpClientConfig   config;
+    private IHttpClientConfig config;
 
     /**
      * 指定client配置和cookieStore
      *
-     * @param config      client配置
-     * @param cookieStore cookieStore
-     * @param sslcontext  sslcontext
-     * @param noRedirect  如果为true表示客户端将不会自动重定向
+     * @param config
+     *            client配置
+     * @param cookieStore
+     *            cookieStore
+     * @param sslcontext
+     *            sslcontext
+     * @param noRedirect
+     *            如果为true表示客户端将不会自动重定向
      */
     @Builder
-    private IHttpClient(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext,
-                        boolean noRedirect) {
+    private IHttpClient(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext, boolean noRedirect) {
         this.config = config == null ? new IHttpClientConfig() : config;
         cookieStore = cookieStore == null ? new BasicCookieStore() : cookieStore;
         sslcontext = sslcontext == null ? SSLContexts.createSystemDefault() : sslcontext;
@@ -132,8 +135,10 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 执行HTTP请求
      *
-     * @param request 请求体
-     * @throws IOException IO异常
+     * @param request
+     *            请求体
+     * @throws IOException
+     *             IO异常
      */
     public IHttpResponse execute(IHttpRequestBase request) throws IOException {
         if (request == null) {
@@ -143,12 +148,11 @@ public class IHttpClient implements AutoCloseable {
         HttpRequestBase requestBase;
         // 构建请求
         if (request instanceof IHttpGet) {
-            requestBase = build((IHttpGet) request);
+            requestBase = build((IHttpGet)request);
         } else if (request instanceof IHttpPost) {
-            requestBase = build((IHttpPost) request);
+            requestBase = build((IHttpPost)request);
         } else {
-            throw new NetException(
-                StringFormater.simpleFormat("不支持的请求类型：[{0}]", request.getClass()));
+            throw new NetException(StringFormater.simpleFormat("不支持的请求类型：[{0}]", request.getClass()));
         }
         // 配置请求
         configure(requestBase, request);
@@ -175,7 +179,8 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 获取指定cookie
      *
-     * @param name cookie名
+     * @param name
+     *            cookie名
      * @return cookie存在时返回cookie，不存在时返回null
      */
     public Cookie getCookie(String name) {
@@ -191,7 +196,8 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 添加cookie
      *
-     * @param cookie 要添加的cookie
+     * @param cookie
+     *            要添加的cookie
      */
     public void addCookie(Cookie cookie) {
         cookieStore.addCookie(cookie);
@@ -213,15 +219,16 @@ public class IHttpClient implements AutoCloseable {
 
     @Override
     protected void finalize() throws Throwable {
-        //如果用户没有正常关闭那么在finalize方法中关闭，由于该方法调用时机的不确定性，所以用户应该自己关闭
-        //而不是依赖该方法关闭资源。
+        // 如果用户没有正常关闭那么在finalize方法中关闭，由于该方法调用时机的不确定性，所以用户应该自己关闭
+        // 而不是依赖该方法关闭资源。
         close();
     }
 
     /**
      * 执行GET请求
      *
-     * @param request 请求体
+     * @param request
+     *            请求体
      */
     private HttpRequestBase build(IHttpGet request) {
         HttpGet get = new HttpGet(buildUrl(request));
@@ -233,7 +240,8 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 从请求中构建URL（因为请求可能包含query参数）
      *
-     * @param request 请求
+     * @param request
+     *            请求
      * @return 构建完成的URL
      */
     private String buildUrl(IHttpRequestBase request) {
@@ -250,7 +258,8 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 执行POST请求
      *
-     * @param request 请求体
+     * @param request
+     *            请求体
      */
     private HttpRequestBase build(IHttpPost request) {
         HttpPost post = new HttpPost(buildUrl(request));
@@ -266,21 +275,21 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 配置HTTP请求（根据iRequest配置request）
      *
-     * @param request  要配置的request
-     * @param iRequest 配置来源
+     * @param request
+     *            要配置的request
+     * @param iRequest
+     *            配置来源
      */
     private void configure(HttpRequestBase request, IHttpRequestBase iRequest) {
         // 设置
-        HttpBaseConfig config = iRequest.getHttpConfig() == null ? this.config
-            : iRequest.getHttpConfig();
+        HttpBaseConfig config = iRequest.getHttpConfig() == null ? this.config : iRequest.getHttpConfig();
 
-        //请求配置
+        // 请求配置
         request.setConfig(buildRequestConfig(config.getSocketTimeout(), config.getConnectTimeout(),
             config.getConnectionRequestTimeout()));
 
-        log.debug("请求socketTimeout为：{}；connectTimeout为：{}；connectionRequestTimeout为：{}",
-            config.getSocketTimeout(), config.getConnectTimeout(),
-            config.getConnectionRequestTimeout());
+        log.debug("请求socketTimeout为：{}；connectTimeout为：{}；connectionRequestTimeout为：{}", config.getSocketTimeout(),
+            config.getConnectTimeout(), config.getConnectionRequestTimeout());
         // 设置请求头
         Map<String, String> headers = iRequest.getHeaders();
         for (Map.Entry<String, String> entity : headers.entrySet()) {
@@ -297,19 +306,20 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 构建HttpClient请求配置
      *
-     * @param socketTimeout            传输超时（单位：毫秒）
-     * @param connectTimeout           连接超时（单位：毫秒）
-     * @param connectionRequestTimeout 请求超时（单位：毫秒）
+     * @param socketTimeout
+     *            传输超时（单位：毫秒）
+     * @param connectTimeout
+     *            连接超时（单位：毫秒）
+     * @param connectionRequestTimeout
+     *            请求超时（单位：毫秒）
      * @return
      */
-    private RequestConfig buildRequestConfig(int socketTimeout, int connectTimeout,
-                                             int connectionRequestTimeout) {
+    private RequestConfig buildRequestConfig(int socketTimeout, int connectTimeout, int connectionRequestTimeout) {
         log.debug("构建请求配置");
-        log.debug("请求socket超时时间为：" + socketTimeout + "ms；connect超时时间为：" + connectTimeout
-                  + "ms；connectionRequest超时时间为：" + connectionRequestTimeout + "ms");
+        log.debug("请求socket超时时间为：" + socketTimeout + "ms；connect超时时间为：" + connectTimeout + "ms；connectionRequest超时时间为："
+            + connectionRequestTimeout + "ms");
         RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout).setConnectionRequestTimeout(connectionRequestTimeout)
-            .build();
+            .setConnectTimeout(connectTimeout).setConnectionRequestTimeout(connectionRequestTimeout).build();
         log.debug("请求配置构建成功");
         return requestConfig;
     }
@@ -317,10 +327,10 @@ public class IHttpClient implements AutoCloseable {
     /**
      * 初始化httpClient和CookieStore
      *
-     * @param config client配置信息
+     * @param config
+     *            client配置信息
      */
-    private void init(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext,
-                      boolean noRedirect) {
+    private void init(IHttpClientConfig config, CookieStore cookieStore, SSLContext sslcontext, boolean noRedirect) {
         log.debug("正在初始化HttpClient");
         CloseableHttpClient httpclient;
         // 自定义解析，选择默认解析
@@ -328,14 +338,13 @@ public class IHttpClient implements AutoCloseable {
         HttpMessageWriterFactory<HttpRequest> requestWriterFactory = new DefaultHttpRequestWriterFactory();
 
         // 利用ParserFactory创建连接工厂
-        HttpConnectionFactory<HttpRoute, ManagedHttpClientConnection> connFactory = new ManagedHttpClientConnectionFactory(
-            requestWriterFactory, responseParserFactory);
+        HttpConnectionFactory<HttpRoute, ManagedHttpClientConnection> connFactory =
+            new ManagedHttpClientConnectionFactory(requestWriterFactory, responseParserFactory);
 
         // 注册协议
-        Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder
-            .<ConnectionSocketFactory> create()
-            .register("http", PlainConnectionSocketFactory.INSTANCE)
-            .register("https", new SSLConnectionSocketFactory(sslcontext)).build();
+        Registry<ConnectionSocketFactory> socketFactoryRegistry =
+            RegistryBuilder.<ConnectionSocketFactory>create().register("http", PlainConnectionSocketFactory.INSTANCE)
+                .register("https", new SSLConnectionSocketFactory(sslcontext)).build();
 
         // 自定义DNS
         DnsResolver dnsResolver = new SystemDefaultDnsResolver() {
@@ -343,8 +352,7 @@ public class IHttpClient implements AutoCloseable {
             @Override
             public InetAddress[] resolve(final String host) throws UnknownHostException {
                 if ("localhost".equalsIgnoreCase(host)) {
-                    return new InetAddress[] { InetAddress
-                        .getByAddress(new byte[] { 127, 0, 0, 1 }) };
+                    return new InetAddress[] {InetAddress.getByAddress(new byte[] {127, 0, 0, 1})};
                 } else {
                     return super.resolve(host);
                 }
@@ -353,14 +361,14 @@ public class IHttpClient implements AutoCloseable {
         };
 
         // 连接池管理
-        PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(
-            socketFactoryRegistry, connFactory, dnsResolver);
+        PoolingHttpClientConnectionManager connManager =
+            new PoolingHttpClientConnectionManager(socketFactoryRegistry, connFactory, dnsResolver);
 
         int sndBufSize = config.getSndBufSize();
         int rcvBufSize = config.getRcvBufSize();
         // socket配置，不延迟发送
-        SocketConfig socketConfig = SocketConfig.custom().setTcpNoDelay(true)
-            .setSndBufSize(sndBufSize).setSoKeepAlive(true).setRcvBufSize(rcvBufSize).build();
+        SocketConfig socketConfig = SocketConfig.custom().setTcpNoDelay(true).setSndBufSize(sndBufSize)
+            .setSoKeepAlive(true).setRcvBufSize(rcvBufSize).build();
         log.debug("soket默认设置：sendBufferSize:{};receiveBufferSize:{}", sndBufSize, rcvBufSize);
         // 将socket配置设置为连接池默认配置
         connManager.setDefaultSocketConfig(socketConfig);
@@ -368,14 +376,13 @@ public class IHttpClient implements AutoCloseable {
         connManager.setValidateAfterInactivity(1000);
 
         // 消息容器，初始化消息容器以及消息容器的配置，设置最多200个请求头，请求行长度最大为2000
-        MessageConstraints messageConstraints = MessageConstraints.custom().setMaxHeaderCount(200)
-            .setMaxLineLength(2000).build();
+        MessageConstraints messageConstraints =
+            MessageConstraints.custom().setMaxHeaderCount(200).setMaxLineLength(2000).build();
 
         Charset charset = config.getCharset();
 
         // Create connection configuration
-        ConnectionConfig connectionConfig = ConnectionConfig.custom()
-            .setMalformedInputAction(CodingErrorAction.IGNORE)
+        ConnectionConfig connectionConfig = ConnectionConfig.custom().setMalformedInputAction(CodingErrorAction.IGNORE)
             .setUnmappableInputAction(CodingErrorAction.IGNORE).setCharset(charset)
             .setMessageConstraints(messageConstraints).build();
         log.debug("默认连接编码配置为：{}", charset);
@@ -388,10 +395,10 @@ public class IHttpClient implements AutoCloseable {
         connManager.setDefaultMaxPerRoute(config.getDefaultMaxPerRoute());
 
         // Create global request configuration
-        RequestConfig defaultRequestConfig = RequestConfig.custom()
-            .setCookieSpec(CookieSpecs.DEFAULT).setExpectContinueEnabled(true)
-            .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
-            .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
+        RequestConfig defaultRequestConfig =
+            RequestConfig.custom().setCookieSpec(CookieSpecs.DEFAULT).setExpectContinueEnabled(true)
+                .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
+                .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
 
         // 根据配置构建httpClient
         HttpClientBuilder builder = HttpClients.custom();
@@ -406,8 +413,7 @@ public class IHttpClient implements AutoCloseable {
         }
 
         httpclient = builder.setConnectionManager(connManager).setDefaultCookieStore(cookieStore)
-            .setDefaultRequestConfig(defaultRequestConfig).setUserAgent(config.getUserAgent())
-            .build();
+            .setDefaultRequestConfig(defaultRequestConfig).setUserAgent(config.getUserAgent()).build();
         log.debug("用户代理为：{}", config.getUserAgent());
         this.httpClient = httpclient;
         this.cookieStore = cookieStore;

@@ -24,27 +24,27 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
     /**
      * 资源实例class
      */
-    private final Class<?>  resourceClass;
+    private final Class<?> resourceClass;
 
     /**
      * 资源method
      */
-    private final Method    method;
+    private final Method method;
 
     /**
      * 资源方法参数
      */
-    private final Object[]  args;
+    private final Object[] args;
 
     /**
      * 资源前缀
      */
-    private String          pathPrefix;
+    private String pathPrefix;
 
     /**
      * 资源后缀
      */
-    private String          pathLast;
+    private String pathLast;
 
     /**
      * 资源参数
@@ -54,22 +54,22 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
     /**
      * 资源方法
      */
-    private ResourceMethod  resourceMethod;
+    private ResourceMethod resourceMethod;
 
     /**
      * 请求contentType
      */
-    private String[]        requestContentTypes;
+    private String[] requestContentTypes;
 
     /**
      * 响应contentType
      */
-    private String[]        responseContentTypes;
+    private String[] responseContentTypes;
 
     /**
      * 是否是一个资源
      */
-    private boolean         isResource;
+    private boolean isResource;
 
     JerseyResourceAnalyze(Class<?> resourceClass, Method method, Object[] args) {
         Assert.notNull(resourceClass, "resourceClass must not be null");
@@ -87,7 +87,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
 
     private void init() {
         {
-            //解析路径
+            // 解析路径
             Path prePath = resourceClass.getDeclaredAnnotation(Path.class);
             if (prePath == null) {
                 isResource = false;
@@ -108,7 +108,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
         }
 
         {
-            //解析请求方法
+            // 解析请求方法
             if (method.getAnnotation(POST.class) != null) {
                 resourceMethod = ResourceMethod.POST;
             } else if (method.getAnnotation(GET.class) != null) {
@@ -133,55 +133,55 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
         }
 
         {
-            //解析参数
+            // 解析参数
             Parameter[] parameters = method.getParameters();
             int len = parameters.length;
             if (len > 0) {
                 params = new ResourceParam[len];
 
                 for (int i = 0; i < len; i++) {
-                    //参数值
+                    // 参数值
                     Object value = args[i];
                     Parameter parameter = parameters[i];
 
-                    //资源参数
+                    // 资源参数
                     ResourceParam param = new ResourceParam();
                     param.setParam(value);
                     param.setIndex(i);
                     params[i] = param;
 
-                    //注解
+                    // 注解
                     Annotation[] annotations = parameter.getAnnotations();
 
-                    //解析注解
+                    // 解析注解
                     for (Annotation annotation : annotations) {
                         if (annotation instanceof QueryParam) {
-                            QueryParam queryParam = (QueryParam) annotation;
+                            QueryParam queryParam = (QueryParam)annotation;
                             log.debug("参数是QueryParam，参数名为：{}，参数值为：{}", queryParam.value(), value);
                             param.setType(ResourceParam.Type.QUERY);
                             param.setName(queryParam.value());
                             break;
                         } else if (annotation instanceof HeaderParam) {
-                            //解析headerparam
-                            HeaderParam headerParam = (HeaderParam) annotation;
+                            // 解析headerparam
+                            HeaderParam headerParam = (HeaderParam)annotation;
                             log.debug("参数是HeaderParam，参数名为：{}，参数值为：{}", headerParam.value(), value);
                             param.setType(ResourceParam.Type.HEADER);
                             param.setName(headerParam.value());
                             break;
                         } else if (annotation instanceof PathParam) {
-                            PathParam pathParam = (PathParam) annotation;
+                            PathParam pathParam = (PathParam)annotation;
                             log.debug("参数是PathParam，参数名为：{}，参数值为：{}", pathParam.value(), value);
                             param.setType(ResourceParam.Type.PATH);
                             param.setName(pathParam.value());
                             break;
                         } else if (annotation instanceof FormParam) {
-                            FormParam formParam = (FormParam) annotation;
+                            FormParam formParam = (FormParam)annotation;
                             log.debug("参数是FormParam，参数名为：{}，参数值为：{}", formParam.value(), value);
                             param.setType(ResourceParam.Type.FORM);
                             param.setName(formParam.value());
                             break;
                         } else if (annotation instanceof Context) {
-                            //当前是需要context的，跳过
+                            // 当前是需要context的，跳过
                             param.setType(ResourceParam.Type.CONTEXT);
                             break;
                         } else if (annotation instanceof BeanParam) {
@@ -189,7 +189,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
                         }
                     }
 
-                    //如果到这里仍然没有类型，那么设置为json
+                    // 如果到这里仍然没有类型，那么设置为json
                     if (param.getType() == null) {
                         param.setType(ResourceParam.Type.JSON);
                     }
@@ -201,6 +201,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
 
     /**
      * 是否是资源
+     * 
      * @return true表示是资源，false表示不是
      */
     @Override
@@ -210,6 +211,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
 
     /**
      * path前缀
+     * 
      * @return path前缀
      */
     @Override
@@ -219,6 +221,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
 
     /**
      * path结尾
+     * 
      * @return path结尾
      */
     @Override
@@ -228,6 +231,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
 
     /**
      * 获取参数列表
+     * 
      * @return 参数列表
      */
     @Override
@@ -237,6 +241,7 @@ public final class JerseyResourceAnalyze implements ResourceAnalyze {
 
     /**
      * 获取请求方法
+     * 
      * @return 请求方法
      */
     @Override

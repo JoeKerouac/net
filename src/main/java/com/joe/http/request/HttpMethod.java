@@ -2,11 +2,12 @@ package com.joe.http.request;
 
 /**
  * Http请求方法
+ * 
  * @author joe
  *
  */
 public enum HttpMethod {
-                        GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
+    GET("GET"), POST("POST"), PUT("PUT"), DELETE("DELETE");
 
     private String method;
 

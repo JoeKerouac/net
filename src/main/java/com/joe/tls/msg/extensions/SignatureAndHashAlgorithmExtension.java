@@ -45,7 +45,6 @@ public class SignatureAndHashAlgorithmExtension implements HelloExtension {
 
     @Override
     public String toString() {
-        return String.format("%s :\t[supports SignatureAndHashAlgorithm : %s]",
-            getExtensionType().name, supports);
+        return String.format("%s :\t[supports SignatureAndHashAlgorithm : %s]", getExtensionType().name, supports);
     }
 }

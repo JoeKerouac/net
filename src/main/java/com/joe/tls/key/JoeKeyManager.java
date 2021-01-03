@@ -21,11 +21,10 @@ public class JoeKeyManager implements X509KeyManager {
 
     private Map<String, X509Credentials> credentialsMap;
 
-    private Map<String, String[]>        serverAliasCache;
+    private Map<String, String[]> serverAliasCache;
 
-    public JoeKeyManager(KeyStore ks, char[] password) throws KeyStoreException,
-                                                       NoSuchAlgorithmException,
-                                                       UnrecoverableKeyException {
+    public JoeKeyManager(KeyStore ks, char[] password)
+        throws KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException {
         credentialsMap = new HashMap<>();
         serverAliasCache = new ConcurrentHashMap<>();
 
@@ -50,7 +49,7 @@ public class JoeKeyManager implements X509KeyManager {
                 continue;
             }
 
-            X509Credentials cred = new X509Credentials((PrivateKey) key, tryConvert(certs));
+            X509Credentials cred = new X509Credentials((PrivateKey)key, tryConvert(certs));
             credentialsMap.put(alias, cred);
         }
     }
@@ -141,14 +140,16 @@ public class JoeKeyManager implements X509KeyManager {
 
     /**
      * 尝试将Certificate转换为X509Certificate
-     * @param certificates Certificate
+     * 
+     * @param certificates
+     *            Certificate
      * @return X509Certificate
      */
     private X509Certificate[] tryConvert(Certificate[] certificates) {
         X509Certificate[] certs = new X509Certificate[certificates.length];
         for (int i = 0; i < certificates.length; i++) {
             if (certificates[i] instanceof X509Certificate) {
-                certs[i] = (X509Certificate) certificates[i];
+                certs[i] = (X509Certificate)certificates[i];
             } else {
                 throw new RuntimeException("不支持的证书类型：" + certificates[i].getType());
             }
@@ -159,8 +160,11 @@ public class JoeKeyManager implements X509KeyManager {
 
     /**
      * 获取指定公钥类型的别名，并且该公钥需要被认可（如果有），认可的证书颁发机构在principals中保存
-     * @param keyType 公钥类型
-     * @param principals 认可的证书颁发机构列表
+     * 
+     * @param keyType
+     *            公钥类型
+     * @param principals
+     *            认可的证书颁发机构列表
      * @return 认可的颁发机构颁发的指定类型的证书
      */
     private String[] getAliases(String keyType, Principal[] principals) {
@@ -185,7 +189,7 @@ public class JoeKeyManager implements X509KeyManager {
             sigType = null;
         }
 
-        X500Principal[] x500Principals = (X500Principal[]) principals;
+        X500Principal[] x500Principals = (X500Principal[])principals;
         List<String> aliases = new ArrayList<>();
 
         for (Map.Entry<String, X509Credentials> entry : credentialsMap.entrySet()) {
@@ -234,14 +238,16 @@ public class JoeKeyManager implements X509KeyManager {
 
     /**
      * 尝试将Principal转换为X500Principal，如果无法转换则抛出异常
-     * @param principals principal
+     * 
+     * @param principals
+     *            principal
      * @return X500Principal
      */
     private X500Principal[] tryConvert(Principal[] principals) {
         X500Principal[] x500Principals = new X500Principal[principals.length];
         for (int i = 0; i < principals.length; i++) {
             if (principals[i] instanceof X500Principal) {
-                x500Principals[i] = (X500Principal) principals[i];
+                x500Principals[i] = (X500Principal)principals[i];
             } else {
                 throw new RuntimeException("不支持的Principal类型：" + principals[i].getClass());
             }
@@ -257,12 +263,12 @@ public class JoeKeyManager implements X509KeyManager {
         /**
          * 证书的私钥
          */
-        PrivateKey                 privateKey;
+        PrivateKey privateKey;
 
         /**
          * 证书链
          */
-        X509Certificate[]          certificates;
+        X509Certificate[] certificates;
 
         /**
          * 证书相关认证信息，包含颁发机构

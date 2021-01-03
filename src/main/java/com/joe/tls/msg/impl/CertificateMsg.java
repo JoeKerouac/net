@@ -37,12 +37,12 @@ public class CertificateMsg implements HandshakeProtocol {
     /**
      * 证书链{@link #chain}编码后的信息，顺序与{@link #chain}一致
      */
-    private List<byte[]>  encodedChain  = new ArrayList<>();
+    private List<byte[]> encodedChain = new ArrayList<>();
 
     /**
      * 该消息总长度，包含header
      */
-    private int           messageLength = -1;
+    private int messageLength = -1;
 
     public CertificateMsg(ByteBuffer buffer) {
         // 跳过类型和长度，刚好是4byte
@@ -96,6 +96,7 @@ public class CertificateMsg implements HandshakeProtocol {
 
     /**
      * 获取服务端证书公钥
+     * 
      * @return 服务端证书公钥
      */
     public PublicKey getPublicKey() {
@@ -109,8 +110,7 @@ public class CertificateMsg implements HandshakeProtocol {
 
     @Override
     public int len() {
-        return 3 + 3 * encodedChain.size()
-               + encodedChain.stream().mapToInt(arr -> arr.length).sum();
+        return 3 + 3 * encodedChain.size() + encodedChain.stream().mapToInt(arr -> arr.length).sum();
     }
 
     @Override

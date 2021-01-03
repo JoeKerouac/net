@@ -4,11 +4,9 @@ import com.joe.tls.TlsVersion;
 import com.joe.tls.enums.ContentType;
 
 /**
- * record消息，record消息格式：
+ * record消息，record消息格式： <br/>
  * <br/>
- * <br/>
- * | 1byte content type | 2byte version | 2byte content len | n byte nonce | content | mac |
- * <br/>
+ * | 1byte content type | 2byte version | 2byte content len | n byte nonce | content | mac | <br/>
  * <br/>
  * 其中nonce的长度是加密套件决定的，同时对于AEAD模式来说nonce不能加密，要明文发送，最后的mac对于AEAD模式来说是没有的
  * 
@@ -19,10 +17,10 @@ import com.joe.tls.enums.ContentType;
  */
 public class Record {
 
-    private final ContentType   type;
-    private final TlsVersion    version;
+    private final ContentType type;
+    private final TlsVersion version;
     private final RecordContent content;
-    private final byte[]        contentData;
+    private final byte[] contentData;
 
     public Record(ContentType type, TlsVersion version, RecordContent content) {
         this(type, version, content, null);
@@ -37,6 +35,7 @@ public class Record {
 
     /**
      * 消息contentType
+     * 
      * @return 消息的contentType
      */
     public ContentType type() {
@@ -45,6 +44,7 @@ public class Record {
 
     /**
      * 消息版本号
+     * 
      * @return 版本号
      */
     public TlsVersion version() {
@@ -53,6 +53,7 @@ public class Record {
 
     /**
      * 协议消息的长度
+     * 
      * @return 协议消息的长度，2byte，不包含record层5byte的header（1byte type + 2byte version + 2byte长度）
      */
     public int len() {
@@ -61,6 +62,7 @@ public class Record {
 
     /**
      * 协议消息
+     * 
      * @return 协议消息
      */
     public RecordContent msg() {

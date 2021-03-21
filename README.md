@@ -9,6 +9,7 @@
 
 # 使用示例：
 ## IHttpClient
+
 ```java
 package com.joe.http;
 
@@ -26,7 +27,6 @@ import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
-import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author JoeKerouac
@@ -34,7 +34,7 @@ import com.joe.utils.test.WebBaseTest;
  */
 public class IHttpClientTest extends WebBaseTest {
     private ThreadLocal<IHttpClient> clientHolder = new ThreadLocal<>();
-    private ThreadLocal<String>      url          = new ThreadLocal<>();
+    private ThreadLocal<String> url = new ThreadLocal<>();
 
     @Test
     public void executeGet() {
@@ -52,8 +52,8 @@ public class IHttpClientTest extends WebBaseTest {
     public void executePost() {
         runCase(() -> {
             IHttpPost post = IHttpPost.builder(url.get() + "helloName")
-                .contentType(IHttpRequestBase.CONTENT_TYPE_FORM).formParam("name", "123")
-                .charset("utf8").build();
+                    .contentType(IHttpRequestBase.CONTENT_TYPE_FORM).formParam("name", "123")
+                    .charset("utf8").build();
             try {
                 doRequest(clientHolder.get(), post, "hello : 123");
             } catch (Exception e) {
@@ -113,6 +113,7 @@ public class IHttpClientTest extends WebBaseTest {
 可以看出IHttpClient可以定制化很多信息，例如连接超时时间、请求超时时间等，上述示例的配置并不全，详细的配置信息可以看API（还可以定制SSLContext、CookieStore等，同时对于每个请求信息也能单独定制），但是请求相对复杂；
 
 ## IHttpClientUtil
+
 ```java
 package com.joe.http;
 
@@ -123,7 +124,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.request.IHttpRequestBase;
-import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author joe
@@ -131,7 +131,7 @@ import com.joe.utils.test.WebBaseTest;
  */
 public class IHttpClientUtilTest extends WebBaseTest {
     private ThreadLocal<IHttpClientUtil> clientHolder = new ThreadLocal<>();
-    private ThreadLocal<String>          url          = new ThreadLocal<>();
+    private ThreadLocal<String> url = new ThreadLocal<>();
 
     @Test
     public void executeGet() {
@@ -150,7 +150,7 @@ public class IHttpClientUtilTest extends WebBaseTest {
         runCase(() -> {
             try {
                 String result = clientHolder.get().executePost(url.get() + "helloName", "name=123",
-                    "UTF8", "UTF8", IHttpRequestBase.CONTENT_TYPE_FORM);
+                        "UTF8", "UTF8", IHttpRequestBase.CONTENT_TYPE_FORM);
                 Assert.assertEquals("hello : 123", result);
             } catch (Exception e) {
                 Assert.assertNull("请求异常", e);
@@ -192,6 +192,7 @@ public class IHttpClientUtilTest extends WebBaseTest {
 可以看出使用IHttpClientUtil的方式发起请求很方便，但是不能对每个请求做定制，不过也能满足大多数场景了，同时还可以自定义一个IHttpClient然后通过构造参数传给IHttpClientUtil，这样就能使用现有的已经定制的IHttpClient了。
 
 ## ResourceFactory
+
 ```java
 package com.joe.http.ws;
 
@@ -215,7 +216,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.ws.core.ResourceType;
-import com.joe.utils.test.WebBaseTest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -291,7 +291,7 @@ public class ResourceFactoryTest extends WebBaseTest {
             Resource resource = factory.build(SpringApi.class);
             User user = new User("JoeKerouac", 23, "man");
             Assert.assertEquals("结果与预期不符", user,
-                resource.formUser(user.getName(), user.getAge(), user.getSex()));
+                    resource.formUser(user.getName(), user.getAge(), user.getSex()));
         });
     }
 
@@ -391,7 +391,7 @@ public class ResourceFactoryTest extends WebBaseTest {
     @NoArgsConstructor
     public static class User {
         private String name;
-        private int    age;
+        private int age;
         private String sex;
     }
 }

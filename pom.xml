@@ -1,18 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.JoeKerouac</groupId>
     <artifactId>net</artifactId>
-    <version>1.8.000</version>
+    <version>2.0.0</version>
     <name>net</name>
     <packaging>jar</packaging>
     <description>网络请求工具简单封装</description>
     <url>https://github.com/JoeKerouac/net</url>
-
-    <parent>
-        <groupId>com.github.JoeKerouac</groupId>
-        <artifactId>java-parent</artifactId>
-        <version>1.1.0</version>
-    </parent>
 
     <licenses>
         <license>
@@ -34,52 +29,77 @@
         <developerConnection>scm:git:https://github.com/JoeKerouac/net.git</developerConnection>
     </scm>
 
+    <properties>
+        <httpclient.version>4.5.13</httpclient.version>
+        <slf4j.version>1.7.30</slf4j.version>
+        <utils.version>2.0.0</utils.version>
+        <rs-api.version>2.1</rs-api.version>
+        <cglib.version>3.2.5</cglib.version>
+        <spring.version>5.3.5</spring.version>
+        <spring-boot.version>2.4.4</spring-boot.version>
+        <servlet-api.version>4.0.1</servlet-api.version>
+        <bcprov.version>1.46</bcprov.version>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
+        <java.version>1.8</java.version>
+    </properties>
+
     <dependencies>
         <!-- 核心，本包就是对这个httpclient包进行简单封装的来的 -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
         </dependency>
         <!-- 日志 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <!-- 解决common-logging依赖，该包可以替换common-logging依赖（http-client中有common-logging依赖，所以需要该依赖） -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.JoeKerouac</groupId>
             <artifactId>utils</artifactId>
+            <version>${utils.version}</version>
         </dependency>
         <!--下面cglib、JSR311、utils、spring、servlet都是ResourceFactory需要使用的-->
         <!--JSR311规范，REST的API-->
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
+            <version>${rs-api.version}</version>
             <scope>provided</scope>
         </dependency>
         <!--CGLIB依赖包，生成测试类使用-->
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+            <version>${spring.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+            <version>${servlet-api.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -87,17 +107,20 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk16</artifactId>
+            <version>${bcprov.version}</version>
         </dependency>
 
         <!--测试使用-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring-boot.version}</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -107,6 +130,21 @@
             </exclusions>
         </dependency>
         <!--上面cglib、JSR311、utils、spring、servlet都是ResourceFactory需要使用的-->
+
+        <!--快速生成get、set方法-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.10</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--test-->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -114,6 +152,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -137,13 +176,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>com.github.JoeKerouac</groupId>
-                        <artifactId>java-parent</artifactId>
-                        <version>1.1.0</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>

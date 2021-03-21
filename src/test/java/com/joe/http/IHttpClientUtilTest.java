@@ -1,5 +1,6 @@
 package com.joe.http;
 
+import com.joe.http.base.WebBaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.stereotype.Controller;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.utils.collection.CollectionUtil;
-import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author joe

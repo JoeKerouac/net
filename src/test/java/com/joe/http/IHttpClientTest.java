@@ -2,6 +2,7 @@ package com.joe.http;
 
 import java.nio.charset.Charset;
 
+import com.joe.http.base.WebBaseTest;
 import com.joe.utils.collection.CollectionUtil;
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,7 +16,6 @@ import com.joe.http.request.IHttpGet;
 import com.joe.http.request.IHttpPost;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.response.IHttpResponse;
-import com.joe.utils.test.WebBaseTest;
 
 /**
  * @author JoeKerouac

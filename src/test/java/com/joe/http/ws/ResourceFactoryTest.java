@@ -10,6 +10,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
+import com.joe.http.base.WebBaseTest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.stereotype.Controller;
@@ -22,7 +23,6 @@ import com.joe.http.exception.ServerException;
 import com.joe.http.request.IHttpRequestBase;
 import com.joe.http.ws.core.ResourceType;
 import com.joe.utils.collection.CollectionUtil;
-import com.joe.utils.test.WebBaseTest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

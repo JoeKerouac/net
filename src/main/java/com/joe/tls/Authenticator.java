@@ -38,7 +38,7 @@ public class Authenticator {
      *            content type
      * @param length
      *            要写出record数据的长度，加密前的的，不是加密后的，同时不包括record的header部分
-     * @return
+     * @return 认证添加数据，AEAD加密模式需要使用
      */
     public final byte[] acquireAuthenticationBytes(byte type, int length) {
         // 这里长度是原始数据长度，不是加密后的，不带IV

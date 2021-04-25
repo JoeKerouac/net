@@ -39,11 +39,6 @@ public class CertificateMsg implements HandshakeProtocol {
      */
     private List<byte[]> encodedChain = new ArrayList<>();
 
-    /**
-     * 该消息总长度，包含header
-     */
-    private int messageLength = -1;
-
     public CertificateMsg(ByteBuffer buffer) {
         // 跳过类型和长度，刚好是4byte
         ByteBufferUtil.mergeReadInt32(buffer);
@@ -78,14 +73,11 @@ public class CertificateMsg implements HandshakeProtocol {
         this.chain = certificates.clone();
 
         // 1byte type + 3byte len + 3byte certificate len
-        this.messageLength += 7;
         try {
             for (int i = 0; i < certificates.length; i++) {
                 Certificate certificate = certificates[i];
                 byte[] encode = certificate.getEncoded();
                 this.encodedChain.add(encode);
-                // 这里加3是因为Certificate消息中证书链里边除了放每个证书外，还有个单独的3byte的长度信息
-                this.messageLength += encode.length + 3;
             }
         } catch (CertificateEncodingException exception) {
             this.encodedChain = null;
